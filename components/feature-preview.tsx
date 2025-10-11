@@ -4,16 +4,22 @@ import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Play, X, Sparkles } from "lucide-react"
+import { Play, X, Sparkles, TrendingUp, Mic, BarChart3 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { LivePreviewModal } from "./live-preview-modal"
+
+const iconMap: { [key: string]: any } = {
+  TrendingUp,
+  Mic,
+  BarChart3,
+}
 
 interface FeaturePreviewProps {
   feature: {
     id: string
     title: string
     description: string
-    icon: any
+    iconName: string
     preview: string
     color: string
   }
@@ -24,6 +30,9 @@ export function FeaturePreview({ feature, autoPlayDelay = 0 }: FeaturePreviewPro
   const [isPlaying, setIsPlaying] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [hasAutoPlayed, setHasAutoPlayed] = useState(false)
+
+  // Get icon component from map
+  const IconComponent = iconMap[feature.iconName] || TrendingUp
 
   // Auto-start preview animation after delay
   useEffect(() => {
@@ -52,7 +61,7 @@ export function FeaturePreview({ feature, autoPlayDelay = 0 }: FeaturePreviewPro
               <>
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className={cn("text-8xl opacity-20", feature.color)}>
-                    <feature.icon className="h-32 w-32" />
+                    <IconComponent className="h-32 w-32" />
                   </div>
                 </div>
                 <div className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity">
@@ -87,7 +96,7 @@ export function FeaturePreview({ feature, autoPlayDelay = 0 }: FeaturePreviewPro
                 <div className="h-full flex items-center justify-center">
                   <div className="text-center space-y-4">
                     <div className={cn("inline-flex p-4 rounded-full animate-pulse-glow", feature.color)}>
-                      <feature.icon className="h-12 w-12" />
+                      <IconComponent className="h-12 w-12" />
                     </div>
                     <p className="text-lg font-semibold">{feature.preview}</p>
                     <div className="grid grid-cols-2 gap-2 mt-4">
@@ -113,7 +122,7 @@ export function FeaturePreview({ feature, autoPlayDelay = 0 }: FeaturePreviewPro
           <div className="p-6">
             <div className="flex items-start gap-3 mb-3">
               <div className={cn("p-2 rounded-lg", feature.color)}>
-                <feature.icon className="h-5 w-5" />
+                <IconComponent className="h-5 w-5" />
               </div>
               <div className="flex-1">
                 <h3 className="text-xl font-bold mb-2">{feature.title}</h3>

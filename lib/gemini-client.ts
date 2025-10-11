@@ -2,6 +2,7 @@
 export class GeminiClient {
   private apiKey: string
   private baseUrl = "https://generativelanguage.googleapis.com/v1beta"
+  private model = "gemini-1.5-flash-latest" // Using latest Gemini Flash model
 
   constructor(apiKey: string) {
     this.apiKey = apiKey
@@ -10,11 +11,14 @@ export class GeminiClient {
   async generateText(prompt: string, context?: any): Promise<string> {
     // Fallback mode - return intelligent demo responses
     if (this.apiKey === "fallback-mode") {
+      console.log("[Gemini] Using fallback mode - no API key configured")
       return this.getFallbackResponse(prompt, context)
     }
 
+    console.log("[Gemini] Attempting API call with model:", this.model)
+
     try {
-      const response = await fetch(`${this.baseUrl}/models/gemini-pro:generateContent?key=${this.apiKey}`, {
+      const response = await fetch(`${this.baseUrl}/models/${this.model}:generateContent?key=${this.apiKey}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -30,23 +34,32 @@ export class GeminiClient {
             },
           ],
           generationConfig: {
-            temperature: 0.7,
+            temperature: 0.9,
             topK: 40,
             topP: 0.95,
-            maxOutputTokens: 2048,
+            maxOutputTokens: 8192,
           },
         }),
       })
 
       if (!response.ok) {
-        console.error(`[v0] Gemini API error: ${response.statusText}`)
+        const errorText = await response.text()
+        console.error(`[Gemini] API error ${response.status}: ${response.statusText}`, errorText)
         return this.getFallbackResponse(prompt, context)
       }
 
       const data = await response.json()
-      return data.candidates[0]?.content?.parts[0]?.text || this.getFallbackResponse(prompt, context)
+      const result = data.candidates[0]?.content?.parts[0]?.text
+      
+      if (result) {
+        console.log("[Gemini] API call successful, response length:", result.length)
+        return result
+      } else {
+        console.error("[Gemini] No text in response:", JSON.stringify(data))
+        return this.getFallbackResponse(prompt, context)
+      }
     } catch (error) {
-      console.error("[v0] Gemini API error:", error)
+      console.error("[Gemini] API call exception:", error)
       return this.getFallbackResponse(prompt, context)
     }
   }
@@ -71,14 +84,40 @@ export class GeminiClient {
   }
 
   async analyzeFinancialData(data: any, query: string): Promise<any> {
-    const prompt = `You are a financial advisor AI. Analyze the following financial data and answer the query.
+    const prompt = `You are Aura, an expert AI Chief Financial Officer (CFO) and financial advisor for startups and SMEs. You have deep expertise in:
 
-Financial Data:
-${JSON.stringify(data, null, 2)}
+• Cash flow management and runway forecasting
+• Financial modeling and scenario planning
+• Fundraising strategy and investor relations
+• Expense optimization and cost management
+• Revenue growth and unit economics
+• Financial statements (P&L, Balance Sheet, Cash Flow)
+• Strategic decision-making for early-stage companies
 
-Query: ${query}
+Your communication style is:
+• Professional yet accessible
+• Data-driven with specific numbers and metrics
+• Action-oriented with clear recommendations
+• Empathetic to the challenges founders face
+• Concise but comprehensive
 
-Provide a detailed, actionable response with specific numbers and recommendations.`
+Current Financial Context:
+• Cash Balance: $${data.cashBalance?.toLocaleString() || 'N/A'}
+• Monthly Burn Rate: $${data.monthlyBurn?.toLocaleString() || 'N/A'}
+• Runway: ${data.runway || 'N/A'} months
+• Monthly Recurring Revenue (MRR): $${data.mrr?.toLocaleString() || 'N/A'}
+• Growth Rate: ${data.growth || 'N/A'}%
+
+User Question: ${query}
+
+As a CFO, provide a strategic response that:
+1. Directly answers the question with specific numbers
+2. Identifies key financial insights or concerns
+3. Provides 2-3 actionable recommendations
+4. Explains the financial impact of your advice
+5. Uses professional but clear language
+
+Keep your response focused, practical, and under 300 words.`
 
     const response = await this.generateText(prompt)
     return this.parseFinancialResponse(response)
@@ -317,10 +356,11 @@ export function getGeminiClient(): GeminiClient {
     // Server-side only - never exposed to client
     const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey) {
-      console.warn("[v0] GEMINI_API_KEY not set, using fallback responses")
+      console.warn("[Gemini] GEMINI_API_KEY not set in environment, using fallback responses")
       // Create a client with a dummy key - will use fallback responses
       geminiClient = new GeminiClient("fallback-mode")
     } else {
+      console.log("[Gemini] API key found, initializing client with key:", apiKey.substring(0, 10) + "***")
       geminiClient = new GeminiClient(apiKey)
     }
   }

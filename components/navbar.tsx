@@ -18,8 +18,7 @@ export function Navbar() {
     { href: "/sales", label: "Sales" },
     { href: "/data-voice", label: "Voice Data" },
     { href: "/data-management", label: "Data" },
-    { href: "/ai-chat", label: "AI Chat" },
-    { href: "/user-journey", label: "User Journey" },
+    { href: "/ai-assistant", label: "AI Assistant" },
   ]
 
   return (

@@ -19,6 +19,13 @@ import {
   CheckCircle2,
   Sparkles,
   Database,
+  UserPlus,
+  Target,
+  DollarSign,
+  Leaf,
+  Users,
+  TrendingDown,
+  Globe,
 } from "lucide-react"
 import Link from "next/link"
 
@@ -36,7 +43,7 @@ export default function HomePage() {
       title: "AI-Powered Runway Forecasting",
       description:
         "Get precise cash runway predictions with machine learning that adapts to your spending patterns and revenue trends in real-time.",
-      icon: TrendingUp,
+      iconName: "TrendingUp",
       preview: "See your runway forecast update in real-time as you adjust assumptions",
       color: "bg-primary/10 text-primary",
     },
@@ -45,7 +52,7 @@ export default function HomePage() {
       title: "Voice-Activated Data Entry",
       description:
         "Simply speak to add transactions, expenses, or revenue. Our AI understands natural language and categorizes everything automatically.",
-      icon: Mic,
+      iconName: "Mic",
       preview: "Say 'Add $500 marketing expense' and watch it appear instantly",
       color: "bg-accent/10 text-accent",
     },
@@ -54,7 +61,7 @@ export default function HomePage() {
       title: "Smart Analytics Dashboard",
       description:
         "Visualize your financial health with interactive charts, AI-generated insights, and downloadable reports for investors.",
-      icon: BarChart3,
+      iconName: "BarChart3",
       preview: "Explore interactive charts with one-click JPG export for presentations",
       color: "bg-secondary/10 text-secondary",
     },
@@ -286,6 +293,187 @@ export default function HomePage() {
                 <div className="text-muted-foreground">{stat.label}</div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* User Journey Section */}
+      <section className="py-20">
+        <div className="container">
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <Badge className="mb-4 bg-primary/10 text-primary border-primary/50">Your Journey to Financial Clarity</Badge>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">From Signup to Strategic Insights</h2>
+            <p className="text-lg text-muted-foreground">
+              Experience how Aura transforms financial chaos into strategic clarity in 5 simple phases
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-5 gap-6 max-w-6xl mx-auto">
+            {[
+              {
+                icon: UserPlus,
+                phase: "Discovery",
+                description: "Sign up, onboard, and get instant AI runway forecast",
+                color: "from-primary to-primary/70",
+              },
+              {
+                icon: Database,
+                phase: "Data Integration",
+                description: "Import from Excel, voice commands, or manual entry",
+                color: "from-secondary to-secondary/70",
+              },
+              {
+                icon: Brain,
+                phase: "AI Analysis",
+                description: "Auto-categorization, insights, and real-time forecasts",
+                color: "from-accent to-accent/70",
+              },
+              {
+                icon: Target,
+                phase: "Strategic Planning",
+                description: "Scenario modeling, runway forecasting, AI advisor",
+                color: "from-primary to-primary/70",
+              },
+              {
+                icon: BarChart3,
+                phase: "Reporting & Actions",
+                description: "Interactive dashboards, statements, and analytics",
+                color: "from-secondary to-secondary/70",
+              },
+            ].map((step, i) => (
+              <Card
+                key={i}
+                className="p-6 hover-lift hover-glow border-2 border-transparent hover:border-primary/50 transition-all relative overflow-hidden group"
+              >
+                <div className={`absolute inset-0 bg-gradient-to-br ${step.color} opacity-5 group-hover:opacity-10 transition-opacity`} />
+                <div className="relative z-10">
+                  <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <step.icon className="h-6 w-6 text-primary" />
+                  </div>
+                  <div className="text-xs font-semibold text-primary mb-2">Phase {i + 1}</div>
+                  <h3 className="font-bold mb-2">{step.phase}</h3>
+                  <p className="text-sm text-muted-foreground">{step.description}</p>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          <div className="mt-12 grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+            {[
+              {
+                icon: Mic,
+                title: "Voice-First Data Entry",
+                description: "90% faster data entry with natural language voice input",
+                impact: "90% faster",
+              },
+              {
+                icon: Brain,
+                title: "Real-Time AI Forecasting",
+                description: "Machine learning adapts to your spending patterns automatically",
+                impact: "95% accuracy",
+              },
+              {
+                icon: Zap,
+                title: "Unified Financial Intelligence",
+                description: "Single source of truth for all your financial data",
+                impact: "Zero silos",
+              },
+              {
+                icon: DollarSign,
+                title: "SME-Optimized Pricing",
+                description: "CFO-level intelligence at startup pricing",
+                impact: "1/10th cost",
+              },
+            ].map((feature, i) => (
+              <Card key={i} className="p-6 hover-lift hover-glow border-2 border-primary/10">
+                <div className="flex flex-col gap-3">
+                  <div className="p-3 rounded-lg bg-gradient-to-br from-primary/10 to-accent/10 w-fit">
+                    <feature.icon className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold mb-2">{feature.title}</h3>
+                    <p className="text-sm text-muted-foreground mb-3">{feature.description}</p>
+                    <Badge className="bg-accent/10 text-accent border-accent/50">{feature.impact}</Badge>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* SDG Connection Section */}
+      <section className="py-20 gradient-bg-2">
+        <div className="container">
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <Badge className="mb-4 bg-success/10 text-success border-success/50 gap-2">
+              <Leaf className="h-3 w-3" />
+              Contributing to Global Goals
+            </Badge>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Aligned with UN Sustainable Development Goals</h2>
+            <p className="text-lg text-muted-foreground">
+              Aura empowers sustainable business growth by promoting financial health, innovation, and responsible resource management
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+            {[
+              {
+                sdg: "SDG 8",
+                title: "Decent Work & Economic Growth",
+                icon: TrendingUp,
+                description: "Helping SMEs thrive and create sustainable employment through better financial management",
+                color: "from-[#a21942] to-[#a21942]/70",
+              },
+              {
+                sdg: "SDG 9",
+                title: "Industry, Innovation & Infrastructure",
+                icon: Sparkles,
+                description: "Pioneering AI-powered fintech solutions to democratize CFO-level financial intelligence",
+                color: "from-[#fd6925] to-[#fd6925]/70",
+              },
+              {
+                sdg: "SDG 10",
+                title: "Reduced Inequalities",
+                icon: Users,
+                description: "Making enterprise-grade financial tools accessible to startups and SMEs at 1/10th the cost",
+                color: "from-[#dd1367] to-[#dd1367]/70",
+              },
+              {
+                sdg: "SDG 12",
+                title: "Responsible Consumption",
+                icon: Leaf,
+                description: "Promoting efficient resource allocation and sustainable cash flow management through AI insights",
+                color: "from-[#bf8b2e] to-[#bf8b2e]/70",
+              },
+            ].map((sdg, i) => (
+              <Card key={i} className="p-6 hover-lift hover-glow border-2 border-transparent hover:border-success/50 transition-all relative overflow-hidden group">
+                <div className={`absolute inset-0 bg-gradient-to-br ${sdg.color} opacity-5 group-hover:opacity-10 transition-opacity`} />
+                <div className="relative z-10">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className={`h-10 w-10 rounded-full bg-gradient-to-br ${sdg.color} flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                      <sdg.icon className="h-5 w-5 text-white" />
+                    </div>
+                    <Badge variant="outline" className="font-mono text-xs border-success/30">
+                      {sdg.sdg}
+                    </Badge>
+                  </div>
+                  <h3 className="font-bold mb-2">{sdg.title}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{sdg.description}</p>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          <div className="mt-12 text-center">
+            <Card className="p-8 max-w-4xl mx-auto border-2 border-success/20 bg-gradient-to-br from-success/5 to-transparent">
+              <Globe className="h-12 w-12 text-success mx-auto mb-4" />
+              <h3 className="text-2xl font-bold mb-3">Building a Sustainable Financial Future</h3>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                By preventing cash flow crises and promoting data-driven decision making, Aura helps businesses grow sustainably, 
+                create more jobs, and contribute to economic stability in their communities.
+              </p>
+            </Card>
           </div>
         </div>
       </section>

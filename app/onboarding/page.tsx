@@ -201,7 +201,10 @@ export default function OnboardingPage() {
           <CardHeader className="text-center pb-4">
             <div className="flex justify-center mb-4">
               <div className="h-16 w-16 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
-                {steps[currentStep].icon({ className: "h-8 w-8 text-primary" })}
+                {(() => {
+                  const IconComponent = steps[currentStep].icon
+                  return <IconComponent className="h-8 w-8 text-primary" />
+                })()}
               </div>
             </div>
             <CardTitle className="text-2xl">{steps[currentStep].title}</CardTitle>

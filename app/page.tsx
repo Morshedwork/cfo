@@ -65,7 +65,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background relative">
+    <div className="min-h-screen bg-background relative w-full overflow-x-hidden">
       <ParticlesBackground />
       <Navbar />
 
@@ -131,7 +131,7 @@ export default function HomePage() {
           <div className="grid md:grid-cols-3 gap-8">
             {topFeatures.map((feature, i) => (
               <div key={feature.id} className="animate-slide-up" style={{ animationDelay: `${i * 0.1}s` }}>
-                <FeaturePreview feature={feature} />
+                <FeaturePreview feature={feature} autoPlayDelay={3000 + i * 1000} />
               </div>
             ))}
           </div>

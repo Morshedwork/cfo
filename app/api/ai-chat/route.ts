@@ -1,4 +1,4 @@
-import { getGeminiClient } from "@/lib/gemini-client"
+import { getGeminiClient, isFallbackMode } from "@/lib/gemini-client"
 import type { NextRequest } from "next/server"
 
 export const runtime = "edge"
@@ -6,11 +6,20 @@ export const maxDuration = 30
 
 export async function POST(req: NextRequest) {
   try {
-    const { message, context } = await req.json()
+    const body = await req.json()
+    const { message, context } = body
+
+    if (!message || typeof message !== "string") {
+      return Response.json(
+        { error: "Invalid request: message is required and must be a string" },
+        { status: 400 }
+      )
+    }
 
     const gemini = getGeminiClient()
+    const useFallback = isFallbackMode()
 
-    // Build financial context
+    // Build financial context with defaults
     const financialContext = {
       cashBalance: context?.cashBalance || 70000,
       monthlyBurn: context?.monthlyBurn || 82000,
@@ -27,9 +36,17 @@ export async function POST(req: NextRequest) {
       insights: response.insights,
       recommendations: response.recommendations,
       timestamp: new Date().toISOString(),
+      demoMode: useFallback,
     })
   } catch (error) {
     console.error("[v0] AI Chat API error:", error)
-    return Response.json({ error: "Failed to process message" }, { status: 500 })
+    return Response.json(
+      {
+        error: "Failed to process message",
+        message: "I'm having trouble processing your request right now. Please try again in a moment.",
+        demoMode: isFallbackMode(),
+      },
+      { status: 500 }
+    )
   }
 }

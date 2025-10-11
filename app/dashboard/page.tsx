@@ -38,6 +38,7 @@ import {
   PolarAngleAxis,
   PolarRadiusAxis,
   Radar,
+  Cell,
 } from "recharts"
 import html2canvas from "html2canvas"
 
@@ -238,26 +239,38 @@ export default function DashboardPage() {
                     <AreaChart data={cashFlowData}>
                       <defs>
                         <linearGradient id="colorCash" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.7} />
+                          <stop offset="50%" stopColor="#06b6d4" stopOpacity={0.4} />
+                          <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1} />
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
-                      <YAxis stroke="hsl(var(--muted-foreground))" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
+                      <XAxis 
+                        dataKey="month" 
+                        stroke="#f9fafb"
+                        style={{ fontSize: '12px', fontWeight: 500, fill: '#f9fafb' }}
+                      />
+                      <YAxis 
+                        stroke="#f9fafb"
+                        style={{ fontSize: '12px', fontWeight: 500, fill: '#f9fafb' }}
+                      />
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: "hsl(var(--card))",
-                          border: "1px solid hsl(var(--border))",
-                          borderRadius: "8px",
+                          backgroundColor: "#1f2937",
+                          border: "2px solid #10b981",
+                          borderRadius: "12px",
+                          color: "#f9fafb",
+                          fontWeight: 600,
                         }}
+                        cursor={{stroke: '#10b981', strokeWidth: 2}}
                       />
                       <Area
                         type="monotone"
                         dataKey="cash"
-                        stroke="hsl(var(--primary))"
-                        strokeWidth={2}
+                        stroke="#10b981"
+                        strokeWidth={3}
                         fill="url(#colorCash)"
+                        animationDuration={1500}
                       />
                     </AreaChart>
                   </ResponsiveContainer>
@@ -282,17 +295,61 @@ export default function DashboardPage() {
                 <CardContent id="expense-chart">
                   <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={expenseBreakdown}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="category" stroke="hsl(var(--muted-foreground))" />
-                      <YAxis stroke="hsl(var(--muted-foreground))" />
+                      <defs>
+                        <linearGradient id="colorPayroll" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.9} />
+                          <stop offset="95%" stopColor="#10b981" stopOpacity={0.7} />
+                        </linearGradient>
+                        <linearGradient id="colorMarketing" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.9} />
+                          <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.7} />
+                        </linearGradient>
+                        <linearGradient id="colorInfra" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.9} />
+                          <stop offset="95%" stopColor="#06b6d4" stopOpacity={0.7} />
+                        </linearGradient>
+                        <linearGradient id="colorOffice" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#a855f7" stopOpacity={0.9} />
+                          <stop offset="95%" stopColor="#a855f7" stopOpacity={0.7} />
+                        </linearGradient>
+                        <linearGradient id="colorOther" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#f97316" stopOpacity={0.9} />
+                          <stop offset="95%" stopColor="#f97316" stopOpacity={0.7} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
+                      <XAxis 
+                        dataKey="category" 
+                        stroke="#f9fafb"
+                        style={{ fontSize: '12px', fontWeight: 500, fill: '#f9fafb' }}
+                      />
+                      <YAxis 
+                        stroke="#f9fafb"
+                        style={{ fontSize: '12px', fontWeight: 500, fill: '#f9fafb' }}
+                      />
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: "hsl(var(--card))",
-                          border: "1px solid hsl(var(--border))",
-                          borderRadius: "8px",
+                          backgroundColor: "#1f2937",
+                          border: "2px solid #10b981",
+                          borderRadius: "12px",
+                          color: "#f9fafb",
+                          fontWeight: 600,
                         }}
+                        cursor={{fill: '#06b6d4', opacity: 0.1}}
                       />
-                      <Bar dataKey="amount" fill="hsl(var(--secondary))" radius={[8, 8, 0, 0]} />
+                      <Bar 
+                        dataKey="amount" 
+                        radius={[12, 12, 0, 0]}
+                        stroke="hsl(var(--foreground))"
+                        strokeWidth={0.5}
+                      >
+                        {expenseBreakdown.map((entry, index) => (
+                          <Cell 
+                            key={`cell-${index}`} 
+                            fill={`url(#${['colorPayroll', 'colorMarketing', 'colorInfra', 'colorOffice', 'colorOther'][index]})`}
+                          />
+                        ))}
+                      </Bar>
                     </BarChart>
                   </ResponsiveContainer>
                 </CardContent>
@@ -319,25 +376,62 @@ export default function DashboardPage() {
               <CardContent id="net-cashflow-chart">
                 <ResponsiveContainer width="100%" height={400}>
                   <ComposedChart data={cashFlowData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
-                    <YAxis stroke="hsl(var(--muted-foreground))" />
+                    <defs>
+                      <linearGradient id="colorRevenueBar" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.9} />
+                        <stop offset="95%" stopColor="#10b981" stopOpacity={0.6} />
+                      </linearGradient>
+                      <linearGradient id="colorBurnBar" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#f97316" stopOpacity={0.9} />
+                        <stop offset="95%" stopColor="#f97316" stopOpacity={0.6} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
+                    <XAxis 
+                      dataKey="month" 
+                      stroke="#f9fafb"
+                      style={{ fontSize: '12px', fontWeight: 500, fill: '#f9fafb' }}
+                    />
+                    <YAxis 
+                      stroke="#f9fafb"
+                      style={{ fontSize: '12px', fontWeight: 500, fill: '#f9fafb' }}
+                    />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: "hsl(var(--card))",
-                        border: "1px solid hsl(var(--border))",
-                        borderRadius: "8px",
+                        backgroundColor: "#1f2937",
+                        border: "2px solid #10b981",
+                        borderRadius: "12px",
+                        color: "#f9fafb",
+                        fontWeight: 600,
                       }}
                     />
-                    <Legend />
-                    <Bar dataKey="revenue" fill="hsl(var(--success))" name="Revenue" />
-                    <Bar dataKey="burn" fill="hsl(var(--destructive))" name="Burn Rate" />
+                    <Legend 
+                      wrapperStyle={{
+                        color: "#f9fafb",
+                        fontWeight: 600,
+                        fontSize: '14px'
+                      }}
+                    />
+                    <Bar 
+                      dataKey="revenue" 
+                      fill="url(#colorRevenueBar)" 
+                      name="Revenue" 
+                      radius={[8, 8, 0, 0]}
+                    />
+                    <Bar 
+                      dataKey="burn" 
+                      fill="url(#colorBurnBar)" 
+                      name="Burn Rate" 
+                      radius={[8, 8, 0, 0]}
+                    />
                     <Line
                       type="monotone"
                       dataKey="netCashFlow"
-                      stroke="hsl(var(--primary))"
-                      strokeWidth={3}
+                      stroke="#a855f7"
+                      strokeWidth={4}
                       name="Net Cash Flow"
+                      dot={{ fill: '#a855f7', r: 5 }}
+                      activeDot={{ r: 8 }}
                     />
                   </ComposedChart>
                 </ResponsiveContainer>
@@ -366,36 +460,54 @@ export default function DashboardPage() {
                   <ComposedChart data={revenueData}>
                     <defs>
                       <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="hsl(var(--success))" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="hsl(var(--success))" stopOpacity={0} />
+                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.7} />
+                        <stop offset="50%" stopColor="#06b6d4" stopOpacity={0.4} />
+                        <stop offset="95%" stopColor="#10b981" stopOpacity={0.05} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
-                    <YAxis stroke="hsl(var(--muted-foreground))" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
+                    <XAxis 
+                      dataKey="month" 
+                      stroke="#f9fafb"
+                      style={{ fontSize: '12px', fontWeight: 500, fill: '#f9fafb' }}
+                    />
+                    <YAxis 
+                      stroke="#f9fafb"
+                      style={{ fontSize: '12px', fontWeight: 500, fill: '#f9fafb' }}
+                    />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: "hsl(var(--card))",
-                        border: "1px solid hsl(var(--border))",
-                        borderRadius: "8px",
+                        backgroundColor: "#1f2937",
+                        border: "2px solid #10b981",
+                        borderRadius: "12px",
+                        color: "#f9fafb",
+                        fontWeight: 600,
                       }}
                     />
-                    <Legend />
+                    <Legend 
+                      wrapperStyle={{
+                        color: "#f9fafb",
+                        fontWeight: 600,
+                        fontSize: '14px'
+                      }}
+                    />
                     <Area
                       type="monotone"
                       dataKey="revenue"
-                      stroke="hsl(var(--success))"
-                      strokeWidth={3}
+                      stroke="#10b981"
+                      strokeWidth={4}
                       fill="url(#colorRevenue)"
                       name="Actual Revenue"
+                      animationDuration={1500}
                     />
                     <Line
                       type="monotone"
                       dataKey="target"
-                      stroke="hsl(var(--muted-foreground))"
-                      strokeWidth={2}
-                      strokeDasharray="5 5"
+                      stroke="#fbbf24"
+                      strokeWidth={3}
+                      strokeDasharray="8 4"
                       name="Target"
+                      dot={{ fill: '#fbbf24', r: 4 }}
                     />
                   </ComposedChart>
                 </ResponsiveContainer>
@@ -461,16 +573,37 @@ export default function DashboardPage() {
                 <CardContent id="health-radar-chart">
                   <ResponsiveContainer width="100%" height={400}>
                     <RadarChart data={financialHealthData}>
-                      <PolarGrid stroke="hsl(var(--border))" />
-                      <PolarAngleAxis dataKey="metric" stroke="hsl(var(--muted-foreground))" />
-                      <PolarRadiusAxis stroke="hsl(var(--muted-foreground))" />
+                      <defs>
+                        <linearGradient id="colorRadar" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#10b981" stopOpacity={0.7} />
+                          <stop offset="50%" stopColor="#06b6d4" stopOpacity={0.5} />
+                          <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.3} />
+                        </linearGradient>
+                      </defs>
+                      <PolarGrid 
+                        stroke="#374151" 
+                        strokeWidth={1.5}
+                        opacity={0.5}
+                      />
+                      <PolarAngleAxis 
+                        dataKey="metric" 
+                        stroke="#f9fafb"
+                        style={{ fontSize: '12px', fontWeight: 600, fill: '#f9fafb' }}
+                      />
+                      <PolarRadiusAxis 
+                        stroke="#f9fafb"
+                        style={{ fontSize: '11px', fontWeight: 500, fill: '#f9fafb' }}
+                        angle={90}
+                      />
                       <Radar
                         name="Score"
                         dataKey="value"
-                        stroke="hsl(var(--primary))"
-                        fill="hsl(var(--primary))"
-                        fillOpacity={0.3}
-                        strokeWidth={2}
+                        stroke="#10b981"
+                        fill="url(#colorRadar)"
+                        fillOpacity={0.7}
+                        strokeWidth={3}
+                        dot={{ fill: '#10b981', r: 5 }}
+                        animationDuration={1500}
                       />
                     </RadarChart>
                   </ResponsiveContainer>

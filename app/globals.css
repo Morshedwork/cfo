@@ -6,38 +6,40 @@
 :root {
   /* Dark fintech theme optimized for financial applications */
   --background: oklch(0.15 0.02 240);
-  --foreground: oklch(0.95 0.01 240);
+  --foreground: oklch(0.98 0.01 240);
   --card: oklch(0.18 0.02 240);
-  --card-foreground: oklch(0.95 0.01 240);
+  --card-foreground: oklch(0.98 0.01 240);
   --popover: oklch(0.18 0.02 240);
-  --popover-foreground: oklch(0.95 0.01 240);
+  --popover-foreground: oklch(0.98 0.01 240);
 
-  /* Professional fintech color palette - emerald green for growth, blue for trust */
-  --primary: oklch(0.65 0.22 160);
+  /* Professional fintech color palette - vibrant and modern */
+  --primary: oklch(0.7 0.25 160);
   --primary-foreground: oklch(0.98 0.01 160);
-  --secondary: oklch(0.58 0.2 220);
+  --secondary: oklch(0.65 0.22 220);
   --secondary-foreground: oklch(0.98 0.01 220);
   --muted: oklch(0.25 0.02 240);
-  --muted-foreground: oklch(0.65 0.02 240);
-  --accent: oklch(0.55 0.18 180);
+  --muted-foreground: oklch(0.75 0.02 240);
+  --accent: oklch(0.6 0.2 180);
   --accent-foreground: oklch(0.98 0.01 180);
-  --destructive: oklch(0.55 0.22 25);
+  --destructive: oklch(0.6 0.25 25);
   --destructive-foreground: oklch(0.98 0.01 25);
-  --success: oklch(0.65 0.22 160);
+  --success: oklch(0.7 0.25 160);
   --success-foreground: oklch(0.98 0.01 160);
-  --warning: oklch(0.75 0.18 70);
+  --warning: oklch(0.8 0.22 70);
   --warning-foreground: oklch(0.15 0.01 70);
   --border: oklch(0.28 0.02 240);
   --input: oklch(0.28 0.02 240);
-  --ring: oklch(0.65 0.22 160);
+  --ring: oklch(0.7 0.25 160);
 
-  /* Enhanced chart colors for financial data visualization */
-  --chart-1: oklch(0.65 0.22 160);
-  --chart-2: oklch(0.58 0.2 220);
-  --chart-3: oklch(0.55 0.18 180);
-  --chart-4: oklch(0.7 0.2 140);
-  --chart-5: oklch(0.55 0.22 25);
-  --chart-6: oklch(0.75 0.18 70);
+  /* Enhanced chart colors for financial data visualization - vibrant and professional */
+  --chart-1: oklch(0.7 0.25 160);     /* Vibrant emerald green */
+  --chart-2: oklch(0.65 0.24 220);    /* Bright blue */
+  --chart-3: oklch(0.62 0.22 180);    /* Vivid teal */
+  --chart-4: oklch(0.75 0.23 280);    /* Purple */
+  --chart-5: oklch(0.68 0.26 40);     /* Orange */
+  --chart-6: oklch(0.78 0.22 80);     /* Yellow */
+  --chart-7: oklch(0.58 0.24 340);    /* Pink/Magenta */
+  --chart-8: oklch(0.72 0.23 120);    /* Lime green */
 
   --radius: 0.75rem;
   --sidebar: oklch(0.18 0.02 240);
@@ -113,6 +115,8 @@
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
   --color-chart-6: var(--chart-6);
+  --color-chart-7: var(--chart-7);
+  --color-chart-8: var(--chart-8);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -130,9 +134,64 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  html {
+    overflow-x: hidden;
+    width: 100%;
   }
   body {
     @apply bg-background text-foreground;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    overflow-x: hidden;
+  }
+  #__next {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+/* Container fix for proper centering */
+.container {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .container {
+    max-width: 640px;
+  }
+}
+
+@media (min-width: 768px) {
+  .container {
+    max-width: 768px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    max-width: 1024px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .container {
+    max-width: 1280px;
+  }
+}
+
+@media (min-width: 1536px) {
+  .container {
+    max-width: 1536px;
   }
 }
 
@@ -271,6 +330,70 @@
   }
 }
 
+@keyframes float-currency {
+  0% {
+    transform: translateY(-10%) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.3;
+  }
+  90% {
+    opacity: 0.3;
+  }
+  100% {
+    transform: translateY(110vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes orbit {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes shimmer-fast {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes flow-particle {
+  0%, 100% {
+    transform: translateX(0) scale(1);
+    opacity: 0;
+  }
+  50% {
+    transform: translateX(200px) scale(1.5);
+    opacity: 1;
+  }
+}
+
+@keyframes grid-flow {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(4rem);
+  }
+}
+
 .animate-float {
   animation: float 6s ease-in-out infinite;
 }
@@ -318,6 +441,30 @@
 
 .animate-chart-rise {
   animation: chart-rise 0.6s ease-out;
+}
+
+.animate-float-currency {
+  animation: float-currency 8s linear infinite;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 4s linear infinite;
+}
+
+.animate-orbit {
+  animation: orbit 4s linear infinite;
+}
+
+.animate-shimmer-fast {
+  animation: shimmer-fast 2s linear infinite;
+}
+
+.animate-flow-particle {
+  animation: flow-particle 2s ease-in-out infinite;
+}
+
+.animate-grid-flow {
+  animation: grid-flow 20s linear infinite;
 }
 
 /* Enhanced hover effects for fintech UI */
@@ -478,4 +625,18 @@
 .btn-glow:hover::after {
   width: 300px;
   height: 300px;
+}
+
+/* Money flow animation for SVG paths */
+@keyframes flow {
+  0% {
+    stroke-dashoffset: 100;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-flow {
+  animation: flow 2s linear infinite;
 }

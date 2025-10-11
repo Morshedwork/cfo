@@ -1,10 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Play, X } from "lucide-react"
+import { Play, X, Sparkles } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { LivePreviewModal } from "./live-preview-modal"
 
@@ -17,11 +17,30 @@ interface FeaturePreviewProps {
     preview: string
     color: string
   }
+  autoPlayDelay?: number
 }
 
-export function FeaturePreview({ feature }: FeaturePreviewProps) {
+export function FeaturePreview({ feature, autoPlayDelay = 0 }: FeaturePreviewProps) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [showModal, setShowModal] = useState(false)
+  const [hasAutoPlayed, setHasAutoPlayed] = useState(false)
+
+  // Auto-start preview animation after delay
+  useEffect(() => {
+    if (autoPlayDelay > 0 && !hasAutoPlayed) {
+      const timer = setTimeout(() => {
+        setIsPlaying(true)
+        setHasAutoPlayed(true)
+        
+        // Auto-close after showing
+        setTimeout(() => {
+          setIsPlaying(false)
+        }, 5000)
+      }, autoPlayDelay)
+
+      return () => clearTimeout(timer)
+    }
+  }, [autoPlayDelay, hasAutoPlayed])
 
   return (
     <>
@@ -40,11 +59,20 @@ export function FeaturePreview({ feature }: FeaturePreviewProps) {
                   <Button
                     size="lg"
                     className="rounded-full h-16 w-16 bg-primary hover:bg-primary/90 animate-glow-pulse"
-                    onClick={() => setIsPlaying(true)}
+                    onClick={() => {
+                      setIsPlaying(true)
+                      setHasAutoPlayed(true)
+                    }}
                   >
                     <Play className="h-8 w-8 ml-1" />
                   </Button>
                 </div>
+                {autoPlayDelay > 0 && !hasAutoPlayed && (
+                  <div className="absolute bottom-4 right-4 flex items-center gap-2 bg-primary/90 text-primary-foreground px-3 py-1.5 rounded-full text-xs font-medium animate-pulse">
+                    <Sparkles className="h-3 w-3" />
+                    Auto-preview starting...
+                  </div>
+                )}
               </>
             ) : (
               <div className="absolute inset-0 bg-background/95 p-6 animate-scale-in">
@@ -63,11 +91,11 @@ export function FeaturePreview({ feature }: FeaturePreviewProps) {
                     </div>
                     <p className="text-lg font-semibold">{feature.preview}</p>
                     <div className="grid grid-cols-2 gap-2 mt-4">
-                      <div className="p-3 rounded-lg bg-muted">
+                      <div className="p-3 rounded-lg bg-muted animate-scale-in [animation-delay:0.1s]">
                         <div className="text-2xl font-bold text-primary">95%</div>
                         <div className="text-xs text-muted-foreground">Accuracy</div>
                       </div>
-                      <div className="p-3 rounded-lg bg-muted">
+                      <div className="p-3 rounded-lg bg-muted animate-scale-in [animation-delay:0.2s]">
                         <div className="text-2xl font-bold text-accent">2.5s</div>
                         <div className="text-xs text-muted-foreground">Response</div>
                       </div>
@@ -76,7 +104,9 @@ export function FeaturePreview({ feature }: FeaturePreviewProps) {
                 </div>
               </div>
             )}
-            <Badge className="absolute top-4 left-4 bg-primary text-primary-foreground">Featured</Badge>
+            <Badge className="absolute top-4 left-4 bg-primary text-primary-foreground animate-pulse">
+              {isPlaying ? "Live Demo" : "Featured"}
+            </Badge>
           </div>
 
           {/* Content */}

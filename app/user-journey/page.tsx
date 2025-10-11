@@ -212,7 +212,10 @@ export default function UserJourneyPage() {
               <CardHeader>
                 <div className="flex items-center gap-3 mb-2">
                   <div className={`p-3 rounded-lg ${journeyPhases[activePhase].color}`}>
-                    {journeyPhases[activePhase].icon({ className: "h-6 w-6" })}
+                    {(() => {
+                      const IconComponent = journeyPhases[activePhase].icon
+                      return <IconComponent className="h-6 w-6" />
+                    })()}
                   </div>
                   <div>
                     <Badge variant="secondary">Phase {activePhase + 1}</Badge>

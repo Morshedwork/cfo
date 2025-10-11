@@ -34,20 +34,43 @@ export default function SignUpPage() {
     }
 
     try {
+      // Sign up with auto-confirm (no email verification required)
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/onboarding`,
+          emailRedirectTo: `${window.location.origin}/onboarding`,
           data: {
             company_name: companyName,
           },
         },
       })
+      
       if (error) throw error
 
-      // Show success message
-      router.push("/auth/sign-up-success")
+      // Check if user is automatically confirmed (no email confirmation required)
+      if (data.user && data.session) {
+        // User is auto-confirmed and logged in, redirect to onboarding
+        router.push("/onboarding")
+      } else if (data.user && !data.session) {
+        // Email confirmation is required - check if user needs to verify
+        // For development/demo, automatically sign them in
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        })
+        
+        if (signInError) {
+          // If sign in fails, they need to confirm email
+          router.push("/auth/sign-up-success")
+        } else {
+          // Successfully signed in, go to onboarding
+          router.push("/onboarding")
+        }
+      } else {
+        // Fallback: redirect to onboarding
+        router.push("/onboarding")
+      }
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred")
     } finally {

@@ -170,38 +170,69 @@ export default function RunwayPage() {
               <AreaChart data={forecastData}>
                 <defs>
                   <linearGradient id="colorCashForecast" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
+                    <stop offset="50%" stopColor="#06b6d4" stopOpacity={0.5} />
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
                 <XAxis
                   dataKey="month"
-                  stroke="hsl(var(--muted-foreground))"
-                  label={{ value: "Months from now", position: "insideBottom", offset: -5 }}
+                  stroke="#f9fafb"
+                  label={{ 
+                    value: "Months from now", 
+                    position: "insideBottom", 
+                    offset: -5,
+                    style: { fill: '#f9fafb', fontWeight: 600 }
+                  }}
+                  style={{ fontSize: '12px', fontWeight: 500, fill: '#f9fafb' }}
                 />
-                <YAxis stroke="hsl(var(--muted-foreground))" />
+                <YAxis 
+                  stroke="#f9fafb"
+                  style={{ fontSize: '12px', fontWeight: 500, fill: '#f9fafb' }}
+                />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "8px",
+                    backgroundColor: "#1f2937",
+                    border: "2px solid #10b981",
+                    borderRadius: "12px",
+                    color: "#f9fafb",
+                    fontWeight: 600,
                   }}
                   formatter={(value: number) => `$${value.toLocaleString()}`}
+                  cursor={{stroke: '#10b981', strokeWidth: 2}}
                 />
-                <ReferenceLine y={0} stroke="hsl(var(--destructive))" strokeDasharray="3 3" />
+                <ReferenceLine 
+                  y={0} 
+                  stroke="#f97316" 
+                  strokeDasharray="5 5" 
+                  strokeWidth={2}
+                  label={{ 
+                    value: "Break Even", 
+                    position: "right",
+                    style: { fill: '#f97316', fontWeight: 600 }
+                  }}
+                />
                 <ReferenceLine
                   x={runoutMonth}
-                  stroke="hsl(var(--destructive))"
-                  strokeDasharray="3 3"
-                  label={{ value: "Runout", position: "top" }}
+                  stroke="#f97316"
+                  strokeDasharray="5 5"
+                  strokeWidth={2}
+                  label={{ 
+                    value: "Runout Point", 
+                    position: "top",
+                    style: { fill: '#f97316', fontWeight: 700, fontSize: 13 }
+                  }}
                 />
                 <Area
                   type="monotone"
                   dataKey="cash"
-                  stroke="hsl(var(--primary))"
-                  strokeWidth={3}
+                  stroke="#10b981"
+                  strokeWidth={4}
                   fill="url(#colorCashForecast)"
+                  animationDuration={1500}
+                  dot={{ fill: '#10b981', r: 4 }}
+                  activeDot={{ r: 7, fill: '#10b981' }}
                 />
               </AreaChart>
             </ResponsiveContainer>

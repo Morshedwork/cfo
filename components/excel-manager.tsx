@@ -28,21 +28,52 @@ export function ExcelManager({ onDataImport, exportData, exportFilename = "aura-
     setUploadStatus("processing")
     setUploadedFile(file.name)
 
-    // Simulate AI processing
-    setTimeout(() => {
-      setUploadStatus("success")
-      console.log("[v0] Excel file processed:", file.name)
-
-      // Mock parsed data
-      const mockData = {
-        rows: 150,
-        columns: 8,
-        categories: ["Revenue", "Expenses", "Payroll", "Marketing"],
-        dateRange: "Jan 2024 - Dec 2024",
+    try {
+      // Read file content
+      const reader = new FileReader()
+      
+      reader.onload = async (e) => {
+        try {
+          const content = e.target?.result as string
+          console.log("[Excel Manager] File content loaded, length:", content.length)
+          
+          // Import statement generator dynamically to avoid build issues
+          const { generateFinancialStatements } = await import('@/lib/statement-generator')
+          
+          // Generate statements from CSV
+          const result = generateFinancialStatements(content)
+          
+          console.log("[Excel Manager] Generated result:", {
+            transactions: result.transactions.length,
+            revenue: result.profitLoss.revenue.total,
+            expenses: result.profitLoss.operatingExpenses.total,
+            categories: result.summary.categories.length
+          })
+          
+          setUploadStatus("success")
+          
+          // Pass comprehensive data to parent
+          onDataImport?.({
+            ...result,
+            fileName: file.name,
+            uploadedAt: new Date().toISOString()
+          })
+        } catch (error) {
+          console.error("[Excel Manager] Parse error:", error)
+          setUploadStatus("error")
+        }
       }
-
-      onDataImport?.(mockData)
-    }, 2000)
+      
+      reader.onerror = () => {
+        console.error("[Excel Manager] File read error")
+        setUploadStatus("error")
+      }
+      
+      reader.readAsText(file)
+    } catch (error) {
+      console.error("[Excel Manager] Upload error:", error)
+      setUploadStatus("error")
+    }
   }
 
   const handleExportToExcel = () => {

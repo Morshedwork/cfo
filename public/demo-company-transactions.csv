@@ -1,0 +1,51 @@
+Date,Description,Amount,Category,Type,Vendor,Payment Method
+2024-01-05,Product Sale - Enterprise Plan,15000,Revenue,Income,Customer A,Bank Transfer
+2024-01-08,Product Sale - Pro Plan,2500,Revenue,Income,Customer B,Credit Card
+2024-01-10,Software Engineer Salary,8500,Payroll,Expense,John Doe,Bank Transfer
+2024-01-10,Software Engineer Salary,8500,Payroll,Expense,Jane Smith,Bank Transfer
+2024-01-10,Marketing Manager Salary,7000,Payroll,Expense,Mike Johnson,Bank Transfer
+2024-01-12,AWS Hosting,3500,Infrastructure,Expense,Amazon Web Services,Credit Card
+2024-01-15,Product Sale - Starter Plan,500,Revenue,Income,Customer C,Credit Card
+2024-01-15,Google Ads Campaign,5000,Marketing,Expense,Google Ads,Credit Card
+2024-01-18,Office Rent,4000,Office & Admin,Expense,WeWork,Bank Transfer
+2024-01-20,Stripe Payment Processing Fees,450,Payment Processing,Expense,Stripe,Auto-debit
+2024-01-22,Product Sale - Pro Plan,2500,Revenue,Income,Customer D,Credit Card
+2024-01-25,LinkedIn Ads,3000,Marketing,Expense,LinkedIn,Credit Card
+2024-01-28,Figma Subscription,450,Software & Tools,Expense,Figma,Credit Card
+2024-01-28,GitHub Enterprise,210,Software & Tools,Expense,GitHub,Credit Card
+2024-01-30,Accounting Services,1200,Professional Services,Expense,CPA Firm,Bank Transfer
+2024-02-01,Product Sale - Enterprise Plan,15000,Revenue,Income,Customer E,Bank Transfer
+2024-02-03,Customer Support Specialist Salary,5000,Payroll,Expense,Sarah Lee,Bank Transfer
+2024-02-05,Product Sale - Pro Plan,2500,Revenue,Income,Customer F,Credit Card
+2024-02-08,AWS Hosting,3800,Infrastructure,Expense,Amazon Web Services,Credit Card
+2024-02-10,Software Engineer Salary,8500,Payroll,Expense,John Doe,Bank Transfer
+2024-02-10,Software Engineer Salary,8500,Payroll,Expense,Jane Smith,Bank Transfer
+2024-02-10,Marketing Manager Salary,7000,Payroll,Expense,Mike Johnson,Bank Transfer
+2024-02-10,Customer Support Specialist Salary,5000,Payroll,Expense,Sarah Lee,Bank Transfer
+2024-02-12,Product Sale - Starter Plan,500,Revenue,Income,Customer G,Credit Card
+2024-02-15,Facebook Ads,4500,Marketing,Expense,Meta,Credit Card
+2024-02-18,Office Rent,4000,Office & Admin,Expense,WeWork,Bank Transfer
+2024-02-20,Stripe Payment Processing Fees,520,Payment Processing,Expense,Stripe,Auto-debit
+2024-02-22,Product Sale - Enterprise Plan,15000,Revenue,Income,Customer H,Bank Transfer
+2024-02-25,LinkedIn Ads,3500,Marketing,Expense,LinkedIn,Credit Card
+2024-02-27,Slack Subscription,840,Software & Tools,Expense,Slack,Credit Card
+2024-02-28,Legal Consultation,2500,Professional Services,Expense,Law Firm,Bank Transfer
+2024-03-01,Product Sale - Enterprise Plan,15000,Revenue,Income,Customer I,Bank Transfer
+2024-03-03,Product Sale - Pro Plan,2500,Revenue,Income,Customer J,Credit Card
+2024-03-05,Design Contractor,3000,Professional Services,Expense,Freelancer,Bank Transfer
+2024-03-08,AWS Hosting,4200,Infrastructure,Expense,Amazon Web Services,Credit Card
+2024-03-10,Software Engineer Salary,9000,Payroll,Expense,John Doe,Bank Transfer
+2024-03-10,Software Engineer Salary,9000,Payroll,Expense,Jane Smith,Bank Transfer
+2024-03-10,Software Engineer Salary,9000,Payroll,Expense,New Engineer,Bank Transfer
+2024-03-10,Marketing Manager Salary,7500,Payroll,Expense,Mike Johnson,Bank Transfer
+2024-03-10,Customer Support Specialist Salary,5000,Payroll,Expense,Sarah Lee,Bank Transfer
+2024-03-12,Product Sale - Starter Plan,500,Revenue,Income,Customer K,Credit Card
+2024-03-15,Google Ads Campaign,6000,Marketing,Expense,Google Ads,Credit Card
+2024-03-18,Office Rent,4000,Office & Admin,Expense,WeWork,Bank Transfer
+2024-03-20,Stripe Payment Processing Fees,580,Payment Processing,Expense,Stripe,Auto-debit
+2024-03-22,Product Sale - Enterprise Plan,15000,Revenue,Income,Customer L,Bank Transfer
+2024-03-22,Product Sale - Pro Plan,2500,Revenue,Income,Customer M,Credit Card
+2024-03-25,Content Marketing,2500,Marketing,Expense,Agency,Bank Transfer
+2024-03-27,Notion Subscription,200,Software & Tools,Expense,Notion,Credit Card
+2024-03-28,Insurance Premium,1800,Office & Admin,Expense,Insurance Co,Bank Transfer
+2024-03-30,Tax Preparation,3000,Professional Services,Expense,CPA Firm,Bank Transfer

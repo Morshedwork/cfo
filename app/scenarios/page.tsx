@@ -27,7 +27,10 @@ export default function ScenariosPage() {
   const [newScenarioMonth, setNewScenarioMonth] = useState(0)
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 1500)
+    const timer = setTimeout(() => {
+      // Redirect to AI Assistant for scenario modeling
+      window.location.href = '/ai-assistant'
+    }, 2000)
     return () => clearTimeout(timer)
   }, [])
 

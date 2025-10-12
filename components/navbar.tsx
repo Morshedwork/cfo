@@ -12,11 +12,8 @@ export function Navbar() {
   const navLinks = [
     { href: "/dashboard", label: "Dashboard" },
     { href: "/runway", label: "Runway" },
-    { href: "/scenarios", label: "Scenarios" },
     { href: "/bookkeeping", label: "Bookkeeping" },
-    { href: "/statements", label: "Statements" },
     { href: "/sales", label: "Sales" },
-    { href: "/data-voice", label: "Voice Data" },
     { href: "/data-management", label: "Data" },
     { href: "/ai-assistant", label: "AI Assistant" },
   ]

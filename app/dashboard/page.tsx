@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react"
 import { LoadingScreen } from "@/components/loading-screen"
 import { Navbar } from "@/components/navbar"
+import { RealDataLoader } from "@/components/real-data-loader"
+import { DashboardNotificationsWidget } from "@/components/dashboard-notifications-widget"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -123,7 +125,8 @@ export default function DashboardPage() {
             <h1 className="text-3xl font-bold mb-2">Financial Dashboard</h1>
             <p className="text-muted-foreground">Comprehensive real-time view of your startup's financial health</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <RealDataLoader />
             <div className="flex items-center gap-2 border border-border rounded-lg p-1">
               {["1m", "3m", "6m", "1y"].map((period) => (
                 <Button
@@ -146,6 +149,11 @@ export default function DashboardPage() {
               Filter
             </Button>
           </div>
+        </div>
+
+        {/* Notification Widget */}
+        <div className="mb-8">
+          <DashboardNotificationsWidget />
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">

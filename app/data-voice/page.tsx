@@ -41,29 +41,9 @@ export default function DataVoiceManagement() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setLoading(false)
-      setEntries([
-        {
-          id: "1",
-          type: "expense",
-          description: "Office rent payment",
-          amount: 3500,
-          date: "2025-01-10",
-          category: "Office",
-          source: "manual",
-        },
-        {
-          id: "2",
-          type: "revenue",
-          description: "Client payment - Project Alpha",
-          amount: 15000,
-          date: "2025-01-12",
-          category: "Services",
-          source: "voice",
-          confidence: 95,
-        },
-      ])
-    }, 1500)
+      // Redirect to data management page
+      window.location.href = '/data-management'
+    }, 2000)
     return () => clearTimeout(timer)
   }, [])
 

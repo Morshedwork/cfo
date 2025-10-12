@@ -28,13 +28,28 @@ import {
   RefreshCw,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { CFOMascot } from "@/components/cfo-mascot"
+import {
+  ScenarioComparisonCard,
+  KPIDashboardCard,
+  RiskAlertCard,
+  CapTableComparisonCard,
+  StrategicInsightCard,
+} from "@/components/ai-message-types"
 
 interface Message {
   id: string
   role: "user" | "assistant"
   content: string
   timestamp: Date
-  type?: "text" | "insight" | "warning" | "recommendation"
+  type?: "text" | "insight" | "warning" | "recommendation" | "scenario_analysis" | "kpi_dashboard" | "alert" | "cap_table" | "strategic_insight" | "forecast"
+  data?: any
+  chart?: any
+  actions?: Array<{
+    label: string
+    action: string
+    variant?: 'default' | 'outline' | 'destructive' | 'secondary'
+  }>
 }
 
 export default function AIAssistantPage() {
@@ -53,16 +68,7 @@ export default function AIAssistantPage() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setLoading(false)
-      setMessages([
-        {
-          id: "welcome",
-          role: "assistant",
-          content:
-            "👋 Hello! I'm **Aura**, your AI Chief Financial Officer.\n\nI'm here to help you with:\n• Cash flow & runway analysis\n• Expense optimization strategies\n• Revenue growth planning\n• Fundraising recommendations\n• Strategic financial decisions\n\n**Ask me anything** about your finances!",
-          timestamp: new Date(),
-          type: "text",
-        },
-      ])
+      // Start with empty messages to show thought bubbles
     }, 1500)
     return () => clearTimeout(timer)
   }, [])
@@ -104,12 +110,12 @@ export default function AIAssistantPage() {
   }, [messages])
 
   const quickActions = [
-    { icon: TrendingUp, label: "Burn Rate", query: "What's my current burn rate and how can I optimize it?" },
-    { icon: Calendar, label: "Runway", query: "How many months of runway do I have left?" },
-    { icon: DollarSign, label: "Revenue", query: "Show me my revenue trends and growth opportunities" },
-    { icon: BarChart3, label: "Expenses", query: "What are my biggest expenses and where can I cut costs?" },
-    { icon: Lightbulb, label: "Fundraising", query: "When should I start fundraising and how much should I raise?" },
-    { icon: Zap, label: "Quick Wins", query: "What are 3 quick wins to improve my financial position?" },
+    { icon: BarChart3, label: "Model Hiring Scenario", query: "Model hiring 2 engineers at $180k each starting next month" },
+    { icon: TrendingUp, label: "Cash Flow Forecast", query: "Project our cash runway for the next 12 months" },
+    { icon: DollarSign, label: "Investor KPIs", query: "Generate investor KPI dashboard with benchmarks" },
+    { icon: Calendar, label: "Funding Round Impact", query: "Model a $10M Series B at $100M pre-money valuation with 10% option pool" },
+    { icon: Lightbulb, label: "Cost Optimization", query: "What are my biggest expenses and where can I reduce costs?" },
+    { icon: Zap, label: "Revenue Growth Ideas", query: "Analyze growth opportunities and revenue optimization strategies" },
   ]
 
   const startVoiceInput = () => {
@@ -231,17 +237,8 @@ export default function AIAssistantPage() {
       const data = await response.json()
       console.log("[AI Assistant] Received response:", data)
 
-      // Determine message type based on content
-      let messageType: "text" | "insight" | "warning" | "recommendation" = "text"
-      const lowerContent = data.message.toLowerCase()
-      
-      if (lowerContent.includes("critical") || lowerContent.includes("warning") || lowerContent.includes("immediately") || lowerContent.includes("urgent")) {
-        messageType = "warning"
-      } else if (lowerContent.includes("recommend") || lowerContent.includes("suggest") || lowerContent.includes("should") || lowerContent.includes("consider")) {
-        messageType = "recommendation"
-      } else if (lowerContent.includes("insight") || lowerContent.includes("analysis") || lowerContent.includes("trend") || lowerContent.includes("based on")) {
-        messageType = "insight"
-      }
+      // Use the type from the enhanced API response
+      const messageType = data.type || "text"
 
       const assistantMessage: Message = {
         id: Math.random().toString(36).substr(2, 9),
@@ -249,6 +246,9 @@ export default function AIAssistantPage() {
         content: data.message,
         timestamp: new Date(),
         type: messageType,
+        data: data.data,
+        chart: data.chart,
+        actions: data.actions,
       }
 
       setMessages((prev) => [...prev, assistantMessage])
@@ -299,9 +299,16 @@ export default function AIAssistantPage() {
         <div className="mb-6">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary via-accent to-secondary flex items-center justify-center animate-pulse-glow">
-                <Sparkles className="h-6 w-6 text-white" />
-              </div>
+              <CFOMascot 
+                size="medium" 
+                state={
+                  isListening ? 'listening' : 
+                  isProcessing ? 'thinking' : 
+                  isSpeaking ? 'speaking' : 
+                  'idle'
+                }
+                className="animate-pulse-glow"
+              />
               <div>
                 <h1 className="text-2xl font-bold gradient-text">AI Chief Financial Officer</h1>
                 <p className="text-sm text-muted-foreground">Your expert financial advisor powered by Gemini AI</p>
@@ -334,7 +341,171 @@ export default function AIAssistantPage() {
           <div className="lg:col-span-3">
             <Card className="flex flex-col border-2 border-primary/10" style={{ height: 'calc(100vh - 220px)' }}>
               {/* Messages */}
-              <CardContent className="flex-1 overflow-y-auto p-6 space-y-4">
+              <CardContent className="flex-1 overflow-y-auto p-6 space-y-4 relative">
+                {/* Empty State with Interactive Thought Bubbles */}
+                {messages.length === 0 && (
+                  <div className="flex items-center justify-center h-full animate-fade-in relative">
+                    {/* Central Mascot */}
+                    <div className="relative z-10">
+                      <CFOMascot 
+                        size="large" 
+                        state={
+                          isListening ? 'listening' : 
+                          isProcessing ? 'thinking' : 
+                          'idle'
+                        }
+                        className="animate-float"
+                      />
+                      <div className="text-center mt-4">
+                        <h2 className="text-2xl font-bold gradient-text">Hi! I'm Aura</h2>
+                        <p className="text-sm text-muted-foreground">Click a bubble to get started</p>
+                      </div>
+                    </div>
+
+                    {/* Thought Bubbles - Positioned around mascot */}
+                    {/* Top Left - FP&A */}
+                    <div 
+                      className="absolute top-8 left-12 animate-fade-in cursor-pointer group"
+                      style={{ animationDelay: '0.1s' }}
+                      onClick={() => {
+                        setInputValue("Show me our current runway forecast and cash flow analysis");
+                        setTimeout(() => textareaRef.current?.focus(), 100);
+                      }}
+                    >
+                      <div className="relative">
+                        {/* Bubble tail */}
+                        <div className="absolute -bottom-2 left-8 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[10px] border-t-primary/20 group-hover:border-t-primary/40 transition-colors" />
+                        {/* Bubble */}
+                        <div className="bg-gradient-to-br from-primary/10 to-primary/5 backdrop-blur-sm border-2 border-primary/20 rounded-2xl p-3 w-44 hover:border-primary/40 hover:scale-105 transition-all hover:shadow-lg hover:shadow-primary/20">
+                          <div className="flex items-start gap-2">
+                            <TrendingUp className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                            <div className="min-w-0 flex-1">
+                              <h3 className="font-semibold text-xs text-foreground mb-0.5 leading-tight">FP&A</h3>
+                              <p className="text-[10px] text-muted-foreground leading-tight">Forecast runway</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Top Right - Scenarios */}
+                    <div 
+                      className="absolute top-8 right-12 animate-fade-in cursor-pointer group"
+                      style={{ animationDelay: '0.2s' }}
+                      onClick={() => {
+                        setInputValue("Model hiring 2 engineers at $180k each and show impact on runway");
+                        setTimeout(() => textareaRef.current?.focus(), 100);
+                      }}
+                    >
+                      <div className="relative">
+                        <div className="absolute -bottom-2 right-8 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[10px] border-t-cyan-500/20 group-hover:border-t-cyan-500/40 transition-colors" />
+                        <div className="bg-gradient-to-br from-cyan-500/10 to-cyan-500/5 backdrop-blur-sm border-2 border-cyan-500/20 rounded-2xl p-3 w-44 hover:border-cyan-500/40 hover:scale-105 transition-all hover:shadow-lg hover:shadow-cyan-500/20">
+                          <div className="flex items-start gap-2">
+                            <Zap className="h-4 w-4 text-cyan-500 flex-shrink-0 mt-0.5" />
+                            <div className="min-w-0 flex-1">
+                              <h3 className="font-semibold text-xs text-foreground mb-0.5 leading-tight">Scenarios</h3>
+                              <p className="text-[10px] text-muted-foreground leading-tight">Model what-if</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Middle Left - Fundraising */}
+                    <div 
+                      className="absolute top-1/2 -translate-y-1/2 left-4 animate-fade-in cursor-pointer group"
+                      style={{ animationDelay: '0.3s' }}
+                      onClick={() => {
+                        setInputValue("Show me investor KPIs and prepare a dashboard for due diligence");
+                        setTimeout(() => textareaRef.current?.focus(), 100);
+                      }}
+                    >
+                      <div className="relative">
+                        <div className="absolute top-1/2 -translate-y-1/2 -right-2 w-0 h-0 border-t-[8px] border-t-transparent border-b-[8px] border-b-transparent border-l-[10px] border-l-purple-500/20 group-hover:border-l-purple-500/40 transition-colors" />
+                        <div className="bg-gradient-to-br from-purple-500/10 to-purple-500/5 backdrop-blur-sm border-2 border-purple-500/20 rounded-2xl p-3 w-44 hover:border-purple-500/40 hover:scale-105 transition-all hover:shadow-lg hover:shadow-purple-500/20">
+                          <div className="flex items-start gap-2">
+                            <DollarSign className="h-4 w-4 text-purple-500 flex-shrink-0 mt-0.5" />
+                            <div className="min-w-0 flex-1">
+                              <h3 className="font-semibold text-xs text-foreground mb-0.5 leading-tight">Fundraising</h3>
+                              <p className="text-[10px] text-muted-foreground leading-tight">Investor KPIs</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Middle Right - Cap Table */}
+                    <div 
+                      className="absolute top-1/2 -translate-y-1/2 right-4 animate-fade-in cursor-pointer group"
+                      style={{ animationDelay: '0.4s' }}
+                      onClick={() => {
+                        setInputValue("Analyze cap table dilution for a Series A round");
+                        setTimeout(() => textareaRef.current?.focus(), 100);
+                      }}
+                    >
+                      <div className="relative">
+                        <div className="absolute top-1/2 -translate-y-1/2 -left-2 w-0 h-0 border-t-[8px] border-t-transparent border-b-[8px] border-b-transparent border-r-[10px] border-r-blue-500/20 group-hover:border-r-blue-500/40 transition-colors" />
+                        <div className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 backdrop-blur-sm border-2 border-blue-500/20 rounded-2xl p-3 w-44 hover:border-blue-500/40 hover:scale-105 transition-all hover:shadow-lg hover:shadow-blue-500/20">
+                          <div className="flex items-start gap-2">
+                            <BarChart3 className="h-4 w-4 text-blue-500 flex-shrink-0 mt-0.5" />
+                            <div className="min-w-0 flex-1">
+                              <h3 className="font-semibold text-xs text-foreground mb-0.5 leading-tight">Equity</h3>
+                              <p className="text-[10px] text-muted-foreground leading-tight">Cap table</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Bottom Left - Risk Management */}
+                    <div 
+                      className="absolute bottom-8 left-12 animate-fade-in cursor-pointer group"
+                      style={{ animationDelay: '0.5s' }}
+                      onClick={() => {
+                        setInputValue("Identify financial risks and provide early warnings");
+                        setTimeout(() => textareaRef.current?.focus(), 100);
+                      }}
+                    >
+                      <div className="relative">
+                        <div className="absolute -top-2 left-8 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[10px] border-b-orange-500/20 group-hover:border-b-orange-500/40 transition-colors" />
+                        <div className="bg-gradient-to-br from-orange-500/10 to-orange-500/5 backdrop-blur-sm border-2 border-orange-500/20 rounded-2xl p-3 w-44 hover:border-orange-500/40 hover:scale-105 transition-all hover:shadow-lg hover:shadow-orange-500/20">
+                          <div className="flex items-start gap-2">
+                            <AlertTriangle className="h-4 w-4 text-orange-500 flex-shrink-0 mt-0.5" />
+                            <div className="min-w-0 flex-1">
+                              <h3 className="font-semibold text-xs text-foreground mb-0.5 leading-tight">Risk</h3>
+                              <p className="text-[10px] text-muted-foreground leading-tight">Monitor alerts</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Bottom Right - Strategic Insights */}
+                    <div 
+                      className="absolute bottom-8 right-12 animate-fade-in cursor-pointer group"
+                      style={{ animationDelay: '0.6s' }}
+                      onClick={() => {
+                        setInputValue("Give me strategic insights to optimize spending and improve profitability");
+                        setTimeout(() => textareaRef.current?.focus(), 100);
+                      }}
+                    >
+                      <div className="relative">
+                        <div className="absolute -top-2 right-8 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[10px] border-b-green-500/20 group-hover:border-b-green-500/40 transition-colors" />
+                        <div className="bg-gradient-to-br from-green-500/10 to-green-500/5 backdrop-blur-sm border-2 border-green-500/20 rounded-2xl p-3 w-44 hover:border-green-500/40 hover:scale-105 transition-all hover:shadow-lg hover:shadow-green-500/20">
+                          <div className="flex items-start gap-2">
+                            <Lightbulb className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5" />
+                            <div className="min-w-0 flex-1">
+                              <h3 className="font-semibold text-xs text-foreground mb-0.5 leading-tight">Strategy</h3>
+                              <p className="text-[10px] text-muted-foreground leading-tight">Optimize & grow</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Messages with Mascot Integration */}
                 {messages.map((message) => (
                   <div
                     key={message.id}
@@ -344,8 +515,15 @@ export default function AIAssistantPage() {
                     )}
                   >
                     {message.role === "assistant" && (
-                      <div className="flex-shrink-0 h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg">
-                        <Bot className="h-5 w-5 text-white" />
+                      <div className="flex-shrink-0">
+                        <CFOMascot 
+                          size="small" 
+                          state={
+                            message.type === 'warning' ? 'alert' :
+                            message.type === 'recommendation' ? 'success' :
+                            'idle'
+                          }
+                        />
                       </div>
                     )}
                     <div
@@ -365,22 +543,80 @@ export default function AIAssistantPage() {
                       {message.type === "warning" && (
                         <div className="flex items-center gap-2 mb-2">
                           <AlertTriangle className="h-4 w-4 text-destructive" />
-                          <span className="font-bold text-destructive text-sm">⚠️ Critical Alert</span>
+                          <span className="font-bold text-destructive text-sm">Critical Alert</span>
                         </div>
                       )}
                       {message.type === "insight" && (
                         <div className="flex items-center gap-2 mb-2">
                           <BarChart3 className="h-4 w-4 text-blue-600" />
-                          <span className="font-bold text-blue-600 text-sm">📊 Financial Insight</span>
+                          <span className="font-bold text-blue-600 text-sm">Financial Insight</span>
                         </div>
                       )}
                       {message.type === "recommendation" && (
                         <div className="flex items-center gap-2 mb-2">
                           <Lightbulb className="h-4 w-4 text-green-600" />
-                          <span className="font-bold text-green-600 text-sm">💡 CFO Recommendation</span>
+                          <span className="font-bold text-green-600 text-sm">CFO Recommendation</span>
                         </div>
                       )}
                       <p className="text-sm leading-relaxed whitespace-pre-line">{message.content}</p>
+                      
+                      {/* Rich Message Components */}
+                      {message.role === "assistant" && message.type === "scenario_analysis" && message.data && (
+                        <ScenarioComparisonCard
+                          scenarioName={message.data.scenarioName}
+                          before={message.data.before}
+                          after={message.data.after}
+                          changes={message.data.changes}
+                          impact={message.data.impact}
+                          severity={message.data.severity}
+                          onViewDashboard={() => console.log("View dashboard")}
+                          onSaveScenario={() => console.log("Save scenario")}
+                          onModelAnother={() => setInputValue("Model another scenario")}
+                        />
+                      )}
+                      
+                      {message.role === "assistant" && message.type === "kpi_dashboard" && message.data && (
+                        <KPIDashboardCard
+                          kpis={message.data.kpis}
+                          onViewFull={() => console.log("View full dashboard")}
+                          onDownloadPDF={() => console.log("Download PDF")}
+                          onShare={() => console.log("Share")}
+                        />
+                      )}
+                      
+                      {message.role === "assistant" && message.type === "cap_table" && message.data && (
+                        <CapTableComparisonCard
+                          scenarioName={message.data.scenarioName}
+                          stakeholders={message.data.stakeholders}
+                          summary={message.data.summary}
+                          onViewFull={() => console.log("View full cap table")}
+                          onExport={() => console.log("Export")}
+                          onModelDifferent={() => setInputValue("Model different funding terms")}
+                        />
+                      )}
+                      
+                      {message.role === "assistant" && message.type === "alert" && message.data && (
+                        <RiskAlertCard
+                          severity={message.data.severity}
+                          title={message.data.title}
+                          message={message.data.message}
+                          metrics={message.data.metrics}
+                          actions={message.data.actions}
+                        />
+                      )}
+                      
+                      {message.role === "assistant" && message.type === "strategic_insight" && message.data && (
+                        <StrategicInsightCard
+                          title={message.data.title}
+                          insight={message.data.insight}
+                          dataPoints={message.data.dataPoints}
+                          recommendations={message.data.recommendations}
+                          impactScore={message.data.impactScore}
+                          onImplement={() => console.log("Mark as implemented")}
+                          onDismiss={() => console.log("Dismiss")}
+                        />
+                      )}
+                      
                       <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/30">
                         <span className="text-xs opacity-60">
                           {message.timestamp.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
@@ -406,8 +642,11 @@ export default function AIAssistantPage() {
                 ))}
                 {isProcessing && (
                   <div className="flex gap-3 animate-slide-up">
-                    <div className="flex-shrink-0 h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg">
-                      <Bot className="h-5 w-5 text-white animate-pulse" />
+                    <div className="flex-shrink-0">
+                      <CFOMascot 
+                        size="small" 
+                        state="thinking"
+                      />
                     </div>
                     <div className="bg-muted rounded-2xl p-4 shadow-md">
                       <div className="flex items-center gap-2">
@@ -417,6 +656,50 @@ export default function AIAssistantPage() {
                     </div>
                   </div>
                 )}
+                
+                {/* Floating Interactive Mascot - Always Visible During Chat */}
+                {messages.length > 0 && (
+                  <div className="fixed bottom-24 right-8 z-50 animate-float">
+                    <div className="relative group">
+                      {/* Mascot */}
+                      <div className="transition-transform hover:scale-110 cursor-pointer">
+                        <CFOMascot 
+                          size="medium" 
+                          state={
+                            isListening ? 'listening' : 
+                            isProcessing ? 'thinking' : 
+                            isSpeaking ? 'speaking' :
+                            messages[messages.length - 1]?.type === 'warning' ? 'alert' :
+                            messages[messages.length - 1]?.type === 'recommendation' ? 'success' :
+                            'idle'
+                          }
+                        />
+                      </div>
+                      
+                      {/* Tooltip on Hover */}
+                      <div className="absolute bottom-full right-0 mb-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                        <div className="bg-popover text-popover-foreground px-3 py-2 rounded-lg shadow-lg text-sm whitespace-nowrap border">
+                          {isListening && "I'm listening..."}
+                          {isProcessing && "Thinking..."}
+                          {isSpeaking && "Speaking..."}
+                          {!isListening && !isProcessing && !isSpeaking && "Ask me anything!"}
+                        </div>
+                      </div>
+                      
+                      {/* Status Indicator */}
+                      <div className="absolute -top-1 -right-1">
+                        <div className={cn(
+                          "h-4 w-4 rounded-full border-2 border-background",
+                          isListening && "bg-cyan-500 animate-pulse",
+                          isProcessing && "bg-yellow-500 animate-pulse",
+                          isSpeaking && "bg-purple-500 animate-pulse",
+                          !isListening && !isProcessing && !isSpeaking && "bg-green-500"
+                        )} />
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
                 <div ref={messagesEndRef} />
               </CardContent>
 
@@ -425,7 +708,7 @@ export default function AIAssistantPage() {
                 {isListening && (
                   <div className="mb-3 p-3 bg-destructive/10 border border-destructive/20 rounded-lg flex items-center gap-2">
                     <Mic className="h-4 w-4 text-destructive animate-pulse" />
-                    <span className="text-sm font-medium">🎤 Listening... Speak now</span>
+                    <span className="text-sm font-medium">Listening... Speak now</span>
                   </div>
                 )}
                 <div className="flex items-end gap-2">
@@ -470,7 +753,7 @@ export default function AIAssistantPage() {
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground mt-2 text-center">
-                  {isListening ? "🎤 Click mic to stop" : isProcessing ? "Click stop to cancel" : "Press Enter to send • Shift+Enter for new line"}
+                  {isListening ? "Click mic to stop" : isProcessing ? "Click stop to cancel" : "Press Enter to send • Shift+Enter for new line"}
                 </p>
               </div>
             </Card>

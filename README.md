@@ -11,6 +11,7 @@
 - 🤖 **AI-Powered Forecasting** - Smart runway and cash flow predictions
 - 🎤 **Voice Data Entry** - Natural language financial commands
 - 📊 **Smart Analytics** - Interactive charts with export capabilities
+- 💼 **Real Company Data** - Load actual financial data from 500+ public companies
 - 🚀 **Auto-Preview Demos** - Features showcase automatically on page load
 - 🔐 **Instant Sign-Up** - No email confirmation required
 - 💡 **Intelligent Fallbacks** - Works perfectly without external API keys
@@ -36,6 +37,9 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 
 # Gemini AI (Optional - has intelligent fallbacks)
 GEMINI_API_KEY=your_gemini_api_key
+
+# Financial Modeling Prep (Optional - for real company data)
+FMP_API_KEY=your_fmp_api_key
 ```
 
 ### 3. Configure Supabase Authentication
@@ -193,6 +197,39 @@ Theme colors in `app/globals.css`:
 - Confidence scores
 - Custom categories
 
+## 💼 Real Company Data (New!)
+
+Replace demo data with **real Airbnb financial data** from SEC filings!
+
+### 🚀 Simple Way (Recommended for Prototypes)
+
+**No API, no keys, just one SQL script:**
+
+1. Complete onboarding in your app
+2. Open Supabase SQL Editor
+3. Run `scripts/005_seed_real_company_data.sql`
+4. Refresh dashboard → See real Airbnb Q2 2024 data!
+
+**You get:**
+- ✅ $2.75B quarterly revenue
+- ✅ 70 realistic transactions
+- ✅ 15 sales records
+- ✅ 5 AI insights
+- ✅ Real company profile (6,800 employees, $11.2B cash)
+
+📖 **[Read SIMPLE_REAL_DATA_GUIDE.md](./SIMPLE_REAL_DATA_GUIDE.md)**
+
+### 🔄 Advanced: Load Any Company via API
+
+Want to load multiple companies dynamically?
+
+1. Get free API key from [Financial Modeling Prep](https://site.financialmodelingprep.com/developer/docs)
+2. Add `FMP_API_KEY=your_key` to `.env.local`
+3. Click "Load Real Company Data" button on dashboard
+4. Select from 500+ public companies
+
+📖 **[Read REAL_DATA_SETUP.md for API guide](./REAL_DATA_SETUP.md)**
+
 ## 🐛 Troubleshooting
 
 ### Email Confirmation Still Required
@@ -257,6 +294,7 @@ This project is built with [v0.app](https://v0.app).
 - **Live Demo:** [Vercel Deployment](https://vercel.com/gashinshoutan9-5066s-projects/v0-ai-virtual-cfo)
 - **Build on v0:** [v0.app Project](https://v0.app/chat/projects/QKDsCXLYXW5)
 - **Supabase Setup:** [SUPABASE_SETUP.md](./SUPABASE_SETUP.md)
+- **Real Data Guide:** [REAL_DATA_SETUP.md](./REAL_DATA_SETUP.md)
 
 ## 🎯 Getting Started Checklist
 
@@ -266,6 +304,7 @@ This project is built with [v0.app](https://v0.app).
 - [ ] Run dev server (`npm run dev`)
 - [ ] Test sign up flow
 - [ ] Explore features
+- [ ] (Optional) Add FMP API key for real company data
 
 ---
 

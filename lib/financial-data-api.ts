@@ -204,3 +204,4 @@ export const DEMO_COMPANIES = [
   { symbol: 'NKE', name: 'Nike Inc.' },
 ];
 
+

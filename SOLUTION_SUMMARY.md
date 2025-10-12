@@ -377,3 +377,4 @@ You now have a **production-ready real company data integration** that:
 
 *Built with love using Financial Modeling Prep API, Next.js, and Supabase*
 
+

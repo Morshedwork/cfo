@@ -304,3 +304,4 @@ This integration uses publicly available financial data from SEC filings via Fin
 
 **Ready to use real company data?** Get your API key and start exploring! 🚀
 
+

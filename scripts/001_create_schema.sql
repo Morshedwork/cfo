@@ -92,104 +92,139 @@ ALTER TABLE public.ai_insights ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.data_imports ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for companies
+DROP POLICY IF EXISTS "Users can view their own company" ON public.companies;
 CREATE POLICY "Users can view their own company"
   ON public.companies FOR SELECT
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert their own company" ON public.companies;
 CREATE POLICY "Users can insert their own company"
   ON public.companies FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update their own company" ON public.companies;
 CREATE POLICY "Users can update their own company"
   ON public.companies FOR UPDATE
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete their own company" ON public.companies;
 CREATE POLICY "Users can delete their own company"
   ON public.companies FOR DELETE
   USING (auth.uid() = user_id);
 
 -- RLS Policies for transactions
+DROP POLICY IF EXISTS "Users can view their company transactions" ON public.transactions;
 CREATE POLICY "Users can view their company transactions"
   ON public.transactions FOR SELECT
   USING (company_id IN (SELECT id FROM public.companies WHERE user_id = auth.uid()));
 
+DROP POLICY IF EXISTS "Users can insert their company transactions" ON public.transactions;
 CREATE POLICY "Users can insert their company transactions"
   ON public.transactions FOR INSERT
   WITH CHECK (company_id IN (SELECT id FROM public.companies WHERE user_id = auth.uid()));
 
+DROP POLICY IF EXISTS "Users can update their company transactions" ON public.transactions;
 CREATE POLICY "Users can update their company transactions"
   ON public.transactions FOR UPDATE
   USING (company_id IN (SELECT id FROM public.companies WHERE user_id = auth.uid()));
 
+DROP POLICY IF EXISTS "Users can delete their company transactions" ON public.transactions;
 CREATE POLICY "Users can delete their company transactions"
   ON public.transactions FOR DELETE
   USING (company_id IN (SELECT id FROM public.companies WHERE user_id = auth.uid()));
 
 -- RLS Policies for sales
+DROP POLICY IF EXISTS "Users can view their company sales" ON public.sales;
 CREATE POLICY "Users can view their company sales"
   ON public.sales FOR SELECT
   USING (company_id IN (SELECT id FROM public.companies WHERE user_id = auth.uid()));
 
+DROP POLICY IF EXISTS "Users can insert their company sales" ON public.sales;
 CREATE POLICY "Users can insert their company sales"
   ON public.sales FOR INSERT
   WITH CHECK (company_id IN (SELECT id FROM public.companies WHERE user_id = auth.uid()));
 
+DROP POLICY IF EXISTS "Users can update their company sales" ON public.sales;
 CREATE POLICY "Users can update their company sales"
   ON public.sales FOR UPDATE
   USING (company_id IN (SELECT id FROM public.companies WHERE user_id = auth.uid()));
 
+DROP POLICY IF EXISTS "Users can delete their company sales" ON public.sales;
 CREATE POLICY "Users can delete their company sales"
   ON public.sales FOR DELETE
   USING (company_id IN (SELECT id FROM public.companies WHERE user_id = auth.uid()));
 
 -- RLS Policies for forecasts
+DROP POLICY IF EXISTS "Users can view their company forecasts" ON public.forecasts;
 CREATE POLICY "Users can view their company forecasts"
   ON public.forecasts FOR SELECT
   USING (company_id IN (SELECT id FROM public.companies WHERE user_id = auth.uid()));
 
+DROP POLICY IF EXISTS "Users can insert their company forecasts" ON public.forecasts;
 CREATE POLICY "Users can insert their company forecasts"
   ON public.forecasts FOR INSERT
   WITH CHECK (company_id IN (SELECT id FROM public.companies WHERE user_id = auth.uid()));
 
+DROP POLICY IF EXISTS "Users can update their company forecasts" ON public.forecasts;
 CREATE POLICY "Users can update their company forecasts"
   ON public.forecasts FOR UPDATE
   USING (company_id IN (SELECT id FROM public.companies WHERE user_id = auth.uid()));
 
+DROP POLICY IF EXISTS "Users can delete their company forecasts" ON public.forecasts;
 CREATE POLICY "Users can delete their company forecasts"
   ON public.forecasts FOR DELETE
   USING (company_id IN (SELECT id FROM public.companies WHERE user_id = auth.uid()));
 
 -- RLS Policies for ai_insights
+DROP POLICY IF EXISTS "Users can view their company insights" ON public.ai_insights;
 CREATE POLICY "Users can view their company insights"
   ON public.ai_insights FOR SELECT
   USING (company_id IN (SELECT id FROM public.companies WHERE user_id = auth.uid()));
 
+DROP POLICY IF EXISTS "Users can insert their company insights" ON public.ai_insights;
 CREATE POLICY "Users can insert their company insights"
   ON public.ai_insights FOR INSERT
   WITH CHECK (company_id IN (SELECT id FROM public.companies WHERE user_id = auth.uid()));
 
+DROP POLICY IF EXISTS "Users can update their company insights" ON public.ai_insights;
 CREATE POLICY "Users can update their company insights"
   ON public.ai_insights FOR UPDATE
   USING (company_id IN (SELECT id FROM public.companies WHERE user_id = auth.uid()));
 
+DROP POLICY IF EXISTS "Users can delete their company insights" ON public.ai_insights;
 CREATE POLICY "Users can delete their company insights"
   ON public.ai_insights FOR DELETE
   USING (company_id IN (SELECT id FROM public.companies WHERE user_id = auth.uid()));
 
 -- RLS Policies for data_imports
+DROP POLICY IF EXISTS "Users can view their company imports" ON public.data_imports;
 CREATE POLICY "Users can view their company imports"
   ON public.data_imports FOR SELECT
   USING (company_id IN (SELECT id FROM public.companies WHERE user_id = auth.uid()));
 
+DROP POLICY IF EXISTS "Users can insert their company imports" ON public.data_imports;
 CREATE POLICY "Users can insert their company imports"
   ON public.data_imports FOR INSERT
   WITH CHECK (company_id IN (SELECT id FROM public.companies WHERE user_id = auth.uid()));
 
 -- Create indexes for better performance
+DROP INDEX IF EXISTS idx_transactions_company_id;
 CREATE INDEX idx_transactions_company_id ON public.transactions(company_id);
+
+DROP INDEX IF EXISTS idx_transactions_date;
 CREATE INDEX idx_transactions_date ON public.transactions(date);
+
+DROP INDEX IF EXISTS idx_sales_company_id;
 CREATE INDEX idx_sales_company_id ON public.sales(company_id);
+
+DROP INDEX IF EXISTS idx_sales_date;
 CREATE INDEX idx_sales_date ON public.sales(date);
+
+DROP INDEX IF EXISTS idx_forecasts_company_id;
 CREATE INDEX idx_forecasts_company_id ON public.forecasts(company_id);
+
+DROP INDEX IF EXISTS idx_ai_insights_company_id;
 CREATE INDEX idx_ai_insights_company_id ON public.ai_insights(company_id);
+
+DROP INDEX IF EXISTS idx_data_imports_company_id;
 CREATE INDEX idx_data_imports_company_id ON public.data_imports(company_id);

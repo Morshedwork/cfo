@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { LoadingScreen } from "@/components/loading-screen"
-import { Navbar } from "@/components/navbar"
+import { AuthNavbar } from "@/components/auth-navbar"
+import { AuthGuard } from "@/components/auth-guard"
 import { RealDataLoader } from "@/components/real-data-loader"
 import { DashboardNotificationsWidget } from "@/components/dashboard-notifications-widget"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -116,10 +117,11 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
+    <AuthGuard>
+      <div className="min-h-screen bg-background">
+        <AuthNavbar />
 
-      <div className="container py-8">
+        <div className="container py-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold mb-2">Financial Dashboard</h1>
@@ -686,7 +688,8 @@ export default function DashboardPage() {
             View Detailed Forecast
           </Button>
         </div>
+        </div>
       </div>
-    </div>
+    </AuthGuard>
   )
 }

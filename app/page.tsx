@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { LoadingScreen } from "@/components/loading-screen"
-import { Navbar } from "@/components/navbar"
+import { AuthNavbar } from "@/components/auth-navbar"
 import { ParticlesBackground } from "@/components/particles-bg"
 import { FeaturePreview } from "@/components/feature-preview"
 import { AIAssistantPreview } from "@/components/ai-assistant-preview"
@@ -75,7 +75,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-background relative w-full overflow-x-hidden">
       <ParticlesBackground />
-      <Navbar />
+      <AuthNavbar />
 
       {/* Hero Section */}
       <section className="relative overflow-hidden py-20 md:py-32">

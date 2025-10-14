@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { LoadingScreen } from "@/components/loading-screen"
-import { Navbar } from "@/components/navbar"
+import { AuthNavbar } from "@/components/auth-navbar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -175,7 +175,7 @@ export default function AIChat() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <AuthNavbar />
 
       <div className="container py-8">
         <div className="mb-8">

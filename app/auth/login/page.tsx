@@ -26,13 +26,56 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
       if (error) throw error
-      router.push("/dashboard")
-      router.refresh()
+      
+      // Verify user has a profile
+      if (data.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .single()
+        
+        // If no profile exists, create one
+        if (!profile) {
+          await supabase
+            .from('profiles')
+            .insert({
+              id: data.user.id,
+              email: data.user.email || email,
+              full_name: data.user.user_metadata?.full_name || email.split('@')[0],
+              company_name: data.user.user_metadata?.company_name || 'My Company',
+            })
+        }
+        
+        // Verify user has a company
+        const { data: company } = await supabase
+          .from('companies')
+          .select('*')
+          .eq('user_id', data.user.id)
+          .single()
+        
+        // If no company exists, create one
+        if (!company) {
+          await supabase
+            .from('companies')
+            .insert({
+              user_id: data.user.id,
+              name: data.user.user_metadata?.company_name || 'My Company',
+              industry: 'Technology',
+              founded_date: new Date().toISOString(),
+              team_size: 1,
+              funding_stage: 'pre-seed',
+            })
+        }
+      }
+      
+      // Redirect to dashboard after successful login
+      window.location.href = "/dashboard"
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred")
     } finally {

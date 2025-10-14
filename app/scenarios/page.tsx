@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { LoadingScreen } from "@/components/loading-screen"
-import { Navbar } from "@/components/navbar"
+import { AuthNavbar } from "@/components/auth-navbar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -135,7 +135,7 @@ export default function ScenariosPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <AuthNavbar />
 
       <div className="container py-8">
         {/* Header */}

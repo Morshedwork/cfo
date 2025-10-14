@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Navbar } from "@/components/navbar"
+import { AuthNavbar } from "@/components/auth-navbar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -77,7 +77,7 @@ export default function NotificationSettingsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <AuthNavbar />
 
       <div className="container py-8 max-w-4xl">
         <div className="mb-8">

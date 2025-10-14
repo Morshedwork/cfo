@@ -42,6 +42,7 @@ export default function SignUpPage() {
           emailRedirectTo: `${window.location.origin}/onboarding`,
           data: {
             company_name: companyName,
+            full_name: email.split('@')[0], // Use email prefix as default name
           },
         },
       })
@@ -50,8 +51,32 @@ export default function SignUpPage() {
 
       // Check if user is automatically confirmed (no email confirmation required)
       if (data.user && data.session) {
-        // User is auto-confirmed and logged in, redirect to onboarding
-        router.push("/onboarding")
+        // User is auto-confirmed and logged in
+        // Profile and company are created automatically via database triggers
+        
+        // Verify profile was created
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .single()
+        
+        if (profileError && profileError.code !== 'PGRST116') {
+          console.error('Profile creation error:', profileError)
+        }
+        
+        // Verify company was created
+        const { data: company, error: companyError } = await supabase
+          .from('companies')
+          .select('*')
+          .eq('user_id', data.user.id)
+          .single()
+        
+        if (companyError && companyError.code !== 'PGRST116') {
+          console.error('Company creation error:', companyError)
+        }
+        
+        window.location.href = "/onboarding"
       } else if (data.user && !data.session) {
         // Email confirmation is required - check if user needs to verify
         // For development/demo, automatically sign them in
@@ -62,14 +87,14 @@ export default function SignUpPage() {
         
         if (signInError) {
           // If sign in fails, they need to confirm email
-          router.push("/auth/sign-up-success")
+          window.location.href = "/auth/sign-up-success"
         } else {
           // Successfully signed in, go to onboarding
-          router.push("/onboarding")
+          window.location.href = "/onboarding"
         }
       } else {
         // Fallback: redirect to onboarding
-        router.push("/onboarding")
+        window.location.href = "/onboarding"
       }
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred")

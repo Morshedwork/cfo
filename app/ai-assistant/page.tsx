@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { LoadingScreen } from "@/components/loading-screen"
-import { Navbar } from "@/components/navbar"
+import { AuthNavbar } from "@/components/auth-navbar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -373,7 +373,7 @@ export default function AIAssistantPage() {
 
   return (
     <div className="min-h-screen bg-background w-full">
-      <Navbar />
+      <AuthNavbar />
 
       <div className="container max-w-[1920px] py-4 w-full px-8">
         {/* Header */}

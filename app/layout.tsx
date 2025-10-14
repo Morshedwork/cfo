@@ -5,6 +5,8 @@ import { GeistMono } from "geist/font/mono"
 import { Analytics } from "@vercel/analytics/next"
 import { Suspense } from "react"
 import { FloatingNotificationButton } from "@/components/floating-notification-button"
+import { AuthProvider } from "@/lib/auth-context"
+import { Toaster } from "sonner"
 import "./globals.css"
 
 export const metadata: Metadata = {
@@ -21,10 +23,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="w-full">
-      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} w-full m-0 p-0`}>
-        <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
-        <FloatingNotificationButton />
-        <Analytics />
+      <body 
+        className={`font-sans ${GeistSans.variable} ${GeistMono.variable} w-full m-0 p-0`}
+        suppressHydrationWarning
+      >
+        <AuthProvider>
+          <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
+          <FloatingNotificationButton />
+          <Toaster position="top-right" richColors />
+          <Analytics />
+        </AuthProvider>
       </body>
     </html>
   )

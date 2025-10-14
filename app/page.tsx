@@ -5,6 +5,7 @@ import { LoadingScreen } from "@/components/loading-screen"
 import { Navbar } from "@/components/navbar"
 import { ParticlesBackground } from "@/components/particles-bg"
 import { FeaturePreview } from "@/components/feature-preview"
+import { AIAssistantPreview } from "@/components/ai-assistant-preview"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -123,6 +124,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* AI Assistant Live Preview */}
+      <AIAssistantPreview autoPlay={true} />
 
       {/* Top 3 Features Preview Section */}
       <section className="py-20 gradient-bg-1 relative">

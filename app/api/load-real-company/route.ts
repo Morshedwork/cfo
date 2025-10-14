@@ -263,3 +263,5 @@ function generateInsights(financialData: any, metrics: any) {
 }
 
 
+
+

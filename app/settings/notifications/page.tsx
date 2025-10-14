@@ -17,9 +17,14 @@ export default function NotificationSettingsPage() {
   )
   const [hasPermission, setHasPermission] = useState(false)
   const [mobilePermission, setMobilePermission] = useState(false)
+  const [isEnablingPush, setIsEnablingPush] = useState(false)
 
   useEffect(() => {
     setHasPermission(typeof window !== 'undefined' && Notification.permission === 'granted')
+    
+    // Debug: Check environment variables
+    console.log('[Settings] OneSignal App ID:', process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID)
+    console.log('[Settings] Has App ID:', !!process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID)
     
     // Initialize mobile push
     pushNotificationService.initialize()
@@ -44,8 +49,24 @@ export default function NotificationSettingsPage() {
   }
 
   const handleEnableMobilePush = async () => {
-    const granted = await pushNotificationService.requestPermission()
-    setMobilePermission(granted)
+    console.log('[Settings] Enable Mobile Push clicked')
+    setIsEnablingPush(true)
+    try {
+      const granted = await pushNotificationService.requestPermission()
+      console.log('[Settings] Permission granted:', granted)
+      setMobilePermission(granted)
+      
+      if (granted) {
+        alert('✅ Push notifications enabled! You can now receive financial alerts.')
+      } else {
+        alert('❌ Permission denied. Please allow notifications in your browser settings.')
+      }
+    } catch (error) {
+      console.error('[Settings] Error enabling push:', error)
+      alert('⚠️ Error: ' + (error instanceof Error ? error.message : 'Failed to enable push notifications'))
+    } finally {
+      setIsEnablingPush(false)
+    }
   }
 
   const handleSendMobilePushDemo = async () => {
@@ -103,9 +124,13 @@ export default function NotificationSettingsPage() {
                     <li>Large expense warnings</li>
                     <li>Invoice overdue reminders</li>
                   </ul>
-                  <Button onClick={handleEnableMobilePush} className="gap-2 bg-gradient-to-r from-primary to-secondary">
+                  <Button 
+                    onClick={handleEnableMobilePush} 
+                    disabled={isEnablingPush}
+                    className="gap-2 bg-gradient-to-r from-primary to-secondary"
+                  >
                     <Bell className="h-4 w-4" />
-                    Enable Mobile Push
+                    {isEnablingPush ? 'Requesting Permission...' : 'Enable Mobile Push'}
                   </Button>
                   <p className="text-xs text-muted-foreground">
                     Works on iOS, Android, and Desktop. Free forever with OneSignal.

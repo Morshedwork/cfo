@@ -42,18 +42,21 @@ import {
   Legend,
 } from "recharts"
 import html2canvas from "html2canvas"
+import { parseSalesCSV, type SalesAnalytics } from "@/lib/sales-parser"
 
 export default function SalesAnalyticsPage() {
   const [loading, setLoading] = useState(true)
   const [selectedPeriod, setSelectedPeriod] = useState("30d")
+  const [salesAnalytics, setSalesAnalytics] = useState<SalesAnalytics | null>(null)
+  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle')
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1500)
     return () => clearTimeout(timer)
   }, [])
 
-  // Mock sales data
-  const salesData = [
+  // Use parsed data or fallback to mock data
+  const salesData = salesAnalytics?.timeSeriesData || [
     { date: "Jan 1", sales: 12500, orders: 45, visitors: 1200 },
     { date: "Jan 8", sales: 15800, orders: 52, visitors: 1450 },
     { date: "Jan 15", sales: 18200, orders: 61, visitors: 1680 },
@@ -63,7 +66,7 @@ export default function SalesAnalyticsPage() {
     { date: "Feb 12", sales: 32500, orders: 91, visitors: 2650 },
   ]
 
-  const productPerformance = [
+  const productPerformance = salesAnalytics?.productPerformance || [
     { name: "Product A", revenue: 45000, units: 320, growth: 25 },
     { name: "Product B", revenue: 38000, units: 280, growth: 18 },
     { name: "Product C", revenue: 32000, units: 245, growth: 32 },
@@ -71,14 +74,14 @@ export default function SalesAnalyticsPage() {
     { name: "Product E", revenue: 22000, units: 180, growth: 12 },
   ]
 
-  const channelData = [
-    { name: "Website", value: 45, color: "hsl(var(--chart-1))" },
-    { name: "Mobile App", value: 30, color: "hsl(var(--chart-2))" },
-    { name: "Marketplace", value: 15, color: "hsl(var(--chart-3))" },
-    { name: "Social", value: 10, color: "hsl(var(--chart-4))" },
+  const channelData = salesAnalytics?.channelDistribution || [
+    { name: "Website", value: 45, color: "#3b82f6" },
+    { name: "Mobile App", value: 30, color: "#10b981" },
+    { name: "Marketplace", value: 15, color: "#f59e0b" },
+    { name: "Social", value: 10, color: "#8b5cf6" },
   ]
 
-  const conversionFunnel = [
+  const conversionFunnel = salesAnalytics?.conversionFunnel || [
     { stage: "Visitors", count: 15000, percentage: 100 },
     { stage: "Product Views", count: 8500, percentage: 57 },
     { stage: "Add to Cart", count: 3200, percentage: 21 },
@@ -86,13 +89,48 @@ export default function SalesAnalyticsPage() {
     { stage: "Purchase", count: 1200, percentage: 8 },
   ]
 
-  const handleExcelUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const metrics = salesAnalytics?.metrics || {
+    totalRevenue: 165000,
+    totalOrders: 574,
+    avgOrderValue: 287,
+    conversionRate: 8.0,
+    revenueGrowth: 98,
+  }
+
+  const aiInsights = salesAnalytics?.aiInsights || `
+    <strong class="text-foreground">Strong Growth Detected:</strong> Your sales have increased 98%
+    over the last 7 weeks. Product C is your fastest-growing item (+32%). Consider increasing inventory
+    and marketing spend for this product. Your conversion rate of 8% is above industry average.
+  `
+
+  const handleExcelUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
-    if (file) {
-      // Simulate file processing
-      console.log("[v0] Processing Excel file:", file.name)
-      alert(`Excel file "${file.name}" uploaded successfully! AI is analyzing your sales data...`)
+    if (!file) return
+
+    setUploadStatus('uploading')
+    
+    try {
+      const text = await file.text()
+      console.log("[Sales] Processing CSV file:", file.name)
+      
+      const analytics = parseSalesCSV(text)
+      setSalesAnalytics(analytics)
+      setUploadStatus('success')
+      
+      // Auto-hide success message after 3 seconds
+      setTimeout(() => setUploadStatus('idle'), 3000)
+    } catch (error) {
+      console.error("[Sales] Error parsing CSV:", error)
+      setUploadStatus('error')
+      setTimeout(() => setUploadStatus('idle'), 3000)
     }
+  }
+
+  const downloadDemoCSV = () => {
+    const link = document.createElement('a')
+    link.href = '/demo-sales-data.csv'
+    link.download = 'demo-sales-data.csv'
+    link.click()
   }
 
   const downloadChartAsImage = async (elementId: string, filename: string) => {
@@ -125,12 +163,20 @@ export default function SalesAnalyticsPage() {
             <p className="text-muted-foreground">Track your sales performance and website metrics in real-time</p>
           </div>
           <div className="flex items-center gap-3">
+            <Button variant="outline" className="gap-2" onClick={downloadDemoCSV}>
+              <Download className="h-4 w-4" />
+              Download Demo CSV
+            </Button>
             <div className="flex items-center gap-2">
               <Label htmlFor="excel-upload" className="cursor-pointer">
-                <Button variant="outline" className="gap-2 bg-transparent" asChild>
+                <Button 
+                  variant="outline" 
+                  className={`gap-2 ${uploadStatus === 'success' ? 'border-green-500 bg-green-50 dark:bg-green-950' : uploadStatus === 'error' ? 'border-red-500 bg-red-50 dark:bg-red-950' : ''}`}
+                  asChild
+                >
                   <span>
                     <Upload className="h-4 w-4" />
-                    Import Excel
+                    {uploadStatus === 'uploading' ? 'Processing...' : uploadStatus === 'success' ? 'Uploaded!' : uploadStatus === 'error' ? 'Error!' : 'Upload CSV'}
                   </span>
                 </Button>
               </Label>
@@ -140,12 +186,9 @@ export default function SalesAnalyticsPage() {
                 accept=".xlsx,.xls,.csv"
                 className="hidden"
                 onChange={handleExcelUpload}
+                disabled={uploadStatus === 'uploading'}
               />
             </div>
-            <Button className="gap-2 bg-gradient-to-r from-primary to-secondary">
-              <Plus className="h-4 w-4" />
-              Add Data Source
-            </Button>
           </div>
         </div>
 
@@ -158,11 +201,10 @@ export default function SalesAnalyticsPage() {
               </div>
               <div className="flex-1">
                 <CardTitle className="text-lg mb-2">AI Sales Insights</CardTitle>
-                <CardDescription className="text-base">
-                  <strong className="text-foreground">Strong Growth Detected:</strong> Your sales have increased 98%
-                  over the last 7 weeks. Product C is your fastest-growing item (+32%). Consider increasing inventory
-                  and marketing spend for this product. Your conversion rate of 8% is above industry average.
-                </CardDescription>
+                <CardDescription 
+                  className="text-base"
+                  dangerouslySetInnerHTML={{ __html: aiInsights }}
+                />
               </div>
             </div>
           </CardHeader>
@@ -176,10 +218,12 @@ export default function SalesAnalyticsPage() {
               <DollarSign className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-foreground">$165,000</div>
+              <div className="text-3xl font-bold text-foreground">
+                ${metrics.totalRevenue.toLocaleString()}
+              </div>
               <div className="flex items-center gap-1 text-sm text-success mt-2">
                 <ArrowUpRight className="h-4 w-4" />
-                <span>+98% from last period</span>
+                <span>+{metrics.revenueGrowth}% from last period</span>
               </div>
             </CardContent>
           </Card>
@@ -190,10 +234,12 @@ export default function SalesAnalyticsPage() {
               <ShoppingCart className="h-4 w-4 text-secondary" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-foreground">574</div>
+              <div className="text-3xl font-bold text-foreground">
+                {metrics.totalOrders.toLocaleString()}
+              </div>
               <div className="flex items-center gap-1 text-sm text-success mt-2">
                 <ArrowUpRight className="h-4 w-4" />
-                <span>+67% from last period</span>
+                <span>Strong performance</span>
               </div>
             </CardContent>
           </Card>
@@ -204,10 +250,12 @@ export default function SalesAnalyticsPage() {
               <BarChart3 className="h-4 w-4 text-accent" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-foreground">$287</div>
+              <div className="text-3xl font-bold text-foreground">
+                ${metrics.avgOrderValue.toFixed(2)}
+              </div>
               <div className="flex items-center gap-1 text-sm text-success mt-2">
                 <ArrowUpRight className="h-4 w-4" />
-                <span>+18% from last period</span>
+                <span>Healthy pricing</span>
               </div>
             </CardContent>
           </Card>
@@ -218,10 +266,12 @@ export default function SalesAnalyticsPage() {
               <TrendingUp className="h-4 w-4 text-chart-4" />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-foreground">8.0%</div>
+              <div className="text-3xl font-bold text-foreground">
+                {metrics.conversionRate.toFixed(1)}%
+              </div>
               <div className="flex items-center gap-1 text-sm text-success mt-2">
                 <ArrowUpRight className="h-4 w-4" />
-                <span>+1.2% from last period</span>
+                <span>Above industry avg</span>
               </div>
             </CardContent>
           </Card>
@@ -258,24 +308,25 @@ export default function SalesAnalyticsPage() {
                     <AreaChart data={salesData}>
                       <defs>
                         <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                          <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4} />
+                          <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" />
-                      <YAxis stroke="hsl(var(--muted-foreground))" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" className="dark:stroke-gray-700" />
+                      <XAxis dataKey="date" stroke="#6b7280" style={{ fontSize: '12px' }} />
+                      <YAxis stroke="#6b7280" style={{ fontSize: '12px' }} />
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: "hsl(var(--card))",
-                          border: "1px solid hsl(var(--border))",
+                          backgroundColor: "#ffffff",
+                          border: "1px solid #e5e7eb",
                           borderRadius: "8px",
                         }}
+                        labelStyle={{ color: "#111827" }}
                       />
                       <Area
                         type="monotone"
                         dataKey="sales"
-                        stroke="hsl(var(--primary))"
+                        stroke="#3b82f6"
                         strokeWidth={3}
                         fill="url(#colorSales)"
                       />
@@ -302,30 +353,33 @@ export default function SalesAnalyticsPage() {
                 <CardContent id="orders-traffic-chart">
                   <ResponsiveContainer width="100%" height={300}>
                     <LineChart data={salesData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" />
-                      <YAxis stroke="hsl(var(--muted-foreground))" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" className="dark:stroke-gray-700" />
+                      <XAxis dataKey="date" stroke="#6b7280" style={{ fontSize: '12px' }} />
+                      <YAxis stroke="#6b7280" style={{ fontSize: '12px' }} />
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: "hsl(var(--card))",
-                          border: "1px solid hsl(var(--border))",
+                          backgroundColor: "#ffffff",
+                          border: "1px solid #e5e7eb",
                           borderRadius: "8px",
                         }}
+                        labelStyle={{ color: "#111827" }}
                       />
                       <Legend />
                       <Line
                         type="monotone"
                         dataKey="orders"
-                        stroke="hsl(var(--secondary))"
+                        stroke="#10b981"
                         strokeWidth={3}
-                        dot={{ fill: "hsl(var(--secondary))", r: 4 }}
+                        dot={{ fill: "#10b981", r: 5 }}
+                        name="Orders"
                       />
                       <Line
                         type="monotone"
                         dataKey="visitors"
-                        stroke="hsl(var(--accent))"
+                        stroke="#f59e0b"
                         strokeWidth={3}
-                        dot={{ fill: "hsl(var(--accent))", r: 4 }}
+                        dot={{ fill: "#f59e0b", r: 5 }}
+                        name="Visitors"
                       />
                     </LineChart>
                   </ResponsiveContainer>
@@ -353,17 +407,18 @@ export default function SalesAnalyticsPage() {
               <CardContent id="product-performance-chart">
                 <ResponsiveContainer width="100%" height={400}>
                   <BarChart data={productPerformance} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis type="number" stroke="hsl(var(--muted-foreground))" />
-                    <YAxis dataKey="name" type="category" stroke="hsl(var(--muted-foreground))" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" className="dark:stroke-gray-700" />
+                    <XAxis type="number" stroke="#6b7280" style={{ fontSize: '12px' }} />
+                    <YAxis dataKey="name" type="category" stroke="#6b7280" style={{ fontSize: '12px' }} width={150} />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: "hsl(var(--card))",
-                        border: "1px solid hsl(var(--border))",
+                        backgroundColor: "#ffffff",
+                        border: "1px solid #e5e7eb",
                         borderRadius: "8px",
                       }}
+                      labelStyle={{ color: "#111827" }}
                     />
-                    <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[0, 8, 8, 0]} />
+                    <Bar dataKey="revenue" fill="#3b82f6" radius={[0, 8, 8, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
                 <div className="mt-6 space-y-3">
@@ -410,17 +465,24 @@ export default function SalesAnalyticsPage() {
                       data={channelData}
                       cx="50%"
                       cy="50%"
-                      labelLine={false}
+                      labelLine={true}
                       label={({ name, value }) => `${name}: ${value}%`}
                       outerRadius={120}
                       fill="#8884d8"
                       dataKey="value"
                     >
                       {channelData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
+                        <Cell key={`cell-${index}`} fill={entry.color} stroke="#fff" strokeWidth={2} />
                       ))}
                     </Pie>
-                    <Tooltip />
+                    <Tooltip 
+                      contentStyle={{
+                        backgroundColor: "#ffffff",
+                        border: "1px solid #e5e7eb",
+                        borderRadius: "8px",
+                      }}
+                    />
+                    <Legend />
                   </PieChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -453,10 +515,13 @@ export default function SalesAnalyticsPage() {
                           {stage.count.toLocaleString()} ({stage.percentage}%)
                         </span>
                       </div>
-                      <div className="h-12 bg-muted rounded-lg overflow-hidden relative">
+                      <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-lg overflow-hidden relative">
                         <div
-                          className="h-full bg-gradient-to-r from-primary to-secondary flex items-center justify-center text-primary-foreground font-semibold transition-all duration-500"
-                          style={{ width: `${stage.percentage}%` }}
+                          className="h-full flex items-center justify-center text-white font-semibold transition-all duration-500"
+                          style={{ 
+                            width: `${stage.percentage}%`,
+                            background: 'linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%)'
+                          }}
                         >
                           {stage.percentage}%
                         </div>

@@ -27,7 +27,6 @@ interface FinancialStatementsViewProps {
   profitLoss: ProfitLossStatement
   cashFlow: CashFlowStatement
   insights: AIInsights
-  onExportPDF?: () => void
 }
 
 export function FinancialStatementsView({ profitLoss, cashFlow, insights }: FinancialStatementsViewProps) {
@@ -186,7 +185,7 @@ export function FinancialStatementsView({ profitLoss, cashFlow, insights }: Fina
             <TabsTrigger value="pl">Profit & Loss</TabsTrigger>
             <TabsTrigger value="cf">Cash Flow</TabsTrigger>
           </TabsList>
-          <Button variant="outline" onClick={onExportPDF} className="gap-2">
+          <Button variant="outline" onClick={handleExportPDF} className="gap-2">
             <Download className="h-4 w-4" />
             Export PDF
           </Button>

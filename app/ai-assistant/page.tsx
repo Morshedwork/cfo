@@ -26,6 +26,7 @@ import {
   Bot,
   User,
   RefreshCw,
+  Rocket,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { CFOMascot } from "@/components/cfo-mascot"
@@ -36,15 +37,24 @@ import {
   CapTableComparisonCard,
   StrategicInsightCard,
 } from "@/components/ai-message-types"
+import { EquityCalculatorView } from "@/components/equity-calculator-view"
+import { EquityCalculatorForm } from "@/components/equity-calculator-form"
+import { EquityCalculatorWizard } from "@/components/equity-calculator-wizard"
+import { EquityCalculator, type EquityCalculationInput } from "@/lib/equity-calculator"
+import { InvestmentWizard } from "@/components/investment-wizard"
+import { InvestmentResultsView } from "@/components/investment-results-view"
+import { InvestmentAnalyzer, type InvestmentInput, type InvestmentAnalysis } from "@/lib/investment-analyzer"
 
 interface Message {
   id: string
   role: "user" | "assistant"
   content: string
   timestamp: Date
-  type?: "text" | "insight" | "warning" | "recommendation" | "scenario_analysis" | "kpi_dashboard" | "alert" | "cap_table" | "strategic_insight" | "forecast"
+  type?: "text" | "insight" | "warning" | "recommendation" | "scenario_analysis" | "kpi_dashboard" | "alert" | "cap_table" | "strategic_insight" | "forecast" | "equity_calculator" | "equity_calculator_form" | "equity_calculator_wizard" | "investment_wizard" | "investment_results"
+  roundName?: string
   data?: any
   chart?: any
+  investmentAmount?: number
   actions?: Array<{
     label: string
     action: string
@@ -112,10 +122,10 @@ export default function AIAssistantPage() {
   const quickActions = [
     { icon: BarChart3, label: "Model Hiring Scenario", query: "Model hiring 2 engineers at $180k each starting next month" },
     { icon: TrendingUp, label: "Cash Flow Forecast", query: "Project our cash runway for the next 12 months" },
-    { icon: DollarSign, label: "Investor KPIs", query: "Generate investor KPI dashboard with benchmarks" },
-    { icon: Calendar, label: "Funding Round Impact", query: "Model a $10M Series B at $100M pre-money valuation with 10% option pool" },
+    { icon: DollarSign, label: "Investment Allocation", query: "Help me allocate my new investment strategically" },
+    { icon: Calendar, label: "Funding Round Impact", query: "Calculate equity distribution from Pre-Seed to Series B" },
     { icon: Lightbulb, label: "Cost Optimization", query: "What are my biggest expenses and where can I reduce costs?" },
-    { icon: Zap, label: "Revenue Growth Ideas", query: "Analyze growth opportunities and revenue optimization strategies" },
+    { icon: Zap, label: "Equity Calculator", query: "Calculate startup equity across Pre-Seed, Seed, Series A, and Series B rounds" },
   ]
 
   const startVoiceInput = () => {
@@ -212,6 +222,77 @@ export default function AIAssistantPage() {
     setAbortController(controller)
 
     try {
+      // Check if this is an investment allocation request
+      const investmentKeywords = [
+        'allocate', 'allocation', 'deploy', 'deployment', 'use investment',
+        'spend', 'budget', 'capital', 'utilize', 'strategic use',
+        'how to use', 'what to do with', 'received investment',
+        'raised money', 'fundraised', 'fund allocation'
+      ]
+      
+      const isInvestmentQuery = investmentKeywords.some(keyword => 
+        messageContent.toLowerCase().includes(keyword)
+      )
+
+      if (isInvestmentQuery) {
+        // Show investment wizard
+        console.log("[AI Assistant] Showing investment allocation wizard")
+        
+        const assistantMessage: Message = {
+          id: Math.random().toString(36).substr(2, 9),
+          role: "assistant",
+          content: `Great! Let's create a strategic investment allocation plan. I'll analyze your company's financial position and recommend how to deploy your capital for maximum impact. 💼`,
+          timestamp: new Date(),
+          type: "investment_wizard",
+        }
+        
+        setMessages((prev) => [...prev, assistantMessage])
+        setIsProcessing(false)
+        setAbortController(null)
+        return
+      }
+
+      // Check if this is an equity calculator request (catch ANYTHING related to equity/funding)
+      const equityKeywords = [
+        'equity', 'cap table', 'dilution', 'ownership', 'shares', 'valuation',
+        'round', 'pre-seed', 'seed', 
+        'series a', 'series b', 'series c', 'founders', 'stakeholder',
+        'pre-money', 'post-money', 'option pool', 'esop', 'vesting',
+        'calculate', 'model', 'analyze', 'distribution', 'percentage'
+      ]
+      
+      const isEquityQuery = equityKeywords.some(keyword => 
+        messageContent.toLowerCase().includes(keyword)
+      )
+
+      // Check for specific round request (wizard flow) - THIS IS THE DEFAULT!
+      const roundMatch = messageContent.toLowerCase().match(/(pre-seed|pre seed|preseed|seed|series a|series b|series c)/i)
+      let roundName = roundMatch ? roundMatch[0].split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('-').replace('Preseed', 'Pre-Seed') : null
+
+      // If they ask for equity calculation but don't specify a round, default to Pre-Seed
+      if (isEquityQuery && !roundName) {
+        roundName = 'Pre-Seed'
+      }
+
+      if (isEquityQuery) {
+        // ALWAYS show the wizard for equity questions
+        console.log("[AI Assistant] Showing equity calculator wizard for", roundName)
+        
+        const assistantMessage: Message = {
+          id: Math.random().toString(36).substr(2, 9),
+          role: "assistant",
+          content: `Perfect! Let's calculate equity for your ${roundName} round. I'll guide you through this step by step. 📊`,
+          timestamp: new Date(),
+          type: "equity_calculator_wizard",
+          roundName: roundName,
+        }
+
+        setMessages((prev) => [...prev, assistantMessage])
+        setIsProcessing(false)
+        setAbortController(null)
+        return
+      }
+
       console.log("[AI Assistant] Sending message:", messageContent)
       
       const response = await fetch("/api/ai-chat", {
@@ -294,9 +375,9 @@ export default function AIAssistantPage() {
     <div className="min-h-screen bg-background w-full">
       <Navbar />
 
-      <div className="container max-w-7xl py-6 w-full">
+      <div className="container max-w-[1920px] py-4 w-full px-8">
         {/* Header */}
-        <div className="mb-6">
+        <div className="mb-4">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-3">
               <CFOMascot 
@@ -336,10 +417,10 @@ export default function AIAssistantPage() {
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-4 gap-6">
-          {/* Chat Interface - 3 columns */}
-          <div className="lg:col-span-3">
-            <Card className="flex flex-col border-2 border-primary/10" style={{ height: 'calc(100vh - 220px)' }}>
+        <div className="grid lg:grid-cols-5 gap-6">
+          {/* Chat Interface - 4 columns */}
+          <div className="lg:col-span-4">
+            <Card className="flex flex-col border-2 border-primary/10" style={{ height: 'calc(100vh - 180px)', minHeight: '700px' }}>
               {/* Messages */}
               <CardContent className="flex-1 overflow-y-auto p-6 space-y-4 relative">
                 {/* Empty State with Interactive Thought Bubbles */}
@@ -388,23 +469,23 @@ export default function AIAssistantPage() {
                       </div>
                     </div>
 
-                    {/* Top Right - Scenarios */}
+                    {/* Top Right - Investment */}
                     <div 
                       className="absolute top-8 right-12 animate-fade-in cursor-pointer group"
                       style={{ animationDelay: '0.2s' }}
                       onClick={() => {
-                        setInputValue("Model hiring 2 engineers at $180k each and show impact on runway");
+                        setInputValue("Help me allocate my $500K Pre-Seed investment across product, marketing, operations, and buffer");
                         setTimeout(() => textareaRef.current?.focus(), 100);
                       }}
                     >
                       <div className="relative">
-                        <div className="absolute -bottom-2 right-8 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[10px] border-t-cyan-500/20 group-hover:border-t-cyan-500/40 transition-colors" />
-                        <div className="bg-gradient-to-br from-cyan-500/10 to-cyan-500/5 backdrop-blur-sm border-2 border-cyan-500/20 rounded-2xl p-3 w-44 hover:border-cyan-500/40 hover:scale-105 transition-all hover:shadow-lg hover:shadow-cyan-500/20">
+                        <div className="absolute -bottom-2 right-8 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[10px] border-t-emerald-500/20 group-hover:border-t-emerald-500/40 transition-colors" />
+                        <div className="bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 backdrop-blur-sm border-2 border-emerald-500/20 rounded-2xl p-3 w-44 hover:border-emerald-500/40 hover:scale-105 transition-all hover:shadow-lg hover:shadow-emerald-500/20">
                           <div className="flex items-start gap-2">
-                            <Zap className="h-4 w-4 text-cyan-500 flex-shrink-0 mt-0.5" />
+                            <Rocket className="h-4 w-4 text-emerald-500 flex-shrink-0 mt-0.5" />
                             <div className="min-w-0 flex-1">
-                              <h3 className="font-semibold text-xs text-foreground mb-0.5 leading-tight">Scenarios</h3>
-                              <p className="text-[10px] text-muted-foreground leading-tight">Model what-if</p>
+                              <h3 className="font-semibold text-xs text-foreground mb-0.5 leading-tight">Investment</h3>
+                              <p className="text-[10px] text-muted-foreground leading-tight">Allocate funds</p>
                             </div>
                           </div>
                         </div>
@@ -617,6 +698,61 @@ export default function AIAssistantPage() {
                         />
                       )}
                       
+                      {message.role === "assistant" && message.type === "equity_calculator" && message.data && (
+                        <EquityCalculatorView result={message.data} />
+                      )}
+                      
+                      {message.role === "assistant" && message.type === "equity_calculator_form" && (
+                        <EquityCalculatorForm />
+                      )}
+                      
+                      {message.role === "assistant" && message.type === "equity_calculator_wizard" && (
+                        <EquityCalculatorWizard 
+                          roundName={message.roundName || 'Pre-Seed'} 
+                          onSendMessage={(msg) => setInputValue(msg)}
+                        />
+                      )}
+                      
+                      {message.role === "assistant" && message.type === "investment_wizard" && (
+                        <InvestmentWizard 
+                          onComplete={async (input: InvestmentInput) => {
+                            // Analyze the investment
+                            const analyzer = new InvestmentAnalyzer()
+                            const analysis = analyzer.analyze(input)
+                            
+                            // Add result message
+                            const resultMessage: Message = {
+                              id: Math.random().toString(36).substr(2, 9),
+                              role: "assistant",
+                              content: "✨ Analysis Complete! Here's your strategic investment allocation plan:",
+                              timestamp: new Date(),
+                              type: "investment_results",
+                              data: analysis,
+                              investmentAmount: input.investmentAmount,
+                            }
+                            
+                            setMessages((prev) => [...prev, resultMessage])
+                          }}
+                          onCancel={() => {
+                            const cancelMessage: Message = {
+                              id: Math.random().toString(36).substr(2, 9),
+                              role: "assistant",
+                              content: "No problem! Feel free to ask me anything else about your finances.",
+                              timestamp: new Date(),
+                              type: "text",
+                            }
+                            setMessages((prev) => [...prev, cancelMessage])
+                          }}
+                        />
+                      )}
+                      
+                      {message.role === "assistant" && message.type === "investment_results" && message.data && (
+                        <InvestmentResultsView 
+                          analysis={message.data as InvestmentAnalysis} 
+                          investmentAmount={message.investmentAmount || 0}
+                        />
+                      )}
+                      
                       <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/30">
                         <span className="text-xs opacity-60">
                           {message.timestamp.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
@@ -760,22 +896,22 @@ export default function AIAssistantPage() {
           </div>
 
           {/* Sidebar - 1 column */}
-          <div className="space-y-4">
+          <div className="space-y-3">
             {/* Quick Actions */}
             <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
+              <CardHeader className="pb-2 pt-3 px-4">
+                <CardTitle className="text-sm flex items-center gap-2">
                   <Zap className="h-4 w-4 text-primary" />
                   Quick Questions
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2">
+              <CardContent className="space-y-1.5 px-4 pb-3">
                 {quickActions.map((action, i) => (
                   <Button
                     key={i}
                     variant="outline"
                     size="sm"
-                    className="w-full justify-start h-auto py-2 text-xs"
+                    className="w-full justify-start h-auto py-1.5 text-xs"
                     onClick={() => handleSendMessage(action.query)}
                     disabled={isProcessing || isListening}
                   >
@@ -788,23 +924,23 @@ export default function AIAssistantPage() {
 
             {/* Status */}
             <Card className="border-accent/30">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Status</CardTitle>
+              <CardHeader className="pb-2 pt-3 px-4">
+                <CardTitle className="text-sm">Status</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2 text-xs">
-                <div className="flex items-center justify-between p-2 rounded bg-muted/50">
+              <CardContent className="space-y-1.5 text-xs px-4 pb-3">
+                <div className="flex items-center justify-between p-1.5 rounded bg-muted/50">
                   <span className="text-muted-foreground">Cash</span>
                   <span className="font-bold">$70,000</span>
                 </div>
-                <div className="flex items-center justify-between p-2 rounded bg-muted/50">
+                <div className="flex items-center justify-between p-1.5 rounded bg-muted/50">
                   <span className="text-muted-foreground">Burn</span>
                   <span className="font-bold">$82,000</span>
                 </div>
-                <div className="flex items-center justify-between p-2 rounded bg-destructive/10">
+                <div className="flex items-center justify-between p-1.5 rounded bg-destructive/10">
                   <span className="text-muted-foreground">Runway</span>
                   <span className="font-bold text-destructive">0.9 mo</span>
                 </div>
-                <div className="flex items-center justify-between p-2 rounded bg-green-500/10">
+                <div className="flex items-center justify-between p-1.5 rounded bg-green-500/10">
                   <span className="text-muted-foreground">Growth</span>
                   <span className="font-bold text-green-600">+25%</span>
                 </div>
@@ -813,13 +949,13 @@ export default function AIAssistantPage() {
 
             {/* Features */}
             <Card className="bg-gradient-to-br from-primary/5 to-accent/5">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
+              <CardHeader className="pb-2 pt-3 px-4">
+                <CardTitle className="text-sm flex items-center gap-2">
                   <Sparkles className="h-4 w-4 text-primary" />
                   AI Features
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2 text-xs">
+              <CardContent className="space-y-1.5 text-xs px-4 pb-3">
                 <div className="flex items-start gap-2">
                   <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                     <Bot className="h-3 w-3 text-primary" />

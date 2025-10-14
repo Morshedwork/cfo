@@ -1,0 +1,42 @@
+Date,Product,Quantity,Unit Price,Channel,Customer,Status
+2024-01-01,Premium SaaS Plan,15,199,Website,Acme Corp,completed
+2024-01-02,Basic SaaS Plan,25,49,Mobile App,TechStart Inc,completed
+2024-01-03,Enterprise Plan,3,999,Website,Global Industries,completed
+2024-01-05,Premium SaaS Plan,12,199,Marketplace,Digital Solutions,completed
+2024-01-06,Basic SaaS Plan,30,49,Social,Startup Labs,completed
+2024-01-08,Premium SaaS Plan,18,199,Website,Innovation Co,completed
+2024-01-09,Enterprise Plan,2,999,Website,MegaCorp LLC,completed
+2024-01-10,Basic SaaS Plan,28,49,Mobile App,Quick Tech,completed
+2024-01-12,Premium SaaS Plan,20,199,Marketplace,Cloud Systems,completed
+2024-01-13,Premium SaaS Plan,16,199,Website,Data Dynamics,completed
+2024-01-15,Basic SaaS Plan,35,49,Social,AgileWorks,completed
+2024-01-16,Enterprise Plan,4,999,Website,Enterprise Solutions,completed
+2024-01-17,Premium SaaS Plan,22,199,Mobile App,FastGrow Inc,completed
+2024-01-19,Basic SaaS Plan,32,49,Website,DevTeam Pro,completed
+2024-01-20,Premium SaaS Plan,19,199,Marketplace,Tech Innovators,completed
+2024-01-22,Enterprise Plan,3,999,Website,Fortune Industries,completed
+2024-01-23,Basic SaaS Plan,40,49,Mobile App,Startup Central,completed
+2024-01-24,Premium SaaS Plan,24,199,Website,Growth Labs,completed
+2024-01-26,Premium SaaS Plan,21,199,Social,Digital First,completed
+2024-01-27,Basic SaaS Plan,38,49,Website,Code Factory,completed
+2024-01-29,Enterprise Plan,5,999,Website,Global Tech Corp,completed
+2024-01-30,Premium SaaS Plan,26,199,Marketplace,Innovation Hub,completed
+2024-01-31,Basic SaaS Plan,42,49,Mobile App,Rapid Solutions,completed
+2024-02-01,Premium SaaS Plan,28,199,Website,Smart Systems,completed
+2024-02-02,Enterprise Plan,4,999,Website,Enterprise Global,completed
+2024-02-03,Basic SaaS Plan,45,49,Social,Tech Pioneers,completed
+2024-02-05,Premium SaaS Plan,30,199,Mobile App,Digital Dynamics,completed
+2024-02-06,Premium SaaS Plan,27,199,Website,Future Tech,completed
+2024-02-08,Basic SaaS Plan,48,49,Marketplace,Startup Pro,completed
+2024-02-09,Enterprise Plan,6,999,Website,MegaBrand Inc,completed
+2024-02-10,Premium SaaS Plan,32,199,Website,Innovation Works,completed
+2024-02-12,Basic SaaS Plan,50,49,Mobile App,Agile Systems,completed
+2024-02-13,Premium SaaS Plan,29,199,Social,Growth Tech,completed
+2024-02-15,Enterprise Plan,5,999,Website,Corporate Solutions,completed
+2024-02-16,Premium SaaS Plan,34,199,Website,Digital Wave,completed
+2024-02-17,Basic SaaS Plan,52,49,Marketplace,Quick Start Co,completed
+2024-02-19,Premium SaaS Plan,31,199,Mobile App,Tech Leaders,completed
+2024-02-20,Enterprise Plan,7,999,Website,Global Enterprises,completed
+2024-02-22,Basic SaaS Plan,55,49,Website,Dev Hub,completed
+2024-02-23,Premium SaaS Plan,36,199,Social,Smart Solutions,completed
+

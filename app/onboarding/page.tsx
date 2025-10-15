@@ -24,7 +24,7 @@ import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 
 export default function OnboardingPage() {
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false) // No delay
   const [currentStep, setCurrentStep] = useState(0)
   const [saving, setSaving] = useState(false)
   const [formData, setFormData] = useState({
@@ -40,8 +40,8 @@ export default function OnboardingPage() {
   const router = useRouter()
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 1500)
-    return () => clearTimeout(timer)
+    // Load immediately
+    setLoading(false)
   }, [])
 
   const steps = [

@@ -46,12 +46,12 @@ import {
 import html2canvas from "html2canvas"
 
 export default function DashboardPage() {
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false) // No artificial delay
   const [selectedPeriod, setSelectedPeriod] = useState("6m")
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 1500)
-    return () => clearTimeout(timer)
+    // Load immediately - no delay needed
+    setLoading(false)
   }, [])
 
   const cashFlowData = [

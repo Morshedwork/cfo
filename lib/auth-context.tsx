@@ -10,7 +10,7 @@ interface AuthContextType {
   profile: UserProfile | null
   loading: boolean
   signOut: () => Promise<void>
-  refreshProfile: () => Promise<void>
+  refreshProfile: () => Promise<UserProfile | null>
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -18,37 +18,50 @@ const AuthContext = createContext<AuthContextType>({
   profile: null,
   loading: true,
   signOut: async () => {},
-  refreshProfile: async () => {},
+  refreshProfile: async () => null,
 })
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
-  const [loading, setLoading] = useState(true)
+  // Start with false to avoid hydration mismatch (SSR can't check auth)
+  const [loading, setLoading] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
+    // Mark as mounted (client-side only)
+    setMounted(true)
+    
     // Get initial session
     const getInitialSession = async () => {
       try {
+        console.log('[Auth] Getting initial session...')
         const { data: { session }, error: sessionError } = await supabase.auth.getSession()
         
         if (sessionError) {
-          console.error('Session error:', sessionError)
+          console.error('[Auth] Session error:', sessionError)
+          return
         }
         
         setUser(session?.user ?? null)
         
         if (session?.user) {
-          console.log('Loading profile for user:', session.user.id)
-          const userProfile = await getCurrentUserProfile()
-          console.log('Profile loaded:', userProfile)
-          setProfile(userProfile)
+          console.log('[Auth] Loading profile for user:', session.user.id)
+          try {
+            const userProfile = await getCurrentUserProfile()
+            console.log('[Auth] Profile loaded:', userProfile)
+            setProfile(userProfile)
+          } catch (profileError) {
+            console.error('[Auth] Profile load error:', profileError)
+            // Continue even if profile fails - user is still authenticated
+            setProfile(null)
+          }
         }
       } catch (error) {
-        console.error('Error getting initial session:', error)
+        console.error('[Auth] Error getting initial session:', error)
       } finally {
-        setLoading(false)
+        console.log('[Auth] Initial session load complete')
       }
     }
 
@@ -57,18 +70,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.id)
+        console.log('[Auth] State changed:', event, session?.user?.id)
         setUser(session?.user ?? null)
         
         if (session?.user) {
-          const userProfile = await getCurrentUserProfile()
-          console.log('Profile updated:', userProfile)
-          setProfile(userProfile)
+          try {
+            const userProfile = await getCurrentUserProfile()
+            console.log('[Auth] Profile updated:', userProfile)
+            setProfile(userProfile)
+          } catch (error) {
+            console.error('[Auth] Profile update error:', error)
+            setProfile(null)
+          }
         } else {
           setProfile(null)
         }
-        
-        setLoading(false)
       }
     )
 
@@ -76,9 +92,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [supabase])
 
   const signOut = async () => {
-    await supabase.auth.signOut()
-    setUser(null)
-    setProfile(null)
+    try {
+      console.log('[Auth] Starting sign out...')
+      
+      // Clear local state first (immediate UI feedback)
+      setUser(null)
+      setProfile(null)
+      
+      // Sign out from Supabase (this clears all auth cookies)
+      const { error } = await supabase.auth.signOut()
+      
+      if (error) {
+        console.error('[Auth] Sign out error:', error)
+      }
+      
+      console.log('[Auth] Sign out complete, redirecting...')
+      
+      // Force a full page reload to clear all state and cookies
+      // This ensures complete cleanup of auth state
+      window.location.href = "/"
+    } catch (error) {
+      console.error('[Auth] Error during sign out:', error)
+      // Still clear state and redirect even on error
+      setUser(null)
+      setProfile(null)
+      window.location.href = "/"
+    }
   }
 
   const refreshProfile = async () => {

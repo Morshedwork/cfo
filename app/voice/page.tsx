@@ -17,7 +17,7 @@ interface Message {
 }
 
 export default function VoiceAssistantPage() {
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [isListening, setIsListening] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [isProcessing, setIsProcessing] = useState(false)

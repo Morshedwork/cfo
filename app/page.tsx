@@ -31,11 +31,12 @@ import {
 import Link from "next/link"
 
 export default function HomePage() {
-  const [loading, setLoading] = useState(true)
+  // Very short loading for smooth content appearance
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 2000)
-    return () => clearTimeout(timer)
+    // No loading screen needed - content loads immediately
+    setLoading(false)
   }, [])
 
   const topFeatures = [

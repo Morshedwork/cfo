@@ -32,17 +32,18 @@ export function AuthNavbar() {
   ]
 
   const handleSignOut = async () => {
+    // SignOut now handles redirect internally, no need to redirect again
     await signOut()
-    window.location.href = "/"
   }
 
   // Refresh profile when component mounts
   ReactUseEffect(() => {
-    if (user && !profile) {
-      console.log('User logged in but no profile, refreshing...')
+    console.log('[Navbar] Auth state - loading:', loading, 'user:', !!user, 'profile:', !!profile)
+    if (user && !profile && !loading) {
+      console.log('[Navbar] User logged in but no profile, refreshing...')
       refreshProfile()
     }
-  }, [user, profile])
+  }, [user, profile, loading, refreshProfile])
 
   const getInitials = (name: string | null | undefined) => {
     if (!name) return "U"
@@ -53,22 +54,12 @@ export function AuthNavbar() {
     return name.substring(0, 2).toUpperCase()
   }
 
-  if (loading) {
-    return (
-      <nav className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 font-semibold text-xl">
-            <Sparkles className="h-6 w-6 text-primary" />
-            <span className="gradient-text">Aura</span>
-          </Link>
-          <div className="h-8 w-8 animate-pulse rounded-full bg-muted" />
-        </div>
-      </nav>
-    )
-  }
+  // Don't show loading state during SSR to avoid hydration mismatch
+  // Auth state loads on client only, so skip loading spinner
 
   // Authenticated view
   if (user) {
+    console.log('[Navbar] Showing authenticated view')
     return (
       <nav className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between">
@@ -186,6 +177,7 @@ export function AuthNavbar() {
   }
 
   // Unauthenticated view
+  console.log('[Navbar] Showing unauthenticated view')
   return (
     <nav className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">

@@ -26,59 +26,71 @@ export default function LoginPage() {
     setError(null)
 
     try {
+      console.log('[Login] Starting authentication...')
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
       if (error) throw error
       
-      // Verify user has a profile
+      console.log('[Login] Auth successful, checking profile...')
+      
+      // Profile and company will be created by database triggers
+      // Just verify they exist (don't wait if tables don't exist)
       if (data.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', data.user.id)
-          .single()
-        
-        // If no profile exists, create one
-        if (!profile) {
-          await supabase
+        try {
+          const { data: profile, error: profileError } = await supabase
             .from('profiles')
-            .insert({
-              id: data.user.id,
-              email: data.user.email || email,
-              full_name: data.user.user_metadata?.full_name || email.split('@')[0],
-              company_name: data.user.user_metadata?.company_name || 'My Company',
-            })
-        }
-        
-        // Verify user has a company
-        const { data: company } = await supabase
-          .from('companies')
-          .select('*')
-          .eq('user_id', data.user.id)
-          .single()
-        
-        // If no company exists, create one
-        if (!company) {
-          await supabase
+            .select('*')
+            .eq('id', data.user.id)
+            .single()
+          
+          // If no profile exists, create one (only if table exists)
+          if (!profile && !profileError) {
+            console.log('[Login] Creating profile...')
+            await supabase
+              .from('profiles')
+              .insert({
+                id: data.user.id,
+                email: data.user.email || email,
+                full_name: data.user.user_metadata?.full_name || email.split('@')[0],
+                company_name: data.user.user_metadata?.company_name || 'My Company',
+              })
+          }
+          
+          // Verify user has a company
+          const { data: company, error: companyError } = await supabase
             .from('companies')
-            .insert({
-              user_id: data.user.id,
-              name: data.user.user_metadata?.company_name || 'My Company',
-              industry: 'Technology',
-              founded_date: new Date().toISOString(),
-              team_size: 1,
-              funding_stage: 'pre-seed',
-            })
+            .select('*')
+            .eq('user_id', data.user.id)
+            .single()
+          
+          // If no company exists, create one (only if table exists)
+          if (!company && !companyError) {
+            console.log('[Login] Creating company...')
+            await supabase
+              .from('companies')
+              .insert({
+                user_id: data.user.id,
+                name: data.user.user_metadata?.company_name || 'My Company',
+                industry: 'Technology',
+                founded_date: new Date().toISOString(),
+                team_size: 1,
+                funding_stage: 'pre-seed',
+              })
+          }
+        } catch (dbError) {
+          // If database operations fail (tables don't exist), continue anyway
+          console.warn('[Login] Database check skipped:', dbError)
         }
       }
       
-      // Redirect to dashboard after successful login
-      window.location.href = "/dashboard"
+      console.log('[Login] Redirecting to dashboard...')
+      // Redirect to dashboard - router.push for faster navigation
+      router.push("/dashboard")
     } catch (error: unknown) {
+      console.error('[Login] Error:', error)
       setError(error instanceof Error ? error.message : "An error occurred")
-    } finally {
       setIsLoading(false)
     }
   }

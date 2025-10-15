@@ -121,19 +121,36 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
   const supabase = createClient()
   
   try {
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
     
-    if (!user) return null
+    if (userError) {
+      console.error('[Profile] User error:', userError)
+      return null
+    }
     
-    const { data: profile } = await supabase
+    if (!user) {
+      console.log('[Profile] No user logged in')
+      return null
+    }
+    
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', user.id)
       .single()
     
+    if (profileError) {
+      console.error('[Profile] Database error:', profileError.message)
+      // Check if it's because table doesn't exist
+      if (profileError.message.includes('relation') || profileError.message.includes('does not exist')) {
+        console.error('[Profile] ⚠️ CRITICAL: profiles table does not exist! Run database setup SQL.')
+      }
+      return null
+    }
+    
     return profile
   } catch (error) {
-    console.error('Error getting user profile:', error)
+    console.error('[Profile] Unexpected error:', error)
     return null
   }
 }

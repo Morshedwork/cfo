@@ -24,7 +24,7 @@ interface DataEntry {
 }
 
 export default function DataManagementPage() {
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [importedData, setImportedData] = useState<any>(null)
   const [isListening, setIsListening] = useState(false)
   const [voiceCommand, setVoiceCommand] = useState("")
@@ -32,7 +32,7 @@ export default function DataManagementPage() {
   const [isProcessing, setIsProcessing] = useState(false)
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 1500)
+    const timer = setTimeout(() => setLoading(false), 0)
     return () => clearTimeout(timer)
   }, [])
 

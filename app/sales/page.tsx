@@ -45,13 +45,13 @@ import html2canvas from "html2canvas"
 import { parseSalesCSV, type SalesAnalytics } from "@/lib/sales-parser"
 
 export default function SalesAnalyticsPage() {
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [selectedPeriod, setSelectedPeriod] = useState("30d")
   const [salesAnalytics, setSalesAnalytics] = useState<SalesAnalytics | null>(null)
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle')
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 1500)
+    const timer = setTimeout(() => setLoading(false), 0)
     return () => clearTimeout(timer)
   }, [])
 

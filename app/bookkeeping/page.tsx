@@ -22,13 +22,13 @@ interface Transaction {
 }
 
 export default function BookkeepingPage() {
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [filterCategory, setFilterCategory] = useState("all")
   const [filterStatus, setFilterStatus] = useState("all")
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 1500)
+    const timer = setTimeout(() => setLoading(false), 0)
     return () => clearTimeout(timer)
   }, [])
 

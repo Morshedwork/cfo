@@ -20,7 +20,7 @@ interface Scenario {
 }
 
 export default function ScenariosPage() {
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [scenarios, setScenarios] = useState<Scenario[]>([])
   const [newScenarioType, setNewScenarioType] = useState<Scenario["type"]>("hire")
   const [newScenarioAmount, setNewScenarioAmount] = useState(0)

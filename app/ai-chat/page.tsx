@@ -31,7 +31,7 @@ interface Message {
 }
 
 export default function AIChat() {
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [isListening, setIsListening] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])

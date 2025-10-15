@@ -32,7 +32,7 @@ interface DataEntry {
 }
 
 export default function DataVoiceManagement() {
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [isListening, setIsListening] = useState(false)
   const [voiceCommand, setVoiceCommand] = useState("")
   const [entries, setEntries] = useState<DataEntry[]>([])

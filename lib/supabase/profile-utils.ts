@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/client"
+import { createBrowserClient } from "@supabase/ssr"
 
 export interface UserProfile {
   id: string
@@ -35,7 +35,10 @@ export async function ensureUserProfile(): Promise<{
   company: UserCompany | null
   error: string | null
 }> {
-  const supabase = createClient()
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
   
   try {
     // Get current user
@@ -118,7 +121,10 @@ export async function ensureUserProfile(): Promise<{
  * Gets the current user's profile
  */
 export async function getCurrentUserProfile(): Promise<UserProfile | null> {
-  const supabase = createClient()
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
   
   try {
     const { data: { user }, error: userError } = await supabase.auth.getUser()
@@ -164,7 +170,10 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
  * Gets the current user's company
  */
 export async function getCurrentUserCompany(): Promise<UserCompany | null> {
-  const supabase = createClient()
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
   
   try {
     const { data: { user } } = await supabase.auth.getUser()
@@ -201,7 +210,10 @@ export async function updateUserProfile(updates: Partial<UserProfile>): Promise<
   profile: UserProfile | null
   error: string | null
 }> {
-  const supabase = createClient()
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
   
   try {
     const { data: { user } } = await supabase.auth.getUser()

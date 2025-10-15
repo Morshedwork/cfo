@@ -50,13 +50,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.log('[Auth] Loading profile for user:', session.user.id)
           try {
             const userProfile = await getCurrentUserProfile()
-            console.log('[Auth] Profile loaded:', userProfile)
+            if (userProfile) {
+              console.log('[Auth] Profile loaded:', userProfile.full_name || userProfile.email)
+            } else {
+              console.log('[Auth] No profile found - user may need to complete onboarding')
+            }
             setProfile(userProfile)
           } catch (profileError) {
             console.error('[Auth] Profile load error:', profileError)
             // Continue even if profile fails - user is still authenticated
             setProfile(null)
           }
+        } else {
+          // Clear profile when user logs out
+          setProfile(null)
         }
       } catch (error) {
         console.error('[Auth] Error getting initial session:', error)
@@ -76,7 +83,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (session?.user) {
           try {
             const userProfile = await getCurrentUserProfile()
-            console.log('[Auth] Profile updated:', userProfile)
+            if (userProfile) {
+              console.log('[Auth] Profile updated:', userProfile.full_name || userProfile.email)
+            } else {
+              console.log('[Auth] No profile found after auth change')
+            }
             setProfile(userProfile)
           } catch (error) {
             console.error('[Auth] Profile update error:', error)

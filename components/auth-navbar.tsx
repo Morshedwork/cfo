@@ -61,11 +61,11 @@ export function AuthNavbar() {
   if (user) {
     console.log('[Navbar] Showing authenticated view')
     return (
-      <nav className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <nav className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-300">
         <div className="container flex h-16 items-center justify-between">
-          <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-xl">
-            <Sparkles className="h-6 w-6 text-primary" />
-            <span className="gradient-text">Aura</span>
+          <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-xl group">
+            <Sparkles className="h-6 w-6 text-primary transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12" />
+            <span className="gradient-text transition-all duration-300">Aura</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -74,7 +74,7 @@ export function AuthNavbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-all duration-300 relative link-smooth"
               >
                 {link.label}
               </Link>
@@ -85,8 +85,8 @@ export function AuthNavbar() {
             {/* User Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                  <Avatar className="h-10 w-10">
+                <Button variant="ghost" className="relative h-10 w-10 rounded-full hover:scale-110 transition-all duration-300">
+                  <Avatar className="h-10 w-10 transition-all duration-300">
                     <AvatarImage src={profile?.avatar_url || ""} alt={profile?.full_name || "User"} />
                     <AvatarFallback className="bg-primary/10 text-primary font-semibold">
                       {getInitials(profile?.full_name)}

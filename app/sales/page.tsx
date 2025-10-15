@@ -45,14 +45,19 @@ import html2canvas from "html2canvas"
 import { parseSalesCSV, type SalesAnalytics } from "@/lib/sales-parser"
 
 export default function SalesAnalyticsPage() {
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [isExiting, setIsExiting] = useState(false)
   const [selectedPeriod, setSelectedPeriod] = useState("30d")
   const [salesAnalytics, setSalesAnalytics] = useState<SalesAnalytics | null>(null)
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle')
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 0)
-    return () => clearTimeout(timer)
+    // Minimum display time for signature loading screen (2.5 seconds)
+    const minLoadTime = setTimeout(() => {
+      setIsExiting(true)
+      setTimeout(() => setLoading(false), 500)
+    }, 2500)
+    return () => clearTimeout(minLoadTime)
   }, [])
 
   // Use parsed data or fallback to mock data
@@ -148,11 +153,11 @@ export default function SalesAnalyticsPage() {
   }
 
   if (loading) {
-    return <LoadingScreen />
+    return <LoadingScreen isExiting={isExiting} />
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background page-transition">
       <AuthNavbar />
 
       <div className="container py-8">

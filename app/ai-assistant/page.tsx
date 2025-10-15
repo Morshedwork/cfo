@@ -63,7 +63,8 @@ interface Message {
 }
 
 export default function AIAssistantPage() {
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [isExiting, setIsExiting] = useState(false)
   const [isListening, setIsListening] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
@@ -76,11 +77,12 @@ export default function AIAssistantPage() {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false)
-      // Start with empty messages to show thought bubbles
-    }, 1500)
-    return () => clearTimeout(timer)
+    // Minimum display time for signature loading screen (2.5 seconds)
+    const minLoadTime = setTimeout(() => {
+      setIsExiting(true)
+      setTimeout(() => setLoading(false), 500)
+    }, 2500)
+    return () => clearTimeout(minLoadTime)
   }, [])
 
   useEffect(() => {
@@ -368,11 +370,11 @@ export default function AIAssistantPage() {
   }
 
   if (loading) {
-    return <LoadingScreen />
+    return <LoadingScreen isExiting={isExiting} />
   }
 
   return (
-    <div className="min-h-screen bg-background w-full">
+    <div className="min-h-screen bg-background w-full page-transition">
       <AuthNavbar />
 
       <div className="container max-w-[1920px] py-4 w-full px-8">

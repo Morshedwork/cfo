@@ -24,7 +24,8 @@ interface DataEntry {
 }
 
 export default function DataManagementPage() {
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [isExiting, setIsExiting] = useState(false)
   const [importedData, setImportedData] = useState<any>(null)
   const [isListening, setIsListening] = useState(false)
   const [voiceCommand, setVoiceCommand] = useState("")
@@ -32,8 +33,12 @@ export default function DataManagementPage() {
   const [isProcessing, setIsProcessing] = useState(false)
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 0)
-    return () => clearTimeout(timer)
+    // Minimum display time for signature loading screen (2.5 seconds)
+    const minLoadTime = setTimeout(() => {
+      setIsExiting(true)
+      setTimeout(() => setLoading(false), 500)
+    }, 2500)
+    return () => clearTimeout(minLoadTime)
   }, [])
 
   const handleVoiceInput = async () => {
@@ -121,11 +126,11 @@ export default function DataManagementPage() {
   ]
 
   if (loading) {
-    return <LoadingScreen />
+    return <LoadingScreen isExiting={isExiting} />
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background page-transition">
       <AuthNavbar />
 
       <div className="container py-8">

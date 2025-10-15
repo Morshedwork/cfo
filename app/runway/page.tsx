@@ -15,14 +15,19 @@ import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLin
 
 export default function RunwayPage() {
   const [loading, setLoading] = useState(true)
+  const [isExiting, setIsExiting] = useState(false)
   const [cashBalance, setCashBalance] = useState(70000)
   const [monthlyBurn, setMonthlyBurn] = useState(82000)
   const [monthlyRevenue, setMonthlyRevenue] = useState(35000)
   const [revenueGrowth, setRevenueGrowth] = useState([5])
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 1500)
-    return () => clearTimeout(timer)
+    // Minimum display time for signature loading screen (2.5 seconds)
+    const minLoadTime = setTimeout(() => {
+      setIsExiting(true)
+      setTimeout(() => setLoading(false), 500)
+    }, 2500)
+    return () => clearTimeout(minLoadTime)
   }, [])
 
   // Calculate runway
@@ -55,12 +60,12 @@ export default function RunwayPage() {
   const runoutMonth = forecastData.find((d) => d.cash === 0)?.month || 12
 
   if (loading) {
-    return <LoadingScreen />
+    return <LoadingScreen isExiting={isExiting} />
   }
 
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background page-transition">
         <AuthNavbar />
 
       <div className="container py-8">

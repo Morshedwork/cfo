@@ -22,14 +22,19 @@ interface Transaction {
 }
 
 export default function BookkeepingPage() {
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [isExiting, setIsExiting] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [filterCategory, setFilterCategory] = useState("all")
   const [filterStatus, setFilterStatus] = useState("all")
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 0)
-    return () => clearTimeout(timer)
+    // Minimum display time for signature loading screen (2.5 seconds)
+    const minLoadTime = setTimeout(() => {
+      setIsExiting(true)
+      setTimeout(() => setLoading(false), 500)
+    }, 2500)
+    return () => clearTimeout(minLoadTime)
   }, [])
 
   const transactions: Transaction[] = [
@@ -141,11 +146,11 @@ export default function BookkeepingPage() {
   }
 
   if (loading) {
-    return <LoadingScreen />
+    return <LoadingScreen isExiting={isExiting} />
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background page-transition">
       <AuthNavbar />
 
       <div className="container py-8">

@@ -19,11 +19,11 @@ export function Navbar() {
   ]
 
   return (
-    <nav className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <nav className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-300">
       <div className="container flex h-16 items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 font-semibold text-xl">
-          <Sparkles className="h-6 w-6 text-primary" />
-          <span className="gradient-text">Aura</span>
+        <Link href="/" className="flex items-center gap-2 font-semibold text-xl group">
+          <Sparkles className="h-6 w-6 text-primary transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12" />
+          <span className="gradient-text transition-all duration-300">Aura</span>
         </Link>
 
         {/* Desktop Navigation */}
@@ -32,7 +32,7 @@ export function Navbar() {
             <Link
               key={link.href}
               href={link.href}
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-all duration-300 relative link-smooth"
             >
               {link.label}
             </Link>
@@ -41,12 +41,12 @@ export function Navbar() {
 
         <div className="flex items-center gap-4">
           <Link href="/auth/login">
-            <Button variant="ghost" className="hidden md:inline-flex">
+            <Button variant="ghost" className="hidden md:inline-flex hover:scale-105">
               Sign In
             </Button>
           </Link>
           <Link href="/auth/sign-up">
-            <Button className="hidden md:inline-flex bg-gradient-to-r from-primary to-secondary hover:opacity-90">
+            <Button className="hidden md:inline-flex bg-gradient-to-r from-primary to-secondary hover:opacity-90 hover:scale-105 hover:shadow-lg hover:shadow-primary/30">
               Get Started
             </Button>
           </Link>
@@ -60,12 +60,13 @@ export function Navbar() {
             </SheetTrigger>
             <SheetContent>
               <div className="flex flex-col gap-4 mt-8">
-                {navLinks.map((link) => (
+                {navLinks.map((link, index) => (
                   <Link
                     key={link.href}
                     href={link.href}
                     onClick={() => setIsOpen(false)}
-                    className="text-lg font-medium text-muted-foreground hover:text-foreground transition-colors"
+                    className="text-lg font-medium text-muted-foreground hover:text-foreground transition-all duration-300 hover:translate-x-2 stagger-item"
+                    style={{ animationDelay: `${index * 0.05}s` }}
                   >
                     {link.label}
                   </Link>

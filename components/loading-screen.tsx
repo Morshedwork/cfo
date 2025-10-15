@@ -3,6 +3,20 @@
 import { useEffect, useState } from "react"
 import { DollarSign, TrendingUp, Wallet, CreditCard, LineChart, Activity, BarChart3, Zap } from "lucide-react"
 
+// Keyframe for fade out animation
+const fadeOutStyle = `
+  @keyframes fadeOut {
+    from {
+      opacity: 1;
+      transform: scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+  }
+`
+
 const loadingStages = [
   { text: "Securing connections...", progress: 20 },
   { text: "Analyzing cash flow...", progress: 40 },
@@ -19,7 +33,7 @@ const financeIcons = [
   { Icon: Zap, color: '#a855f7', delay: 1.5 },
 ]
 
-export function LoadingScreen() {
+export function LoadingScreen({ isExiting = false }: { isExiting?: boolean }) {
   const [progress, setProgress] = useState(0)
   const [stageIndex, setStageIndex] = useState(0)
   const [counter, setCounter] = useState(0)
@@ -71,7 +85,13 @@ export function LoadingScreen() {
   }, [progress, stageIndex])
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background overflow-hidden w-full h-full">
+    <div 
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-background overflow-hidden w-full h-full transition-all duration-500 ${
+        isExiting ? 'opacity-0 scale-95' : 'animate-fade-in'
+      }`}
+      style={isExiting ? { animation: 'fadeOut 0.5s ease-out forwards' } : {}}
+    >
+      <style>{fadeOutStyle}</style>
       {/* Animated Background Grid */}
       <div className="absolute inset-0 opacity-10 w-full">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#10b98120_1px,transparent_1px),linear-gradient(to_bottom,#10b98120_1px,transparent_1px)] bg-[size:4rem_4rem] animate-grid-flow" />

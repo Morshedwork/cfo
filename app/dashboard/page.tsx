@@ -46,12 +46,22 @@ import {
 import html2canvas from "html2canvas"
 
 export default function DashboardPage() {
-  const [loading, setLoading] = useState(false) // No artificial delay
+  const [loading, setLoading] = useState(true) // Show signature loading animation
+  const [isExiting, setIsExiting] = useState(false) // For smooth fade-out
   const [selectedPeriod, setSelectedPeriod] = useState("6m")
 
   useEffect(() => {
-    // Load immediately - no delay needed
-    setLoading(false)
+    // Minimum display time for signature loading screen (2.5 seconds)
+    const minLoadTime = setTimeout(() => {
+      // Start exit animation
+      setIsExiting(true)
+      // Remove loading screen after animation completes
+      setTimeout(() => {
+        setLoading(false)
+      }, 500) // Match the fade-out duration
+    }, 2500)
+
+    return () => clearTimeout(minLoadTime)
   }, [])
 
   const cashFlowData = [
@@ -113,12 +123,12 @@ export default function DashboardPage() {
   }
 
   if (loading) {
-    return <LoadingScreen />
+    return <LoadingScreen isExiting={isExiting} />
   }
 
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background page-transition">
         <AuthNavbar />
 
         <div className="container py-8">

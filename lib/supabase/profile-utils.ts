@@ -50,7 +50,7 @@ export async function ensureUserProfile(): Promise<{
       .from('profiles')
       .select('*')
       .eq('id', user.id)
-      .single()
+      .maybeSingle()
     
     // Create profile if it doesn't exist
     if (!profile) {
@@ -78,7 +78,7 @@ export async function ensureUserProfile(): Promise<{
       .from('companies')
       .select('*')
       .eq('user_id', user.id)
-      .single()
+      .maybeSingle()
     
     // Create company if it doesn't exist
     if (!company) {
@@ -133,11 +133,12 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
       return null
     }
     
+    // Use maybeSingle() instead of single() to handle cases where profile might not exist
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', user.id)
-      .single()
+      .maybeSingle()
     
     if (profileError) {
       console.error('[Profile] Database error:', profileError.message)
@@ -145,6 +146,12 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
       if (profileError.message.includes('relation') || profileError.message.includes('does not exist')) {
         console.error('[Profile] ⚠️ CRITICAL: profiles table does not exist! Run database setup SQL.')
       }
+      return null
+    }
+    
+    // If no profile found, return null (not an error - profile might not be created yet)
+    if (!profile) {
+      console.log('[Profile] No profile found for user:', user.id)
       return null
     }
     
@@ -166,15 +173,20 @@ export async function getCurrentUserCompany(): Promise<UserCompany | null> {
     
     if (!user) return null
     
-    const { data: company } = await supabase
+    const { data: company, error } = await supabase
       .from('companies')
       .select('*')
       .eq('user_id', user.id)
-      .single()
+      .maybeSingle()
+    
+    if (error) {
+      console.error('[Company] Database error:', error.message)
+      return null
+    }
     
     return company
   } catch (error) {
-    console.error('Error getting user company:', error)
+    console.error('[Company] Unexpected error:', error)
     return null
   }
 }

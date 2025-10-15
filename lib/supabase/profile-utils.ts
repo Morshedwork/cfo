@@ -133,29 +133,27 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
       return null
     }
     
-    // Use maybeSingle() instead of single() to handle cases where profile might not exist
-    const { data: profile, error: profileError } = await supabase
+    // Use single() to ensure only one object is returned
+    const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', user.id)
-      .maybeSingle()
+      .single()
     
-    if (profileError) {
-      console.error('[Profile] Database error:', profileError.message)
+    if (error) {
+      console.error('[Profile] Database error:', error.message)
       // Check if it's because table doesn't exist
-      if (profileError.message.includes('relation') || profileError.message.includes('does not exist')) {
+      if (error.message.includes('relation') || error.message.includes('does not exist')) {
         console.error('[Profile] ⚠️ CRITICAL: profiles table does not exist! Run database setup SQL.')
+      }
+      // PGRST116 means no rows returned - profile doesn't exist yet
+      if (error.code === 'PGRST116') {
+        console.log('[Profile] No profile found for user:', user.id)
       }
       return null
     }
     
-    // If no profile found, return null (not an error - profile might not be created yet)
-    if (!profile) {
-      console.log('[Profile] No profile found for user:', user.id)
-      return null
-    }
-    
-    return profile
+    return data
   } catch (error) {
     console.error('[Profile] Unexpected error:', error)
     return null
@@ -173,18 +171,23 @@ export async function getCurrentUserCompany(): Promise<UserCompany | null> {
     
     if (!user) return null
     
-    const { data: company, error } = await supabase
+    // Use single() to ensure only one object is returned
+    const { data, error } = await supabase
       .from('companies')
       .select('*')
       .eq('user_id', user.id)
-      .maybeSingle()
+      .single()
     
     if (error) {
       console.error('[Company] Database error:', error.message)
+      // PGRST116 means no rows returned - company doesn't exist yet
+      if (error.code === 'PGRST116') {
+        console.log('[Company] No company found for user:', user.id)
+      }
       return null
     }
     
-    return company
+    return data
   } catch (error) {
     console.error('[Company] Unexpected error:', error)
     return null

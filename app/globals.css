@@ -600,6 +600,19 @@
 .stagger-item:nth-child(7) { animation-delay: 0.35s; }
 .stagger-item:nth-child(8) { animation-delay: 0.4s; }
 
+/* Animation delay utilities */
+.animation-delay-500 {
+  animation-delay: 0.5s;
+}
+
+.animation-delay-1000 {
+  animation-delay: 1s;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
 /* Glass morphism for modern fintech UI */
 .glass {
   background: rgba(30, 35, 50, 0.8);

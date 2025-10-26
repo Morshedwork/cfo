@@ -1,24 +1,92 @@
-// Gemini API client for all AI features
+// AI API client for all AI features (supports OpenRouter and Gemini)
 export class GeminiClient {
   private apiKey: string
-  private baseUrl = "https://generativelanguage.googleapis.com/v1beta"
-  private model = "gemini-1.5-flash-latest" // Using latest Gemini Flash model
+  private useOpenRouter: boolean
+  private openRouterUrl = "https://openrouter.ai/api/v1/chat/completions"
+  private geminiUrl = "https://generativelanguage.googleapis.com/v1beta"
+  private openRouterModel = "deepseek/deepseek-chat" // DeepSeek Chat - Fast, smart responses
+  private geminiModel = "gemini-1.5-flash-latest"
 
-  constructor(apiKey: string) {
+  constructor(apiKey: string, useOpenRouter: boolean = false) {
     this.apiKey = apiKey
+    this.useOpenRouter = useOpenRouter
   }
 
   async generateText(prompt: string, context?: any): Promise<string> {
     // Fallback mode - return intelligent demo responses
     if (this.apiKey === "fallback-mode") {
-      console.log("[Gemini] Using fallback mode - no API key configured")
+      console.log("[AI] Using fallback mode - no API key configured")
       return this.getFallbackResponse(prompt, context)
     }
 
-    console.log("[Gemini] Attempting API call with model:", this.model)
+    // Use OpenRouter if enabled
+    if (this.useOpenRouter) {
+      return this.generateWithOpenRouter(prompt, context)
+    }
+
+    // Otherwise use Gemini
+    return this.generateWithGemini(prompt, context)
+  }
+
+  private async generateWithOpenRouter(prompt: string, context?: any): Promise<string> {
+    console.log("[OpenRouter] Attempting API call with model:", this.openRouterModel)
 
     try {
-      const response = await fetch(`${this.baseUrl}/models/${this.model}:generateContent?key=${this.apiKey}`, {
+      const fullPrompt = this.buildPromptWithContext(prompt, context)
+      
+      const response = await fetch(this.openRouterUrl, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${this.apiKey}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": "https://aura-cfo.app",
+          "X-Title": "Aura CFO Voice Assistant"
+        },
+        body: JSON.stringify({
+          model: this.openRouterModel,
+          messages: [
+            {
+              role: "system",
+              content: "You are Aura, a smart AI CFO assistant. Be conversational and helpful. Answer in 40-60 words MAXIMUM. NO asterisks or markdown. Give clear, direct answers with specific numbers. Be quick and actionable."
+            },
+            {
+              role: "user",
+              content: fullPrompt
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 150, // Quick, concise responses
+          top_p: 0.95,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error(`[OpenRouter] API error ${response.status}:`, errorText)
+        return this.getFallbackResponse(prompt, context)
+      }
+
+      const data = await response.json()
+      const result = data.choices?.[0]?.message?.content
+      
+      if (result) {
+        console.log("[OpenRouter] API call successful, response length:", result.length)
+        return result
+      } else {
+        console.error("[OpenRouter] No text in response:", JSON.stringify(data))
+        return this.getFallbackResponse(prompt, context)
+      }
+    } catch (error) {
+      console.error("[OpenRouter] API call exception:", error)
+      return this.getFallbackResponse(prompt, context)
+    }
+  }
+
+  private async generateWithGemini(prompt: string, context?: any): Promise<string> {
+    console.log("[Gemini] Attempting API call with model:", this.geminiModel)
+
+    try {
+      const response = await fetch(`${this.geminiUrl}/models/${this.geminiModel}:generateContent?key=${this.apiKey}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -34,10 +102,10 @@ export class GeminiClient {
             },
           ],
           generationConfig: {
-            temperature: 0.9,
+            temperature: 0.7,
             topK: 40,
             topP: 0.95,
-            maxOutputTokens: 8192,
+            maxOutputTokens: 150, // Quick, concise responses
           },
         }),
       })
@@ -65,62 +133,56 @@ export class GeminiClient {
   }
 
   private getFallbackResponse(prompt: string, context?: any): string {
-    // Intelligent fallback responses based on context
+    // Intelligent fallback responses with conversational tone
     const promptLower = prompt.toLowerCase()
     
-    if (promptLower.includes("runway") || promptLower.includes("cash")) {
-      return `Based on your current cash balance of $${context?.cashBalance?.toLocaleString() || "70,000"} and monthly burn rate of $${context?.monthlyBurn?.toLocaleString() || "82,000"}, you have approximately ${context?.runway || "0.9"} months of runway remaining.\n\n• Consider reducing non-essential expenses\n• Focus on revenue-generating activities\n• Plan fundraising activities soon\n\nRecommendation: Start fundraising conversations within the next 2-3 months to ensure sufficient runway during the process.`
+    if (promptLower.includes("runway") || promptLower.includes("cash") || promptLower.includes("how long")) {
+      return `Looking at your numbers, you've got about ${context?.runway || "3.3"} months of runway with $${context?.cashBalance?.toLocaleString() || "150,000"} in the bank and a monthly burn of $${context?.monthlyBurn?.toLocaleString() || "45,000"}.\n\nHere's the thing - that's definitely in the "need attention" zone. I'd recommend:\n\n• Start having fundraising conversations NOW if you haven't already\n• Look for quick wins to reduce burn by 15-20%\n• Focus on revenue-generating activities that have proven ROI\n\nThe good news? You have time to be strategic about this. Use the next 60 days wisely to either improve your unit economics or line up your next round.`
     }
     
-    if (promptLower.includes("revenue") || promptLower.includes("growth")) {
-      return `Your MRR is currently $${context?.mrr?.toLocaleString() || "35,000"} with a ${context?.growth || "25"}% growth rate.\n\n• Strong month-over-month growth momentum\n• Focus on customer retention and expansion\n• Consider upselling to existing customers\n\nRecommendation: Maintain this growth rate to achieve profitability within 8-10 months.`
+    if (promptLower.includes("revenue") || promptLower.includes("growth") || promptLower.includes("growing")) {
+      return `Your revenue story is actually pretty interesting! You're at $${context?.mrr?.toLocaleString() || "28,000"} MRR with ${context?.growth || "18"}% month-over-month growth.\n\nWhat's exciting here is the growth momentum. At this rate, you could be looking at some serious revenue in the next 6-9 months. My take?\n\n• Double down on what's working - that growth isn't by accident\n• Focus heavily on retention (it's 5x cheaper than acquisition)\n• Start thinking about your pricing - you might be undercharging\n\nIf you can maintain even 15% growth for the next 8 months, you'll be in a much stronger position financially and for fundraising.`
     }
     
-    if (promptLower.includes("expense") || promptLower.includes("cost")) {
-      return `Your current monthly burn rate is $${context?.monthlyBurn?.toLocaleString() || "82,000"}.\n\n• Payroll: ~60% of expenses\n• Marketing: ~20% of expenses\n• Infrastructure: ~15% of expenses\n• Other: ~5% of expenses\n\nRecommendation: Review marketing spend efficiency and consider optimizing infrastructure costs.`
+    if (promptLower.includes("expense") || promptLower.includes("cost") || promptLower.includes("spending")) {
+      return `Let me break down your burn rate of $${context?.monthlyBurn?.toLocaleString() || "45,000"} per month:\n\nFrom what I'm seeing:\n• Payroll is likely your biggest chunk (usually 60-70%)\n• Then marketing and customer acquisition\n• Infrastructure and tools probably around 10-15%\n\nHere's my honest take - don't just cut costs for the sake of cutting. Instead:\n\n• Audit your marketing spend ROI - kill what doesn't work\n• Review your tool stack - you'd be surprised how much SaaS bloat happens\n• Consider if you're overstaffed in any areas\n\nThe goal isn't to starve your business, it's to be capital efficient. Every dollar should be working hard for you.`
     }
     
-    return `I'm currently analyzing your financial data. Your key metrics:\n\n• Cash Balance: $${context?.cashBalance?.toLocaleString() || "70,000"}\n• Monthly Burn: $${context?.monthlyBurn?.toLocaleString() || "82,000"}\n• MRR: $${context?.mrr?.toLocaleString() || "35,000"}\n• Growth: ${context?.growth || "25"}%\n\nFeel free to ask specific questions about your runway, expenses, or growth strategies!`
+    if (promptLower.includes("fundrais") || promptLower.includes("investor") || promptLower.includes("raise")) {
+      return `Okay, let's talk fundraising strategy. With ${context?.runway || "3.3"} months of runway and ${context?.growth || "18"}% growth, here's what I'm thinking:\n\nYou're in decent shape, but timing is everything. Start NOW because:\n\n• Fundraising takes 3-6 months on average\n• You want to raise from a position of strength, not desperation\n• Your growth numbers are actually compelling\n\nMy advice:\n\n• Get your story tight - focus on growth, market opportunity, and traction\n• Target investors who understand your space\n• Run a tight process - don't let it drag on\n\nAim to close your round before you hit 2 months of runway. That keeps you in control of the conversation.`
+    }
+    
+    if (promptLower.includes("what should") || promptLower.includes("focus") || promptLower.includes("priority")) {
+      return `Great question! Based on your current position - $${context?.cashBalance?.toLocaleString() || "150,000"} cash, ${context?.runway || "3.3"} months runway, growing at ${context?.growth || "18"}% - here's what I'd prioritize:\n\nTop 3 Focus Areas:\n\n1. Revenue Acceleration - Your growth is solid, but you need to compress the timeline. What can you do to turn that ${context?.growth || "18"}% into 25%?\n\n2. Extend Runway - You need breathing room. Can you negotiate better payment terms? Reduce unnecessary spend? Small changes compound.\n\n3. Fundraising Prep - Start building relationships now, even if you're not actively raising yet.\n\nThe key is balancing growth with survival. You're playing a game where you need to last long enough for the growth to compound. What's your gut telling you is the biggest opportunity right now?`
+    }
+    
+    return `Hey! I'm here to help you understand your financial picture and make smarter decisions. Right now, here's what I see:\n\n• Cash: $${context?.cashBalance?.toLocaleString() || "150,000"}\n• Monthly Burn: $${context?.monthlyBurn?.toLocaleString() || "45,000"}\n• Runway: ${context?.runway || "3.3"} months\n• MRR: $${context?.mrr?.toLocaleString() || "28,000"}\n• Growth: ${context?.growth || "18"}%\n\nYou can ask me things like:\n• "What's my runway situation?"\n• "How's my revenue growth?"\n• "What should I focus on next?"\n• "When should I start fundraising?"\n\nWhat would be most helpful for you to know?`
   }
 
   async analyzeFinancialData(data: any, query: string): Promise<any> {
-    const prompt = `You are Aura, an expert AI Chief Financial Officer (CFO) and financial advisor for startups and SMEs. You have deep expertise in:
+    const prompt = `You're Aura, an AI CFO. Answer in 40-60 words MAX. NO markdown or asterisks - clean text only.
 
-• Cash flow management and runway forecasting
-• Financial modeling and scenario planning
-• Fundraising strategy and investor relations
-• Expense optimization and cost management
-• Revenue growth and unit economics
-• Financial statements (P&L, Balance Sheet, Cash Flow)
-• Strategic decision-making for early-stage companies
+FINANCIALS:
+Cash: $${data.cashBalance?.toLocaleString()} | Burn: $${data.monthlyBurn?.toLocaleString()}/mo | Runway: ${data.runway}mo
+Revenue: $${data.monthlyRevenue?.toLocaleString()}/mo | MRR: $${data.mrr?.toLocaleString()} | Growth: ${data.revenueGrowth}%
+${data.topExpenses?.length > 0 ? `Top Costs: ${data.topExpenses.slice(0,2).map((e: any) => `${e.category} $${e.amount.toLocaleString()}`).join(', ')}` : ''}
 
-Your communication style is:
-• Professional yet accessible
-• Data-driven with specific numbers and metrics
-• Action-oriented with clear recommendations
-• Empathetic to the challenges founders face
-• Concise but comprehensive
+Question: "${query}"
 
-Current Financial Context:
-• Cash Balance: $${data.cashBalance?.toLocaleString() || 'N/A'}
-• Monthly Burn Rate: $${data.monthlyBurn?.toLocaleString() || 'N/A'}
-• Runway: ${data.runway || 'N/A'} months
-• Monthly Recurring Revenue (MRR): $${data.mrr?.toLocaleString() || 'N/A'}
-• Growth Rate: ${data.growth || 'N/A'}%
-
-User Question: ${query}
-
-As a CFO, provide a strategic response that:
-1. Directly answers the question with specific numbers
-2. Identifies key financial insights or concerns
-3. Provides 2-3 actionable recommendations
-4. Explains the financial impact of your advice
-5. Uses professional but clear language
-
-Keep your response focused, practical, and under 300 words.`
+Be conversational, give specific numbers, and be actionable. Answer directly.`
 
     const response = await this.generateText(prompt)
-    return this.parseFinancialResponse(response)
+    const cleanedResponse = this.removeMarkdown(response)
+    return this.parseFinancialResponse(cleanedResponse)
+  }
+
+  private removeMarkdown(text: string): string {
+    // Remove asterisks bold/italic
+    let clean = text.replace(/\*\*([^*]+)\*\*/g, '$1')
+    clean = clean.replace(/\*([^*]+)\*/g, '$1')
+    // Remove markdown headers
+    clean = clean.replace(/^#+\s+/gm, '')
+    return clean
   }
 
   async categorizeTransaction(
@@ -301,15 +363,17 @@ Respond in JSON format:
   }
 
   private buildPromptWithContext(prompt: string, context?: any): string {
-    if (!context) return prompt
+    if (!context) {
+      return `Aura AI CFO. Answer in 40-60 words MAX. NO markdown. Be direct and helpful. ${prompt}`
+    }
 
-    return `Context: You are Aura, an AI-powered virtual CFO assistant for startups and SMEs. You have access to the following financial data:
+    return `Aura AI CFO. 40-60 words MAX. NO markdown. Be conversational.
 
-${JSON.stringify(context, null, 2)}
+Data: Cash $${context.cashBalance?.toLocaleString()} | Burn $${context.monthlyBurn?.toLocaleString()}/mo | Runway ${context.runway}mo | MRR $${context.mrr?.toLocaleString()} | Growth ${context.growth}%
 
-User Query: ${prompt}
+Q: ${prompt}
 
-Provide a helpful, specific, and actionable response based on the data.`
+Give specific numbers. Be direct and actionable.`
   }
 
   private parseFinancialResponse(response: string): any {
@@ -354,14 +418,20 @@ let geminiClient: GeminiClient | null = null
 export function getGeminiClient(): GeminiClient {
   if (!geminiClient) {
     // Server-side only - never exposed to client
-    const apiKey = process.env.GEMINI_API_KEY
-    if (!apiKey) {
-      console.warn("[Gemini] GEMINI_API_KEY not set in environment, using fallback responses")
-      // Create a client with a dummy key - will use fallback responses
-      geminiClient = new GeminiClient("fallback-mode")
+    // Check for OpenRouter API key first (preferred)
+    const openRouterKey = process.env.OPENROUTER_API_KEY
+    const geminiKey = process.env.GEMINI_API_KEY
+    
+    if (openRouterKey) {
+      console.log("[AI] OpenRouter API key found, using OpenRouter with key:", openRouterKey.substring(0, 10) + "***")
+      geminiClient = new GeminiClient(openRouterKey, true) // true = use OpenRouter
+    } else if (geminiKey) {
+      console.log("[AI] Gemini API key found, using Gemini with key:", geminiKey.substring(0, 10) + "***")
+      geminiClient = new GeminiClient(geminiKey, false) // false = use Gemini
     } else {
-      console.log("[Gemini] API key found, initializing client with key:", apiKey.substring(0, 10) + "***")
-      geminiClient = new GeminiClient(apiKey)
+      console.warn("[AI] No API key found (OPENROUTER_API_KEY or GEMINI_API_KEY), using fallback responses")
+      // Create a client with a dummy key - will use fallback responses
+      geminiClient = new GeminiClient("fallback-mode", false)
     }
   }
   return geminiClient
@@ -369,5 +439,5 @@ export function getGeminiClient(): GeminiClient {
 
 // Check if we're in fallback mode
 export function isFallbackMode(): boolean {
-  return !process.env.GEMINI_API_KEY
+  return !process.env.OPENROUTER_API_KEY && !process.env.GEMINI_API_KEY
 }

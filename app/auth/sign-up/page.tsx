@@ -11,6 +11,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { Sparkles } from "lucide-react"
+import { GoogleIcon } from "@/components/google-icon"
 
 export default function SignUpPage() {
   const [email, setEmail] = useState("")
@@ -19,7 +20,33 @@ export default function SignUpPage() {
   const [companyName, setCompanyName] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false)
   const router = useRouter()
+
+  const handleGoogleSignUp = async () => {
+    const supabase = createClient()
+    setIsGoogleLoading(true)
+    setError(null)
+
+    try {
+      console.log('[Sign Up] Starting Google OAuth...')
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
+        }
+      })
+      if (error) throw error
+    } catch (error: unknown) {
+      console.error('[Sign Up] Google OAuth Error:', error)
+      setError(error instanceof Error ? error.message : "Failed to sign up with Google")
+      setIsGoogleLoading(false)
+    }
+  }
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -124,6 +151,30 @@ export default function SignUpPage() {
           <CardContent>
             <form onSubmit={handleSignUp}>
               <div className="flex flex-col gap-6">
+                {/* Google Sign-Up Button */}
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={handleGoogleSignUp}
+                  disabled={isGoogleLoading || isLoading}
+                >
+                  <GoogleIcon className="mr-2 h-5 w-5" />
+                  {isGoogleLoading ? "Connecting..." : "Continue with Google"}
+                </Button>
+
+                {/* Divider */}
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">
+                      Or continue with email
+                    </span>
+                  </div>
+                </div>
+
                 <div className="grid gap-2">
                   <Label htmlFor="company">Company Name</Label>
                   <Input
@@ -171,7 +222,7 @@ export default function SignUpPage() {
                     <p className="text-sm text-destructive">{error}</p>
                   </div>
                 )}
-                <Button type="submit" className="w-full" disabled={isLoading}>
+                <Button type="submit" className="w-full" disabled={isLoading || isGoogleLoading}>
                   {isLoading ? "Creating account..." : "Create Account"}
                 </Button>
               </div>

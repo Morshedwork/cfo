@@ -139,12 +139,13 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
       return null
     }
     
-    // Use single() to ensure only one object is returned
+    // Use limit(1).maybeSingle() to handle duplicates gracefully
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', user.id)
-      .single()
+      .limit(1)
+      .maybeSingle()
     
     if (error) {
       console.error('[Profile] Database error:', error.message)
@@ -152,10 +153,12 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
       if (error.message.includes('relation') || error.message.includes('does not exist')) {
         console.error('[Profile] ⚠️ CRITICAL: profiles table does not exist! Run database setup SQL.')
       }
-      // PGRST116 means no rows returned - profile doesn't exist yet
-      if (error.code === 'PGRST116') {
-        console.log('[Profile] No profile found for user:', user.id)
-      }
+      return null
+    }
+    
+    // If no profile found, return null (not an error)
+    if (!data) {
+      console.log('[Profile] No profile found for user:', user.id)
       return null
     }
     
@@ -180,19 +183,22 @@ export async function getCurrentUserCompany(): Promise<UserCompany | null> {
     
     if (!user) return null
     
-    // Use single() to ensure only one object is returned
+    // Use limit(1).maybeSingle() to handle duplicates gracefully
     const { data, error } = await supabase
       .from('companies')
       .select('*')
       .eq('user_id', user.id)
-      .single()
+      .limit(1)
+      .maybeSingle()
     
     if (error) {
       console.error('[Company] Database error:', error.message)
-      // PGRST116 means no rows returned - company doesn't exist yet
-      if (error.code === 'PGRST116') {
-        console.log('[Company] No company found for user:', user.id)
-      }
+      return null
+    }
+    
+    // If no company found, return null (not an error)
+    if (!data) {
+      console.log('[Company] No company found for user:', user.id)
       return null
     }
     

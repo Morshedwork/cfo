@@ -9,6 +9,8 @@ import { AIAssistantPreview } from "@/components/ai-assistant-preview"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import { CFOMascot } from "@/components/cfo-mascot"
 import {
   TrendingUp,
   Zap,
@@ -27,17 +29,33 @@ import {
   Users,
   TrendingDown,
   Globe,
+  Volume2,
+  X,
 } from "lucide-react"
 import Link from "next/link"
 
 export default function HomePage() {
   // Very short loading for smooth content appearance
   const [loading, setLoading] = useState(false)
+  const [showWelcome, setShowWelcome] = useState(false)
 
   useEffect(() => {
     // No loading screen needed - content loads immediately
     setLoading(false)
+
+    // Show welcome popup after a short delay (only once per session)
+    const hasSeenWelcome = sessionStorage.getItem('aura_welcome_seen')
+    if (!hasSeenWelcome) {
+      setTimeout(() => {
+        setShowWelcome(true)
+        sessionStorage.setItem('aura_welcome_seen', 'true')
+      }, 2000) // Show after 2 seconds
+    }
   }, [])
+
+  const handleCloseWelcome = () => {
+    setShowWelcome(false)
+  }
 
   const topFeatures = [
     {
@@ -77,6 +95,90 @@ export default function HomePage() {
     <div className="min-h-screen bg-background relative w-full overflow-x-hidden">
       <ParticlesBackground />
       <AuthNavbar />
+
+      {/* Welcome Voice Pop-up */}
+      <Dialog open={showWelcome} onOpenChange={setShowWelcome}>
+        <DialogContent className="sm:max-w-[500px] bg-gradient-to-br from-background via-primary/5 to-secondary/5">
+          <button
+            onClick={handleCloseWelcome}
+            className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
+          >
+            <X className="h-4 w-4" />
+            <span className="sr-only">Close</span>
+          </button>
+          
+          <DialogHeader className="text-center">
+            <div className="flex justify-center mb-4">
+              <div className="relative">
+                <CFOMascot 
+                  state="idle" 
+                  size="large"
+                  className="drop-shadow-2xl"
+                />
+              </div>
+            </div>
+            <DialogTitle className="text-3xl font-bold gradient-text flex items-center justify-center gap-2">
+              <Sparkles className="h-6 w-6 text-primary animate-pulse" />
+              Welcome to Aura!
+            </DialogTitle>
+            <DialogDescription className="text-base text-foreground mt-4 leading-relaxed">
+              I'm your <span className="font-semibold text-primary">AI-powered virtual CFO</span>, here to help you manage your startup's finances with confidence.
+              <br /><br />
+              Let's transform your financial chaos into <span className="font-semibold text-accent">strategic clarity</span> together.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="mt-6 space-y-4">
+            {/* Quick Stats */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="text-center p-3 bg-primary/5 rounded-lg border border-primary/10">
+                <div className="text-2xl font-bold text-primary">AI</div>
+                <div className="text-xs text-muted-foreground">Powered</div>
+              </div>
+              <div className="text-center p-3 bg-accent/5 rounded-lg border border-accent/10">
+                <div className="text-2xl font-bold text-accent">24/7</div>
+                <div className="text-xs text-muted-foreground">Available</div>
+              </div>
+              <div className="text-center p-3 bg-secondary/5 rounded-lg border border-secondary/10">
+                <div className="text-2xl font-bold text-secondary">Free</div>
+                <div className="text-xs text-muted-foreground">30 Days</div>
+              </div>
+            </div>
+
+            {/* CTA Buttons */}
+            <div className="flex flex-col gap-2">
+              <Link href="/onboarding" onClick={handleCloseWelcome}>
+                <Button 
+                  className="w-full bg-gradient-to-r from-primary to-secondary hover:opacity-90"
+                  size="lg"
+                >
+                  Get Started Free
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={handleCloseWelcome}
+              >
+                Explore Features
+              </Button>
+            </div>
+
+            {/* Trust Indicators */}
+            <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground pt-2">
+              <div className="flex items-center gap-1">
+                <CheckCircle2 className="h-3 w-3 text-accent" />
+                No credit card
+              </div>
+              <div className="flex items-center gap-1">
+                <CheckCircle2 className="h-3 w-3 text-accent" />
+                Setup in 2 minutes
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Hero Section */}
       <section className="relative overflow-hidden py-20 md:py-32">
@@ -122,6 +224,104 @@ export default function HomePage() {
                 Free for 30 days
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Voice Assistant Live Preview */}
+      <section className="py-20 bg-gradient-to-br from-primary/5 via-background to-secondary/5 relative">
+        <div className="container relative z-10">
+          <div className="text-center mb-12">
+            <Badge className="mb-4 bg-primary/10 text-primary border-primary/50 gap-2">
+              <Mic className="h-3 w-3" />
+              Try Aura Voice Assistant
+            </Badge>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Talk to Your AI CFO</h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Experience the future of financial management with voice-powered AI
+            </p>
+          </div>
+
+          <div className="max-w-4xl mx-auto">
+            <Card className="p-8 bg-gradient-to-br from-background to-primary/5 border-2 border-primary/20 hover-lift hover-glow">
+              <div className="flex flex-col md:flex-row items-center gap-8">
+                {/* Mascot */}
+                <div className="flex-shrink-0">
+                  <div className="relative">
+                    <div className="absolute inset-0 -m-4 rounded-full bg-primary/10 animate-pulse" />
+                    <CFOMascot 
+                      state="idle" 
+                      size="large"
+                      className="drop-shadow-2xl relative z-10"
+                    />
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 space-y-6">
+                  <div>
+                    <h3 className="text-2xl font-bold mb-3 flex items-center gap-2">
+                      <Volume2 className="h-6 w-6 text-primary" />
+                      Voice-Powered Financial Intelligence
+                    </h3>
+                    <p className="text-muted-foreground">
+                      Simply ask Aura about your runway, burn rate, or get strategic advice. 
+                      No typing, no clicking—just talk naturally.
+                    </p>
+                  </div>
+
+                  {/* Example Queries */}
+                  <div className="space-y-3">
+                    <p className="text-sm font-semibold text-primary">Try asking:</p>
+                    <div className="grid gap-2">
+                      {[
+                        '"What\'s my current runway?"',
+                        '"What are my top expenses?"',
+                        '"When should I start fundraising?"',
+                        '"How\'s my revenue growth?"'
+                      ].map((query, i) => (
+                        <div 
+                          key={i}
+                          className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg border border-border/50 hover:border-primary/50 transition-colors"
+                        >
+                          <Mic className="h-4 w-4 text-primary flex-shrink-0" />
+                          <span className="text-sm">{query}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* CTA */}
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Link href="/voice-assistant" className="flex-1">
+                      <Button className="w-full bg-gradient-to-r from-primary to-secondary hover:opacity-90" size="lg">
+                        <Mic className="mr-2 h-5 w-5" />
+                        Try Voice Assistant
+                      </Button>
+                    </Link>
+                    <Link href="/onboarding" className="flex-1">
+                      <Button variant="outline" className="w-full" size="lg">
+                        Get Started Free
+                      </Button>
+                    </Link>
+                  </div>
+
+                  {/* Features */}
+                  <div className="flex flex-wrap gap-3 pt-4 border-t">
+                    {[
+                      { icon: Brain, text: 'AI-Powered' },
+                      { icon: Zap, text: 'Real-Time Analysis' },
+                      { icon: Shield, text: 'Secure & Private' }
+                    ].map((feature, i) => (
+                      <div key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <feature.icon className="h-4 w-4 text-primary" />
+                        <span>{feature.text}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </Card>
           </div>
         </div>
       </section>

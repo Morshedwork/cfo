@@ -19,6 +19,7 @@ import { useRouter } from "next/navigation"
 
 export function AuthNavbar() {
   const [isOpen, setIsOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const { user, profile, signOut, loading, refreshProfile } = useAuth()
   const router = useRouter()
 
@@ -29,7 +30,13 @@ export function AuthNavbar() {
     { href: "/sales", label: "Sales" },
     { href: "/data-management", label: "Data" },
     { href: "/ai-assistant", label: "AI Assistant" },
+    { href: "/voice-assistant", label: "Voice AI" },
   ]
+
+  // Prevent hydration mismatch by only showing auth state after mount
+  ReactUseEffect(() => {
+    setMounted(true)
+  }, [])
 
   const handleSignOut = async () => {
     // SignOut now handles redirect internally, no need to redirect again
@@ -56,6 +63,56 @@ export function AuthNavbar() {
 
   // Don't show loading state during SSR to avoid hydration mismatch
   // Auth state loads on client only, so skip loading spinner
+
+  // Render neutral state during SSR and initial mount to prevent hydration mismatch
+  if (!mounted) {
+    return (
+      <nav className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-16 items-center justify-between">
+          <Link href="/" className="flex items-center gap-2 font-semibold text-xl">
+            <Sparkles className="h-6 w-6 text-primary" />
+            <span className="gradient-text">Aura</span>
+          </Link>
+          <div className="hidden md:flex items-center gap-6">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
+          <div className="flex items-center gap-4">
+            {/* Placeholder for auth buttons to maintain layout */}
+            <div className="h-10 w-32 hidden md:block" />
+            <Sheet open={isOpen} onOpenChange={setIsOpen}>
+              <SheetTrigger asChild className="md:hidden">
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent>
+                <div className="flex flex-col gap-4 mt-8">
+                  {navLinks.map((link) => (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      onClick={() => setIsOpen(false)}
+                      className="text-lg font-medium text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {link.label}
+                    </Link>
+                  ))}
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
+        </div>
+      </nav>
+    )
+  }
 
   // Authenticated view
   if (user) {

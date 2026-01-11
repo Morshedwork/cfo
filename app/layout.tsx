@@ -1,13 +1,22 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { GeistSans } from "geist/font/sans"
-import { GeistMono } from "geist/font/mono"
+import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { Suspense } from "react"
 import { FloatingNotificationButton } from "@/components/floating-notification-button"
 import { AuthProvider } from "@/lib/auth-context"
 import { Toaster } from "sonner"
 import "./globals.css"
+
+const geistSans = Geist({
+  subsets: ["latin"],
+  variable: "--font-geist-sans",
+})
+
+const geistMono = Geist_Mono({
+  subsets: ["latin"],
+  variable: "--font-geist-mono",
+})
 
 export const metadata: Metadata = {
   title: "Aura - AI Virtual CFO for Startups",
@@ -23,10 +32,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="w-full">
-      <body 
-        className={`font-sans ${GeistSans.variable} ${GeistMono.variable} w-full m-0 p-0`}
-        suppressHydrationWarning
-      >
+      <body className={`font-sans ${geistSans.variable} ${geistMono.variable} w-full m-0 p-0`} suppressHydrationWarning>
         <AuthProvider>
           <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
           <FloatingNotificationButton />

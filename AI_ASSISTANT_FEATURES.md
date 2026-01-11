@@ -78,12 +78,12 @@ Now renders:
 - Provides before/after comparison tables
 
 **Try these commands:**
-```
+\`\`\`
 "Model hiring 2 engineers at $180k each starting next month"
 "Project our cash runway for the next 12 months"
 "What happens if we increase marketing spend by $20k per month?"
 "Model cutting expenses by 15%"
-```
+\`\`\`
 
 **What you get back:**
 - 📊 **Scenario Analysis Card** with:
@@ -103,11 +103,11 @@ Now renders:
 - Shows percentile rankings
 
 **Try these commands:**
-```
+\`\`\`
 "Generate investor KPI dashboard"
 "Show me investor KPIs with benchmarks"
 "What are our key metrics for fundraising?"
-```
+\`\`\`
 
 **What you get back:**
 - 💼 **KPI Dashboard Card** with:
@@ -127,11 +127,11 @@ Now renders:
 - Proactive insights on business operations
 
 **Try these commands:**
-```
+\`\`\`
 "What are my biggest expenses and where can I reduce costs?"
 "Analyze growth opportunities"
 "Show me profitability insights"
-```
+\`\`\`
 
 **What you get back:**
 - General financial analysis with specific numbers
@@ -149,11 +149,11 @@ Now renders:
 - Handles option pool creation/refresh
 
 **Try these commands:**
-```
+\`\`\`
 "Model a $10M Series B at $100M pre-money valuation with 10% option pool"
 "Show me dilution for a $5M Series A round"
 "What happens to founder ownership if we raise $15M?"
-```
+\`\`\`
 
 **What you get back:**
 - 📈 **Cap Table Comparison Card** with:
@@ -247,7 +247,7 @@ Natural language patterns are detected:
 
 ### **Financial Modeling Flow**
 
-```
+\`\`\`
 User Message
     ↓
 AI CFO Client (Intent Detection)
@@ -257,7 +257,7 @@ Financial Engine (Calculations)
 Structured Response (type + data + actions)
     ↓
 Rich UI Component Rendered in Chat
-```
+\`\`\`
 
 ---
 
@@ -283,18 +283,18 @@ Rich UI Component Rendered in Chat
 
 You need to run the new database schema in your Supabase SQL editor:
 
-```bash
+\`\`\`bash
 # Copy the contents of scripts/003_ai_assistant_features.sql
 # and run it in Supabase SQL Editor
-```
+\`\`\`
 
 This will create all the new tables with RLS policies.
 
 ### **Step 2: Start the Development Server**
 
-```bash
+\`\`\`bash
 pnpm dev
-```
+\`\`\`
 
 ### **Step 3: Navigate to AI Assistant**
 
@@ -303,29 +303,29 @@ Go to: `http://localhost:3000/ai-assistant`
 ### **Step 4: Try These Commands**
 
 1. **Scenario Modeling:**
-   ```
+   \`\`\`
    Model hiring 2 engineers at $180k each starting next month
-   ```
+   \`\`\`
 
 2. **KPI Dashboard:**
-   ```
+   \`\`\`
    Generate investor KPI dashboard with benchmarks
-   ```
+   \`\`\`
 
 3. **Forecasting:**
-   ```
+   \`\`\`
    Project our cash runway for the next 12 months
-   ```
+   \`\`\`
 
 4. **Cap Table:**
-   ```
+   \`\`\`
    Model a $10M Series B at $100M pre-money valuation with 10% option pool
-   ```
+   \`\`\`
 
 5. **Cost Analysis:**
-   ```
+   \`\`\`
    What are my biggest expenses and where can I reduce costs?
-   ```
+   \`\`\`
 
 ---
 
@@ -450,15 +450,15 @@ While the core functionality is complete, these require additional work:
 ### **Adding a New Command Type**
 
 1. **Add intent detection** in `lib/ai-cfo-client.ts`:
-```typescript
+\`\`\`typescript
 private isNewFeatureRequest(message: string): boolean {
   const keywords = ['keyword1', 'keyword2']
   return keywords.some(k => message.includes(k))
 }
-```
+\`\`\`
 
 2. **Add handler method**:
-```typescript
+\`\`\`typescript
 private async handleNewFeature(message: string, context: FinancialMetrics): Promise<EnhancedMessage> {
   // Your logic here
   return {
@@ -467,16 +467,16 @@ private async handleNewFeature(message: string, context: FinancialMetrics): Prom
     data: { /* structured data */ }
   }
 }
-```
+\`\`\`
 
 3. **Add UI component** in `components/ai-message-types.tsx`
 
 4. **Add rendering** in `app/ai-assistant/page.tsx`:
-```typescript
+\`\`\`typescript
 {message.type === "new_feature" && message.data && (
   <NewFeatureCard data={message.data} />
 )}
-```
+\`\`\`
 
 ---
 
@@ -547,4 +547,3 @@ All 5 features are implemented and working. The next step is connecting real fin
 ---
 
 **Ready to test? Go to `/ai-assistant` and try any of the commands above!** 🚀
-

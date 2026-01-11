@@ -269,4 +269,3 @@ COMMENT ON TABLE risk_alerts IS 'Automated financial risk alerts and warnings';
 COMMENT ON TABLE cap_table_snapshots IS 'Company equity ownership snapshots and scenarios';
 COMMENT ON TABLE strategic_insights IS 'AI-generated strategic business insights';
 COMMENT ON TABLE chat_messages IS 'Enhanced chat history with rich message types';
-

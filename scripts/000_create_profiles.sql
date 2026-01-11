@@ -77,4 +77,3 @@ CREATE TRIGGER on_profile_created
 -- Create index for better performance
 DROP INDEX IF EXISTS idx_profiles_email;
 CREATE INDEX idx_profiles_email ON public.profiles(email);
-

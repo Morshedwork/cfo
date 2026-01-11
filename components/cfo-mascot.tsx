@@ -524,4 +524,3 @@ export function CFOMascot({ state = 'idle', size = 'medium', className }: CFOMas
     </div>
   );
 }
-

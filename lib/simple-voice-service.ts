@@ -338,4 +338,3 @@ export function getVoiceService(): SimpleVoiceService {
   
   return voiceService
 }
-

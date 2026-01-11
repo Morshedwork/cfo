@@ -287,4 +287,3 @@ function getDemoFinancialData() {
     dataSource: 'Dashboard Static Data',
   }
 }
-

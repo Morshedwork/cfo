@@ -14,9 +14,9 @@ Your `.env.local` file has been created with:
 ### Go to Supabase SQL Editor
 
 1. **Open your Supabase dashboard:**
-   ```
+   \`\`\`
    https://app.supabase.com/project/vhshwuolgaqscgebeebb
-   ```
+   \`\`\`
 
 2. **Click on "SQL Editor" in the left sidebar**
 
@@ -83,9 +83,9 @@ This allows users to sign up and log in instantly without email verification.
 ### Option A: Via Dashboard (Easiest)
 
 1. **Go to Authentication → Providers:**
-   ```
+   \`\`\`
    https://app.supabase.com/project/vhshwuolgaqscgebeebb/auth/providers
-   ```
+   \`\`\`
 
 2. **Find "Email" provider and click on it**
 
@@ -134,9 +134,9 @@ The server will now use the new Supabase credentials from `.env.local`.
 ### Test Sign Up:
 
 1. **Go to:**
-   ```
+   \`\`\`
    http://localhost:3000/auth/sign-up
-   ```
+   \`\`\`
 
 2. **Fill in:**
    - Company Name: `Test Company`
@@ -154,9 +154,9 @@ The server will now use the new Supabase credentials from `.env.local`.
 ### Test Login:
 
 1. **Go to:**
-   ```
+   \`\`\`
    http://localhost:3000/auth/login
-   ```
+   \`\`\`
 
 2. **Enter credentials:**
    - Email: `test@test.com`
@@ -175,9 +175,9 @@ The server will now use the new Supabase credentials from `.env.local`.
 ### Check if your user was created:
 
 1. **Go to Authentication → Users:**
-   ```
+   \`\`\`
    https://app.supabase.com/project/vhshwuolgaqscgebeebb/auth/users
-   ```
+   \`\`\`
 
 2. **You should see:**
    - ✅ Your test user (`test@test.com`)
@@ -187,9 +187,9 @@ The server will now use the new Supabase credentials from `.env.local`.
 ### Check if company was created:
 
 1. **Go to Table Editor → companies:**
-   ```
+   \`\`\`
    https://app.supabase.com/project/vhshwuolgaqscgebeebb/editor
-   ```
+   \`\`\`
 
 2. **Click on the `companies` table**
 
@@ -306,6 +306,3 @@ For push notifications:
 ---
 
 **🎉 Once all steps are complete, your Aura CFO app is fully set up and ready to use!**
-
-
-

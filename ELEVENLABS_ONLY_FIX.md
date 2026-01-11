@@ -30,7 +30,7 @@ Your voice assistant now uses **ONLY ElevenLabs** - no more browser TTS fallback
 When you use the voice assistant, you'll see these logs (F12 console):
 
 ### ✅ **Success Flow:**
-```
+\`\`\`
 [Voice] 🎤 New speak request
 [Voice] 🛑 Stopping all audio...
 [Voice] Checking for ElevenLabs API key...
@@ -42,21 +42,21 @@ When you use the voice assistant, you'll see these logs (F12 console):
 [ElevenLabs] Audio loaded, duration: 3.5 seconds
 [ElevenLabs] ✅ Audio playing successfully
 [ElevenLabs] ✅ Audio finished playing
-```
+\`\`\`
 
 ### ❌ **Error Flow (if something fails):**
-```
+\`\`\`
 [Voice] 🎤 New speak request
 [Voice] Checking for ElevenLabs API key...
 [Voice] Key found: true
 [Voice] 🎙️ Using ElevenLabs Bella voice...
 [ElevenLabs] Audio blob received: 0 bytes, type: audio/mpeg
 [ElevenLabs] ❌ ElevenLabs returned empty audio
-```
+\`\`\`
 
 OR
 
-```
+\`\`\`
 [ElevenLabs] Audio blob received: 45678 bytes, type: audio/mpeg
 [ElevenLabs] Audio URL created: blob:http://...
 [ElevenLabs] ❌ Audio playback error: {
@@ -64,7 +64,7 @@ OR
   message: "MEDIA_ERR_SRC_NOT_SUPPORTED",
   type: "error"
 }
-```
+\`\`\`
 
 ---
 
@@ -128,14 +128,14 @@ If you see an audio error, here's what it means:
 ## 🧪 Testing Steps
 
 **1. Hard Refresh Browser**
-```
+\`\`\`
 Ctrl + Shift + R
-```
+\`\`\`
 
 **2. Open Voice Assistant Page**
-```
+\`\`\`
 http://localhost:3000/voice-assistant
-```
+\`\`\`
 
 **3. Open Console (F12)**
 - Go to "Console" tab
@@ -148,15 +148,15 @@ http://localhost:3000/voice-assistant
 **5. Check Console Output**
 
 **✅ If you see:**
-```
+\`\`\`
 [ElevenLabs] ✅ Audio playing successfully
-```
+\`\`\`
 **→ It's working! Enjoy Bella's natural voice!**
 
 **❌ If you see:**
-```
+\`\`\`
 [ElevenLabs] ❌ Audio playback error: {...}
-```
+\`\`\`
 **→ Look at the error details and check table above**
 
 ---
@@ -164,43 +164,43 @@ http://localhost:3000/voice-assistant
 ## 📊 What You Should See
 
 ### API Key Check:
-```
+\`\`\`
 [Voice] Key found: true
 [Voice] Key prefix: sk_1cea4b...
-```
+\`\`\`
 ✅ This confirms your API key is loaded
 
 ### Audio Blob:
-```
+\`\`\`
 [ElevenLabs] Audio blob received: 45678 bytes, type: audio/mpeg
-```
+\`\`\`
 ✅ Size > 0 = API returned audio
 ✅ Type = audio/mpeg = correct format
 
 ### Audio Duration:
-```
+\`\`\`
 [ElevenLabs] Audio loaded, duration: 3.5 seconds
-```
+\`\`\`
 ✅ Browser successfully loaded and decoded the audio
 
 ### Playing:
-```
+\`\`\`
 [ElevenLabs] ✅ Audio playing successfully
-```
+\`\`\`
 ✅ Audio is actually playing through speakers
 
 ---
 
 ## 🎯 Current Configuration
 
-```
+\`\`\`
 ✅ Model: eleven_monolingual_v1 (FREE tier)
 ✅ Voice: Bella (EXAVITQu4vr4xnSDxMaL)
 ✅ Voice Style: Young, friendly, realistic female
 ✅ API Key: sk_1cea4b... (configured in .env.local)
 ✅ Fallback: NONE (ElevenLabs only!)
 ✅ Error Handling: Detailed logging enabled
-```
+\`\`\`
 
 ---
 
@@ -222,24 +222,24 @@ This will help me fix the exact issue!
 ## 💡 Quick Checks
 
 **Is API key valid?**
-```bash
+\`\`\`bash
 # Check .env.local has this line:
 NEXT_PUBLIC_ELEVENLABS_API_KEY=sk_1cea4bc743826c2c0e9d8b6a34943cdbba7eecad64ba57f0
-```
+\`\`\`
 
 **Is server running?**
-```bash
+\`\`\`bash
 # Should see:
 ✓ Ready in X.Xs
 Environments: .env.local
-```
+\`\`\`
 
 **Did you hard refresh?**
-```bash
+\`\`\`bash
 # Press:
 Ctrl + Shift + R (Windows/Linux)
 Cmd + Shift + R (Mac)
-```
+\`\`\`
 
 ---
 
@@ -262,4 +262,3 @@ Cmd + Shift + R (Mac)
 ---
 
 **Try it now! Hard refresh (`Ctrl+Shift+R`) and check those console logs!** 🎯
-

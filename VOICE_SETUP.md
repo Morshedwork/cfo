@@ -34,17 +34,17 @@ No configuration needed! It just works.
 
 Add this line to your `.env.local` file in the project root:
 
-```env
+\`\`\`env
 NEXT_PUBLIC_ELEVENLABS_API_KEY=sk_your_key_here
-```
+\`\`\`
 
 **3. Restart Server**
 
-```bash
+\`\`\`bash
 # Stop server (Ctrl+C)
 # Start again
 npx --yes next@15.2.4 dev
-```
+\`\`\`
 
 **4. Hard Refresh Browser**
 
@@ -59,15 +59,15 @@ Press `Ctrl+Shift+R` to clear cache
 Open Voice Assistant page and click the mic. Check browser console (F12):
 
 **✅ ElevenLabs Working:**
-```
+\`\`\`
 [Voice] 🎙️ Using ElevenLabs Rachel voice (natural)
 [Voice] ✅ ElevenLabs playing
-```
+\`\`\`
 
 **🔊 Browser Fallback:**
-```
+\`\`\`
 [Voice] 🔊 Using browser TTS (fallback)
-```
+\`\`\`
 
 ---
 
@@ -116,12 +116,12 @@ Open Voice Assistant page and click the mic. Check browser console (F12):
 All these voices are **FREE** on ElevenLabs! Edit `lib/simple-voice-service.ts` line 51:
 
 **Current (Bella - young, friendly girl):**
-```typescript
+\`\`\`typescript
 const voiceId = 'EXAVITQu4vr4xnSDxMaL' // Bella
-```
+\`\`\`
 
 **Other FREE options:**
-```typescript
+\`\`\`typescript
 // Rachel - Mature, warm, professional female
 const voiceId = '21m00Tcm4TlvDq8ikWAM'
 
@@ -133,7 +133,7 @@ const voiceId = 'XB0fDUnXU5powFXDhCwa'
 
 // Dorothy - Calm, mature, pleasant female
 const voiceId = 'ThT5KcBeYPX3keUQqHPh'
-```
+\`\`\`
 
 Just change the voice ID and refresh your browser!
 
@@ -161,4 +161,3 @@ Just change the voice ID and refresh your browser!
 ✅ **Free tier available** - 10,000 chars/month
 
 Just add your API key to `.env.local` and enjoy natural voice! 🎯
-

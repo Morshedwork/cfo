@@ -375,4 +375,3 @@ With this allocation, your new monthly burn will be $${Math.round(newMonthlyBurn
     return milestones[stage]
   }
 }
-

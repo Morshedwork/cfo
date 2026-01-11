@@ -341,4 +341,3 @@ export async function sendDemoNotifications() {
     notificationService.alertPaymentReceived(25000, 'Acme Corp')
   }, 4000)
 }
-

@@ -3,10 +3,10 @@
 ## ❌ The Problem
 
 You're seeing:
-```
+\`\`\`
 This site can't be reached: placeholder.supabase.co
 DNS_PROBE_FINISHED_NXDOMAIN
-```
+\`\`\`
 
 This means **you haven't created your `.env.local` file yet!**
 
@@ -39,9 +39,9 @@ The app is trying to use placeholder values instead of your real Supabase creden
 **In your project root folder** (where `package.json` is), create a new file named **`.env.local`**
 
 **On Windows PowerShell:**
-```powershell
+\`\`\`powershell
 New-Item .env.local -ItemType File
-```
+\`\`\`
 
 **Or just:** Right-click in your project folder → New → Text Document → Rename to `.env.local`
 
@@ -51,21 +51,21 @@ New-Item .env.local -ItemType File
 
 Open `.env.local` and paste this:
 
-```env
+\`\`\`env
 # Supabase Configuration
 NEXT_PUBLIC_SUPABASE_URL=https://YOUR-PROJECT-REF.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR-ANON-KEY-HERE
-```
+\`\`\`
 
 **Replace:**
 - `YOUR-PROJECT-REF` with your actual project URL from Step 1
 - `YOUR-ANON-KEY-HERE` with your actual anon key from Step 1
 
 **Example:**
-```env
+\`\`\`env
 NEXT_PUBLIC_SUPABASE_URL=https://abcdefghijklm.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFiY2RlZmdoaWprbG0iLCJyb2xlIjoiYW5vbiIsImlhdCI6MTYzMTIzNDU2NywiZXhwIjoxOTQ2ODEwNTY3fQ.xyz123abc456
-```
+\`\`\`
 
 ---
 
@@ -74,9 +74,9 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzd
 **Stop the server** (Ctrl+C in terminal)
 
 **Start it again:**
-```powershell
+\`\`\`powershell
 pnpm dev
-```
+\`\`\`
 
 ---
 
@@ -112,7 +112,7 @@ The error should be gone! ✅
 4. Click **API**
 5. Look for:
 
-```
+\`\`\`
 Configuration
 ─────────────────────────────────────
 
@@ -126,7 +126,7 @@ Project API keys
 │ anon / public                        │
 │ eyJhbGciOiJIUzI1NiIsInR5cCI...      │ ← COPY THIS
 └─────────────────────────────────────┘
-```
+\`\`\`
 
 ---
 
@@ -185,4 +185,3 @@ Once you have your `.env.local` set up and the app is connecting:
 ---
 
 **This is the FIRST step before anything else will work!** 🚀
-

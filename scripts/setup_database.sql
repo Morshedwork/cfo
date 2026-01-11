@@ -338,4 +338,3 @@ CREATE INDEX idx_data_imports_company_id ON public.data_imports(company_id);
 -- ============================================
 -- SETUP COMPLETE!
 -- ============================================
-

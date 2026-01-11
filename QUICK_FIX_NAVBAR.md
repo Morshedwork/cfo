@@ -6,19 +6,19 @@ After recent speed optimizations, the navbar buttons (profile or sign-in) are no
 ## Quick Fix (Try This First!)
 
 ### Option 1: Hard Refresh
-```
+\`\`\`
 Press: Ctrl + Shift + R
 (or Cmd + Shift + R on Mac)
-```
+\`\`\`
 
 ### Option 2: Clear Cache & Restart
 1. **Close ALL tabs** with your app open
 2. **Restart dev server:**
-   ```powershell
+   \`\`\`powershell
    # In terminal, press Ctrl+C to stop
    # Then restart:
    npm run dev
-   ```
+   \`\`\`
 3. **Open fresh browser tab**
 4. **Navigate to:** http://localhost:3000
 
@@ -37,50 +37,50 @@ Press: Ctrl + Shift + R
 After page loads, look for these logs:
 
 #### ✅ Good (Working):
-```
+\`\`\`
 [Auth] Getting initial session...
 [Auth] Initial session load complete
 [Navbar] Auth state - loading: false, user: false, profile: false
 [Navbar] Showing unauthenticated view
-```
+\`\`\`
 
 #### ❌ Bad (Stuck):
-```
+\`\`\`
 [Auth] Getting initial session...
 (nothing else - STUCK!)
-```
+\`\`\`
 
 #### ❌ Bad (Loading Forever):
-```
+\`\`\`
 [Navbar] Auth state - loading: true, user: false, profile: false
 [Navbar] Showing loading state
 (repeating forever)
-```
+\`\`\`
 
 ### Step 2: Quick Console Test
 
 Open console (F12) and paste this:
 
-```javascript
+\`\`\`javascript
 // Check auth state
 const authTest = document.querySelector('[class*="gradient-text"]');
 console.log('Navbar loaded:', !!authTest);
 console.log('Current path:', window.location.pathname);
-```
+\`\`\`
 
 ### Step 3: Check Environment
 
 In your terminal:
 
-```powershell
+\`\`\`powershell
 Get-Content .env.local | Select-String "SUPABASE"
-```
+\`\`\`
 
 **Should show:**
-```
+\`\`\`
 NEXT_PUBLIC_SUPABASE_URL=https://vhshwuolgaqscgebeebb.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGci...
-```
+\`\`\`
 
 If these are missing or wrong, that's the problem!
 
@@ -125,13 +125,13 @@ If nothing above works:
 
 1. **Stop dev server** (Ctrl+C)
 2. **Delete node_modules/.cache** (if exists):
-   ```powershell
+   \`\`\`powershell
    Remove-Item -Recurse -Force node_modules\.cache
-   ```
+   \`\`\`
 3. **Restart dev server:**
-   ```powershell
+   \`\`\`powershell
    npm run dev
-   ```
+   \`\`\`
 4. **Hard refresh browser:** Ctrl+Shift+R
 5. **Check console for logs**
 
@@ -159,4 +159,3 @@ This will help pinpoint the exact issue!
 1. Try **Ctrl+Shift+R** (hard refresh)
 2. Check **console (F12)** for logs
 3. Restart **dev server** if needed
-

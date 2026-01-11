@@ -13,7 +13,7 @@ After clicking "Sign Out", the app showed a loading screen indefinitely.
 ### 1. Removed Home Page Loading Screen
 **File:** `app/page.tsx`
 
-```tsx
+\`\`\`tsx
 // Before: 2 second loading screen
 const [loading, setLoading] = useState(true)
 setTimeout(() => setLoading(false), 2000)
@@ -21,12 +21,12 @@ setTimeout(() => setLoading(false), 2000)
 // After: No loading screen
 const [loading, setLoading] = useState(false)
 // Content shows immediately
-```
+\`\`\`
 
 ### 2. Clear Loading State on Sign Out
 **File:** `lib/auth-context.tsx`
 
-```tsx
+\`\`\`tsx
 const signOut = async () => {
   // Clear loading state FIRST for immediate feedback
   setUser(null)
@@ -36,12 +36,12 @@ const signOut = async () => {
   await supabase.auth.signOut()
   window.location.href = "/"
 }
-```
+\`\`\`
 
 ### 3. Remove Double Redirect
 **File:** `components/auth-navbar.tsx`
 
-```tsx
+\`\`\`tsx
 // Before: Double redirect (navbar + auth context)
 const handleSignOut = async () => {
   await signOut()
@@ -52,11 +52,11 @@ const handleSignOut = async () => {
 const handleSignOut = async () => {
   await signOut() // Already redirects internally
 }
-```
+\`\`\`
 
 ## How Sign Out Works Now
 
-```
+\`\`\`
 User clicks "Sign Out"
     ↓
 handleSignOut() called
@@ -74,7 +74,7 @@ Home page loads
 Shows content IMMEDIATELY (no loading screen)
     ↓
 Auth navbar shows "Sign In" button
-```
+\`\`\`
 
 ## Testing Sign Out
 
@@ -91,12 +91,12 @@ Auth navbar shows "Sign In" button
 
 Open browser console (F12) when signing out. You should see:
 
-```
+\`\`\`
 [Auth] Starting sign out...
 [Auth] Sign out complete, redirecting...
 [Auth] Getting initial session...
 [Auth] Initial session load complete
-```
+\`\`\`
 
 **No errors, no warnings** ✓
 
@@ -119,4 +119,3 @@ Open browser console (F12) when signing out. You should see:
 ---
 
 **Sign out should now work perfectly!** 🎉
-

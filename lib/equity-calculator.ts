@@ -320,4 +320,3 @@ export class EquityCalculator {
     return `$${amount.toLocaleString()}`
   }
 }
-

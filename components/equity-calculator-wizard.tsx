@@ -482,4 +482,3 @@ export function EquityCalculatorWizard({ roundName, onSendMessage }: WizardProps
 
   return null
 }
-

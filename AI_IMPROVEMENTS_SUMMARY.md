@@ -46,7 +46,7 @@ The AI now knows ALL platform capabilities:
 ## 🎯 Example Improvements
 
 ### Before:
-```
+\`\`\`
 **Looking at your numbers**, you've got about **3.3 months** of runway with 
 **$70,000** in the bank and a monthly burn of **$45,000**.
 
@@ -57,17 +57,17 @@ Here's the thing - that's definitely in the "need attention" zone. I'd recommend
 • Focus on revenue-generating activities...
 
 (120 words, hard to read asterisks)
-```
+\`\`\`
 
 ### After:
-```
+\`\`\`
 You have 3.3 MONTHS RUNWAY with CASH $70,000 and BURN $45,000/month. 
 That's in the danger zone. THREE priorities: start fundraising conversations 
 NOW, cut burn by 15-20% fast, and focus on revenue activities with proven ROI. 
 You have 60 days to act strategically.
 
 (48 words, clean, highlighted key topics)
-```
+\`\`\`
 
 ---
 
@@ -183,4 +183,3 @@ Hard refresh your browser (`Ctrl+Shift+R`) to get the latest updates.
 ---
 
 **Enjoy your smarter, faster AI CFO!** ⚡✨
-

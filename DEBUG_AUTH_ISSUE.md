@@ -26,9 +26,9 @@ I updated the code to:
 
 ### Step 2: Check for This Error
 If you see:
-```
+\`\`\`
 [Profile] ⚠️ CRITICAL: profiles table does not exist! Run database setup SQL.
-```
+\`\`\`
 
 **This means you haven't set up the database yet!**
 
@@ -47,12 +47,12 @@ You **MUST** run the database setup SQL:
 ### Step 4: Verify Tables Created
 
 Run this in SQL Editor:
-```sql
+\`\`\`sql
 SELECT table_name 
 FROM information_schema.tables 
 WHERE table_schema = 'public' 
 ORDER BY table_name;
-```
+\`\`\`
 
 You should see these tables:
 - ✅ `ai_insights`
@@ -87,29 +87,29 @@ You should see these tables:
 ## What the Console Logs Mean
 
 ### ✅ Good Flow (Working):
-```
+\`\`\`
 [Auth] Getting initial session...
 [Auth] Loading profile for user: abc123...
 [Profile] No user logged in
 [Auth] Profile loaded: { email: "...", full_name: "..." }
 [Auth] Initial session load complete
-```
+\`\`\`
 
 ### ❌ Bad Flow (Database Not Set Up):
-```
+\`\`\`
 [Auth] Getting initial session...
 [Auth] Loading profile for user: abc123...
 [Profile] Database error: relation "public.profiles" does not exist
 [Profile] ⚠️ CRITICAL: profiles table does not exist! Run database setup SQL.
 [Auth] Profile loaded: null
 [Auth] Initial session load complete
-```
+\`\`\`
 
 ### ❌ Bad Flow (Stuck Loading):
-```
+\`\`\`
 [Auth] Getting initial session...
 ... nothing else (stuck!)
-```
+\`\`\`
 
 ## Quick Test Without Database
 
@@ -145,4 +145,3 @@ Check the browser console and share the logs. Look for:
 
 **Most Common Cause:** Not running the database setup SQL!  
 **Quick Fix:** Run `scripts/setup_database.sql` in Supabase SQL Editor
-

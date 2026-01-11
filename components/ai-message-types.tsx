@@ -580,4 +580,3 @@ export function StrategicInsightCard({
     </Card>
   )
 }
-

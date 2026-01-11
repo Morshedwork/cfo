@@ -49,7 +49,7 @@ I've set up a complete Supabase authentication system with automatic profile and
 ## 🎯 How It Works
 
 ### Sign-Up Flow:
-```
+\`\`\`
 User fills form
     ↓
 Supabase creates auth user (auth.users)
@@ -59,10 +59,10 @@ Database trigger fires → Creates profile (profiles)
 Database trigger fires → Creates company (companies)
     ↓
 User redirected to /onboarding
-```
+\`\`\`
 
 ### Sign-In Flow:
-```
+\`\`\`
 User signs in
     ↓
 System checks if profile exists
@@ -74,7 +74,7 @@ System checks if company exists
 If missing → Creates company
     ↓
 User redirected to /dashboard
-```
+\`\`\`
 
 ## 🔧 Setup Instructions
 
@@ -82,13 +82,13 @@ User redirected to /dashboard
 
 Go to your Supabase project → **SQL Editor** → Run in order:
 
-```sql
+\`\`\`sql
 -- Script 1: Creates profiles table and triggers
 scripts/000_create_profiles.sql
 
 -- Script 2: Creates main schema (if not already run)
 scripts/001_create_schema.sql
-```
+\`\`\`
 
 ### Step 2: Configure Supabase
 
@@ -101,10 +101,10 @@ scripts/001_create_schema.sql
 
 Make sure `.env.local` has:
 
-```env
+\`\`\`env
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-```
+\`\`\`
 
 ### Step 4: Test It!
 
@@ -146,7 +146,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ## 📊 Database Schema
 
 ### profiles Table
-```sql
+\`\`\`sql
 - id (UUID, Primary Key, References auth.users)
 - email (TEXT)
 - full_name (TEXT)
@@ -156,10 +156,10 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 - onboarding_completed (BOOLEAN, Default: false)
 - created_at (TIMESTAMPTZ)
 - updated_at (TIMESTAMPTZ)
-```
+\`\`\`
 
 ### companies Table
-```sql
+\`\`\`sql
 - id (UUID, Primary Key)
 - user_id (UUID, References auth.users)
 - name (TEXT)
@@ -171,40 +171,40 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 - current_cash (DECIMAL)
 - created_at (TIMESTAMPTZ)
 - updated_at (TIMESTAMPTZ)
-```
+\`\`\`
 
 ## 🛠️ Utility Functions
 
 ### Ensure Profile Exists
-```typescript
+\`\`\`typescript
 import { ensureUserProfile } from '@/lib/supabase/profile-utils'
 
 const { profile, company, error } = await ensureUserProfile()
-```
+\`\`\`
 
 ### Get Current User Profile
-```typescript
+\`\`\`typescript
 import { getCurrentUserProfile } from '@/lib/supabase/profile-utils'
 
 const profile = await getCurrentUserProfile()
-```
+\`\`\`
 
 ### Get Current User Company
-```typescript
+\`\`\`typescript
 import { getCurrentUserCompany } from '@/lib/supabase/profile-utils'
 
 const company = await getCurrentUserCompany()
-```
+\`\`\`
 
 ### Update Profile
-```typescript
+\`\`\`typescript
 import { updateUserProfile } from '@/lib/supabase/profile-utils'
 
 const { profile, error } = await updateUserProfile({
   full_name: 'John Doe',
   company_name: 'My Company'
 })
-```
+\`\`\`
 
 ## 🐛 Troubleshooting
 
@@ -251,4 +251,3 @@ const { profile, error } = await updateUserProfile({
 Your Supabase authentication is now fully configured with automatic profile and company creation. Users will always have a profile and company when they sign up or sign in!
 
 Start building your app! 🚀
-

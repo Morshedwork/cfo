@@ -59,7 +59,7 @@ When a user signs up:
 
 ### Sign-Up Flow
 
-```typescript
+\`\`\`typescript
 // User fills form with:
 // - Email
 // - Password
@@ -70,11 +70,11 @@ When a user signs up:
 // 2. Creates profile (via trigger)
 // 3. Creates company (via trigger)
 // 4. Redirects to onboarding
-```
+\`\`\`
 
 ### Sign-In Flow
 
-```typescript
+\`\`\`typescript
 // User signs in with email/password
 
 // System automatically:
@@ -82,7 +82,7 @@ When a user signs up:
 // 2. Checks if profile exists (creates if missing)
 // 3. Checks if company exists (creates if missing)
 // 4. Redirects to dashboard
-```
+\`\`\`
 
 ## Database Triggers
 
@@ -92,11 +92,11 @@ When a user signs up:
 **What:** Creates profile in `profiles` table
 **Function:** `handle_new_user()`
 
-```sql
+\`\`\`sql
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
-```
+\`\`\`
 
 ### Trigger 2: `on_profile_created`
 
@@ -104,20 +104,20 @@ CREATE TRIGGER on_auth_user_created
 **What:** Creates company in `companies` table
 **Function:** `handle_new_company()`
 
-```sql
+\`\`\`sql
 CREATE TRIGGER on_profile_created
   AFTER INSERT ON public.profiles
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_company();
-```
+\`\`\`
 
 ## Environment Variables
 
 Make sure these are set in your `.env.local`:
 
-```env
+\`\`\`env
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-```
+\`\`\`
 
 ## Testing the Setup
 
@@ -149,7 +149,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 
 ### Test 3: Check Profile Data
 
-```typescript
+\`\`\`typescript
 import { getCurrentUserProfile, getCurrentUserCompany } from '@/lib/supabase/profile-utils'
 
 // Get current user's profile
@@ -159,7 +159,7 @@ console.log('Profile:', profile)
 // Get current user's company
 const company = await getCurrentUserCompany()
 console.log('Company:', company)
-```
+\`\`\`
 
 ## Troubleshooting
 
@@ -195,7 +195,7 @@ console.log('Company:', company)
 
 If triggers fail, you can manually create profiles:
 
-```sql
+\`\`\`sql
 -- Create profile
 INSERT INTO public.profiles (id, email, full_name, company_name)
 VALUES (
@@ -215,13 +215,13 @@ VALUES (
   1,
   'pre-seed'
 );
-```
+\`\`\`
 
 ## Utility Functions
 
 The `lib/supabase/profile-utils.ts` file provides helper functions:
 
-```typescript
+\`\`\`typescript
 // Ensure user has profile and company
 const { profile, company, error } = await ensureUserProfile()
 
@@ -236,7 +236,7 @@ const { profile, error } = await updateUserProfile({
   full_name: 'New Name',
   company_name: 'New Company'
 })
-```
+\`\`\`
 
 ## Security
 
@@ -261,4 +261,3 @@ If you encounter issues:
 3. Verify environment variables are set
 4. Check RLS policies
 5. Check trigger functions exist
-

@@ -32,20 +32,20 @@
 ## 🎯 Key Changes
 
 ### Before (Aggressive):
-```
+\`\`\`
 You have 3.3 MONTHS RUNWAY with CASH $70,000 and BURN $45,000/month. 
 Start fundraising NOW, cut burn by 15-20%, focus on revenue. 60 days to act.
-```
+\`\`\`
 
 ### After (Natural & Conversational):
-```
+\`\`\`
 Looking at your numbers, you have about 3.3 months of runway with $70k 
 in the bank and $45k monthly burn. That's definitely in the "need attention" 
 zone. I'd recommend starting fundraising conversations now, looking for 
 quick wins to reduce burn by 15-20%, and focusing on revenue activities 
 that have proven ROI. The good news? You have time to be strategic about 
 this - use the next 60 days wisely.
-```
+\`\`\`
 
 ---
 
@@ -141,14 +141,14 @@ this - use the next 60 days wisely.
 
 ## 📊 Configuration Verified
 
-```bash
+\`\`\`bash
 ✅ OpenRouter API Key: Found
 ✅ Model: deepseek/deepseek-r1
 ✅ ElevenLabs API Key: Found (sk_1cea4b...)
 ✅ Voice: Bella (young, realistic female)
 ✅ Error Handling: Enabled
 ✅ Fallback: Browser TTS
-```
+\`\`\`
 
 ---
 
@@ -179,15 +179,15 @@ this - use the next 60 days wisely.
 **Question:** "What should I focus on?"
 
 **Old Response:**
-```
+\`\`\`
 FOCUS on THREE AREAS: 
 REVENUE ACCELERATION - your $28K MRR at 18% growth needs 25%
 EXTEND RUNWAY - negotiate terms, cut spend
 FUNDRAISING PREP - start now
-```
+\`\`\`
 
 **New Response (DeepSeek R1):**
-```
+\`\`\`
 Great question! Based on your current position - $70k cash, 3.3 months 
 runway, growing at 18% - here's what I'd prioritize:
 
@@ -199,7 +199,7 @@ payment terms? Reduce unnecessary spend? Small changes compound.
 
 Third, start building fundraising relationships now, even if you're not 
 actively raising yet. What's your gut telling you is the biggest opportunity?
-```
+\`\`\`
 
 ---
 
@@ -242,4 +242,3 @@ actively raising yet. What's your gut telling you is the biggest opportunity?
 - More helpful (actionable advice)
 
 **Enjoy your upgraded AI financial assistant!** 🚀✨
-

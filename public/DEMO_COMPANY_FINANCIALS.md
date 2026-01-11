@@ -77,7 +77,7 @@ Contains all 50 transactions with:
 ## 🎯 What You'll See After Upload
 
 ### Auto-Generated P&L Statement:
-```
+\`\`\`
 REVENUE
   Product Sales               $115,500
   ──────────────────────────────────
@@ -101,7 +101,7 @@ OPERATING EXPENSES
   Total OpEx                 $170,200
 
 NET INCOME                   -$67,750  (loss)
-```
+\`\`\`
 
 ### Key Insights AI Will Generate:
 1. 🔴 **High Burn Alert:** "You're burning $26k/month with only $115k revenue. Focus on revenue growth or reduce headcount."
@@ -171,4 +171,3 @@ After uploading, try these queries in the AI Assistant:
 ---
 
 **This demo company represents a typical early-stage SaaS startup with strong product-market fit but burning cash as it scales.**
-

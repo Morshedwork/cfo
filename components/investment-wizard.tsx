@@ -270,4 +270,3 @@ export function InvestmentWizard({ onComplete, onCancel }: InvestmentWizardProps
     </Card>
   )
 }
-

@@ -68,17 +68,17 @@ Your AI Virtual CFO now has a complete **Real Company Data Integration** system 
 
 ### Simple 5-Step Process
 
-```
+\`\`\`
 1. Get API Key → financialmodelingprep.com
 2. Add to .env.local → FMP_API_KEY=...
 3. Restart Server → npm run dev
 4. Open Dashboard → /dashboard
 5. Click Button → Select company → Done!
-```
+\`\`\`
 
 ### What Happens When You Load Data
 
-```
+\`\`\`
 User clicks "Apple Inc." 
     ↓
 System fetches financial data
@@ -96,7 +96,7 @@ Creates 3-5 AI insights
 Page refreshes with real data
     ↓
 Dashboard shows Apple's actual financials!
-```
+\`\`\`
 
 ## 💡 Key Features
 
@@ -139,7 +139,7 @@ Dashboard shows Apple's actual financials!
 
 ## 🛠️ Technical Architecture
 
-```typescript
+\`\`\`typescript
 // API Client
 lib/financial-data-api.ts
   ↓
@@ -157,11 +157,11 @@ components/real-data-loader.tsx
   ↓
 // Dashboard Integration
 app/dashboard/page.tsx
-```
+\`\`\`
 
 ## 📊 Data Flow
 
-```
+\`\`\`
 Financial Modeling Prep API
   ↓ (Fetch)
 Company Profile
@@ -178,7 +178,7 @@ AI Insights (3-6)
 Supabase Database
   ↓ (Display)
 Dashboard UI
-```
+\`\`\`
 
 ## 🎯 Why Not BrightData?
 
@@ -201,7 +201,7 @@ While BrightData was mentioned, here's why we chose Financial Modeling Prep inst
 ## 🚀 What You Can Do Now
 
 ### 1. Demo with Real Data
-```bash
+\`\`\`bash
 # Load Apple's data
 POST /api/load-real-company
 { "symbol": "AAPL" }
@@ -211,10 +211,10 @@ POST /api/load-real-company
 - $89B annual revenue  
 - 164,000 employees
 - Real quarterly trends
-```
+\`\`\`
 
 ### 2. Compare Companies
-```bash
+\`\`\`bash
 # Load Tesla
 { "symbol": "TSLA" }
 
@@ -222,37 +222,37 @@ POST /api/load-real-company
 { "symbol": "F" }
 
 # Compare automotive financials
-```
+\`\`\`
 
 ### 3. Study Patterns
-```bash
+\`\`\`bash
 # Load multiple tech companies
 AAPL, MSFT, GOOGL, META, AMZN
 
 # Analyze spending patterns
 # Study revenue growth
 # Compare burn rates
-```
+\`\`\`
 
 ### 4. Impress Stakeholders
-```bash
+\`\`\`bash
 # Show your app with real Fortune 500 data
 # Demonstrate with actual financial metrics
 # Prove your calculations work with known data
-```
+\`\`\`
 
 ## 📈 Usage Example
 
 ### Before (Demo Data)
-```
+\`\`\`
 Company: Demo Startup
 Revenue: $35,000/month
 Transactions: 50 random records
 Insights: Generic messages
-```
+\`\`\`
 
 ### After (Real Data - Apple)
-```
+\`\`\`
 Company: Apple Inc.
 Revenue: $97,278,000,000/quarter
 Transactions: 432 realistic records
@@ -267,7 +267,7 @@ Sales: 60 product sales records
 Insights: "Revenue increased 8.2% YoY"
           "Net profit margin: 25.3%"
           "15+ months runway"
-```
+\`\`\`
 
 ## 🎓 Learning Resources
 
@@ -318,12 +318,12 @@ Insights: "Revenue increased 8.2% YoY"
 ## 🎯 Next Steps for You
 
 1. **Get Started Today**
-   ```bash
+   \`\`\`bash
    # 1. Sign up for free API key
    # 2. Add to .env.local
    # 3. Restart server
    # 4. Load your first company!
-   ```
+   \`\`\`
 
 2. **Explore the Data**
    - Try different industries
@@ -376,7 +376,3 @@ You now have a **production-ready real company data integration** that:
 ---
 
 *Built with love using Financial Modeling Prep API, Next.js, and Supabase*
-
-
-
-

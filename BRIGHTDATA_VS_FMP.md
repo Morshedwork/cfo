@@ -33,7 +33,7 @@ You asked about using **BrightData** for real company data. Here's a detailed co
 
 ### BrightData Pricing
 
-```
+\`\`\`
 Starter: $500/month
   - 5 concurrent requests
   - 40GB data
@@ -48,13 +48,13 @@ Enterprise: $2,000+/month
   - Custom limits
   - Dedicated support
   - Custom solutions
-```
+\`\`\`
 
 **Not ideal for:** Individual developers, small startups, MVPs
 
 ### FMP Pricing
 
-```
+\`\`\`
 Free: $0/month
   - 250 requests/day
   - Historical data
@@ -70,7 +70,7 @@ Professional: $49/month
   - 750 requests/day
   - Premium data
   - Priority support
-```
+\`\`\`
 
 **Perfect for:** Developers, startups, small businesses
 
@@ -125,7 +125,7 @@ Professional: $49/month
 
 ### BrightData Approach
 
-```javascript
+\`\`\`javascript
 // 1. Setup scraping rules
 const scraper = new BrightDataScraper({
   api_token: 'your_token',
@@ -157,11 +157,11 @@ const dataParser = (html) => {
 
 // Total: 500+ lines of code
 // Maintenance: Ongoing
-```
+\`\`\`
 
 ### FMP Approach
 
-```javascript
+\`\`\`javascript
 // 1. Simple API call
 const response = await fetch(
   `https://financialmodelingprep.com/api/v3/income-statement/AAPL?apikey=${API_KEY}`
@@ -178,7 +178,7 @@ const data = await response.json();
 
 // Total: 5 lines of code
 // Maintenance: None
-```
+\`\`\`
 
 **Winner: FMP** - 100x simpler
 
@@ -187,7 +187,7 @@ const data = await response.json();
 ## 📈 Data Quality Comparison
 
 ### BrightData
-```json
+\`\`\`json
 // Variable format (depends on source)
 {
   "revenue": "$94.9B",  // String
@@ -197,10 +197,10 @@ const data = await response.json();
   // Manual parsing needed
   // Different per source
 }
-```
+\`\`\`
 
 ### FMP
-```json
+\`\`\`json
 // Standardized format (always consistent)
 {
   "date": "2024-06-30",
@@ -212,7 +212,7 @@ const data = await response.json();
   // Ready to use
   // Same for all companies
 }
-```
+\`\`\`
 
 **Winner: FMP** - Consistent, validated data
 
@@ -222,7 +222,7 @@ const data = await response.json();
 
 ### BrightData Journey
 
-```
+\`\`\`
 Day 1 (4 hours):
   ✏️ Sign up and configure zones
   ✏️ Write scraping scripts
@@ -242,11 +242,11 @@ Day 3 (4 hours):
   ✏️ Fix edge cases
 
 Total: ~14 hours
-```
+\`\`\`
 
 ### FMP Journey
 
-```
+\`\`\`
 Day 1 (5 minutes):
   ✅ Sign up for free account
   ✅ Get API key
@@ -256,7 +256,7 @@ Day 1 (5 minutes):
   ✅ See real data!
 
 Total: 5 minutes
-```
+\`\`\`
 
 **Winner: FMP** - 168x faster
 
@@ -335,7 +335,7 @@ Instead of spending days on BrightData setup, we built:
 
 ### BrightData
 
-```
+\`\`\`
 Scaling challenges:
 - Bandwidth costs increase
 - More proxies needed
@@ -347,11 +347,11 @@ Scaling challenges:
 Cost at scale:
 - 1,000 companies: $2,000+/month
 - 10,000 companies: Custom pricing
-```
+\`\`\`
 
 ### FMP
 
-```
+\`\`\`
 Scaling benefits:
 - Simple rate limit increase
 - Same API, more requests
@@ -362,7 +362,7 @@ Scaling benefits:
 Cost at scale:
 - 1,000 companies: $49/month
 - 10,000 companies: $99/month
-```
+\`\`\`
 
 **Winner: FMP** - Much more scalable
 
@@ -436,7 +436,3 @@ Consider BrightData in the future if you need:
 ---
 
 *Need more info? Check out `REAL_DATA_SETUP.md` for complete implementation details*
-
-
-
-

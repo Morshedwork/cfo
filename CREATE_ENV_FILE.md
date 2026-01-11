@@ -49,15 +49,15 @@ This guide will help you create the `.env.local` file that your app needs to wor
 2. **You'll see two important things:**
 
    **A) Project URL**
-   ```
+   \`\`\`
    URL: https://abcdefghijklmnop.supabase.co
-   ```
+   \`\`\`
    ↑ Copy this entire URL
 
    **B) Project API keys → anon / public**
-   ```
+   \`\`\`
    eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz...
-   ```
+   \`\`\`
    ↑ Click the copy icon to copy this (it's very long!)
 
 3. **Keep these somewhere safe** (you'll need them in the next step)
@@ -74,11 +74,11 @@ This guide will help you create the `.env.local` file that your app needs to wor
 5. Windows might warn you about changing extension - click **Yes**
 
 **Option B: Using PowerShell**
-```powershell
+\`\`\`powershell
 cd "D:\AI AND PSD\cfo"
 New-Item .env.local -ItemType File
 notepad .env.local
-```
+\`\`\`
 
 ---
 
@@ -86,11 +86,11 @@ notepad .env.local
 
 Open the `.env.local` file and paste this:
 
-```env
+\`\`\`env
 # Supabase Configuration
 NEXT_PUBLIC_SUPABASE_URL=PASTE_YOUR_PROJECT_URL_HERE
 NEXT_PUBLIC_SUPABASE_ANON_KEY=PASTE_YOUR_ANON_KEY_HERE
-```
+\`\`\`
 
 **Now replace the placeholders:**
 
@@ -98,11 +98,11 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=PASTE_YOUR_ANON_KEY_HERE
 2. Replace `PASTE_YOUR_ANON_KEY_HERE` with your anon/public key from Step 3
 
 **Example of what it should look like:**
-```env
+\`\`\`env
 # Supabase Configuration
 NEXT_PUBLIC_SUPABASE_URL=https://abcdefghijklmnop.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFiY2RlZmdoaWprbG1ub3AiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTYzMTIzNDU2NywiZXhwIjoxOTQ2ODEwNTY3fQ.xyz123abc456def789
-```
+\`\`\`
 
 **⚠️ Make sure:**
 - No spaces around the `=` sign
@@ -118,17 +118,17 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzd
 
 Run this command to check if everything is correct:
 
-```powershell
+\`\`\`powershell
 node check-env.js
-```
+\`\`\`
 
 You should see:
-```
+\`\`\`
 ✅ .env.local file exists
 ✅ NEXT_PUBLIC_SUPABASE_URL is set
 ✅ NEXT_PUBLIC_SUPABASE_ANON_KEY is set
 🎉 Environment variables are configured!
-```
+\`\`\`
 
 If you see any ❌ errors, follow the instructions to fix them.
 
@@ -215,4 +215,3 @@ If you're stuck:
 ---
 
 **Ready?** Follow the steps above and you'll be up and running in 5 minutes! 🚀
-

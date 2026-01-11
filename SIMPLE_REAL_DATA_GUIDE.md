@@ -10,11 +10,11 @@
 
 ### Step 1: Complete Onboarding (2 minutes)
 
-```bash
+\`\`\`bash
 npm run dev
 # Go to http://localhost:3000
 # Sign up → Complete onboarding → Create your company
-```
+\`\`\`
 
 ### Step 2: Load Real Data (1 minute)
 
@@ -28,18 +28,18 @@ npm run dev
 7. Click **Run** ▶️
 
 **Option B: Command Line (If you have psql)**
-```bash
+\`\`\`bash
 psql $DATABASE_URL -f scripts/005_seed_real_company_data.sql
-```
+\`\`\`
 
 ### Step 3: View Real Data (10 seconds)
 
-```bash
+\`\`\`bash
 # Refresh your dashboard
 http://localhost:3000/dashboard
 
 # You now see Airbnb's real Q2 2024 data! 🎉
-```
+\`\`\`
 
 ---
 
@@ -124,9 +124,9 @@ Just let me know! 🚀
 
 ## 📁 File Reference
 
-```
+\`\`\`
 scripts/005_seed_real_company_data.sql
-```
+\`\`\`
 
 **Data Source:** Airbnb Q2 2024 10-Q SEC Filing  
 **Date Range:** April - June 2024  
@@ -138,7 +138,7 @@ scripts/005_seed_real_company_data.sql
 
 After running the script, verify in Supabase:
 
-```sql
+\`\`\`sql
 -- Check transactions
 SELECT COUNT(*) FROM transactions;
 -- Should show ~70
@@ -154,7 +154,7 @@ SELECT SUM(amount) FROM transactions WHERE type = 'income';
 -- Check insights
 SELECT title FROM ai_insights;
 -- Should show 5 insights
-```
+\`\`\`
 
 ---
 
@@ -172,8 +172,3 @@ Your prototype now has **real financial data** from a $70B public company!
 - ❓ Need more transactions? → I can add more
 - ❓ Want different date range? → Easy to adjust
 - ❓ Need help running SQL? → Check Supabase docs
-
-
-
-
-

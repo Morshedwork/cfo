@@ -2,20 +2,20 @@
 
 ## 1️⃣ Sign Up & Create App
 
-```
+\`\`\`
 🔗 https://onesignal.com → Get Started Free
    → New App/Website → Enter "Aura CFO"
    → Platform: Web → Site URL: http://localhost:3000
    → Save
-```
+\`\`\`
 
 ---
 
 ## 2️⃣ Get Your Keys
 
-```
+\`\`\`
 🔗 Settings → Keys & IDs
-```
+\`\`\`
 
 **Copy these two values:**
 
@@ -26,40 +26,40 @@
 
 ## 3️⃣ Add to `.env.local`
 
-```bash
+\`\`\`bash
 NEXT_PUBLIC_ONESIGNAL_APP_ID=your_app_id_here
 ONESIGNAL_REST_API_KEY=your_rest_api_key_here
-```
+\`\`\`
 
 ---
 
 ## 4️⃣ Restart Server
 
-```bash
+\`\`\`bash
 pnpm dev
-```
+\`\`\`
 
 ---
 
 ## 5️⃣ Test It!
 
 **Desktop:**
-```
+\`\`\`
 http://localhost:3000/settings/notifications
 → Click "Enable Mobile Push"
 → Allow notifications
 → Click "Send Test Push"
 → You should receive 2 notifications! ✅
-```
+\`\`\`
 
 **Mobile Phone (same WiFi):**
-```
+\`\`\`
 http://192.168.X.X:3000/settings/notifications
 (Replace X.X with your computer's IP from terminal)
 → Enable notifications
 → Send test push
 → Check your phone! 📱
-```
+\`\`\`
 
 ---
 
@@ -94,6 +94,3 @@ http://192.168.X.X:3000/settings/notifications
 ---
 
 📖 **Full Guide:** See `ONESIGNAL_PUSH_SETUP.md` for detailed instructions
-
-
-

@@ -232,4 +232,3 @@ function calculateGrowth(data: { sales: number }[]): number {
   const lastWeek = data[data.length - 1].sales
   return Math.round(((lastWeek - firstWeek) / firstWeek) * 100)
 }
-

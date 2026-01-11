@@ -18,9 +18,9 @@ It shows:
 ### Option 1: Click the Quick Action
 
 1. Go to **AI Assistant** page:
-   ```
+   \`\`\`
    http://localhost:3000/ai-assistant
-   ```
+   \`\`\`
 
 2. Click the **"Equity Calculator"** quick action button (⚡ icon)
 
@@ -31,21 +31,21 @@ It shows:
 Ask the AI Assistant anything about equity:
 
 **Examples:**
-```
+\`\`\`
 "Calculate startup equity across Pre-Seed, Seed, Series A, and Series B"
-```
+\`\`\`
 
-```
+\`\`\`
 "Show me equity distribution for multiple funding rounds"
-```
+\`\`\`
 
-```
+\`\`\`
 "Calculate cap table dilution from pre-seed to series B"
-```
+\`\`\`
 
-```
+\`\`\`
 "Model equity distribution with funding rounds"
-```
+\`\`\`
 
 **Keywords that trigger the calculator:**
 - `equity` + (`calculate`, `distribution`, `funding round`, `cap table`, or `dilution`)
@@ -71,14 +71,14 @@ For each round (Pre-Seed, Seed, Series A, Series B):
 - **Math Explanation**: Complete formulas with actual numbers
 
 **Example:**
-```
+\`\`\`
 📐 Calculation:
 Post-Money = Pre-Money + Investment
 Post-Money = $15M + $5M = $20M
 
 Investor Equity % = Investment ÷ Post-Money × 100
 Investor Equity % = $5M ÷ $20M × 100 = 25.00%
-```
+\`\`\`
 
 ### 3. **Final Ownership Summary Table**
 
@@ -111,25 +111,25 @@ Colorful bars showing final ownership percentages:
 ## 🧮 The Math Behind It
 
 ### Post-Money Valuation
-```
+\`\`\`
 Post-Money Valuation = Pre-Money Valuation + Investment Amount
-```
+\`\`\`
 
 ### Investor Equity %
-```
+\`\`\`
 Investor Equity % = (Investment ÷ Post-Money) × 100
-```
+\`\`\`
 
 ### Share Dilution
-```
+\`\`\`
 New Investor Shares = Existing Shares × (Investor% ÷ (100 - Investor%))
-```
+\`\`\`
 
 ### Dilution Effect
 Everyone's ownership percentage is recalculated:
-```
+\`\`\`
 New % = (Old Shares ÷ New Total Shares) × 100
-```
+\`\`\`
 
 ---
 
@@ -138,7 +138,7 @@ New % = (Old Shares ÷ New Total Shares) × 100
 Click the **"Download Cap Table (CSV)"** button to export:
 
 **Sample CSV:**
-```csv
+\`\`\`csv
 Stakeholder,Initial,Pre-Seed,Seed,Series A,Series B
 Founder 1,51.00%,42.50%,34.00%,26.20%,21.80%
 Founder 2,34.00%,28.30%,22.70%,17.50%,14.60%
@@ -147,7 +147,7 @@ Seed Investor,0.00%,0.00%,20.00%,15.40%,12.80%
 Series A Investor,0.00%,0.00%,0.00%,23.10%,19.30%
 Series B Investor,0.00%,0.00%,0.00%,0.00%,16.70%
 Employee Option Pool,15.00%,12.50%,10.00%,7.70%,6.40%
-```
+\`\`\`
 
 **Use this for:**
 - 📊 Investor presentations
@@ -231,17 +231,17 @@ Employee Option Pool,15.00%,12.50%,10.00%,7.70%,6.40%
 
 Want different numbers? Just ask the AI:
 
-```
+\`\`\`
 "Calculate equity with 3 founders at 40%, 35%, 25%"
-```
+\`\`\`
 
-```
+\`\`\`
 "Model Pre-Seed at $500K valuation raising $100K"
-```
+\`\`\`
 
-```
+\`\`\`
 "Show me with a 20% option pool instead"
-```
+\`\`\`
 
 ---
 
@@ -286,9 +286,9 @@ Want different numbers? Just ask the AI:
 ## 🎬 Quick Start
 
 1. **Go to AI Assistant:**
-   ```
+   \`\`\`
    http://localhost:3000/ai-assistant
-   ```
+   \`\`\`
 
 2. **Click "Equity Calculator"** button
 
@@ -336,4 +336,3 @@ Want different numbers? Just ask the AI:
 ---
 
 **🎉 You now have CFO-level equity analysis at your fingertips!**
-

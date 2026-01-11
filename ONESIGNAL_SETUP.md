@@ -34,16 +34,16 @@ Get real mobile push notifications for financial alerts in 5 minutes!
 ### Step 5: Add to Your Project
 Create `.env.local` file in your project root:
 
-```bash
+\`\`\`bash
 # OneSignal Configuration
 NEXT_PUBLIC_ONESIGNAL_APP_ID=your-app-id-here
 ONESIGNAL_REST_API_KEY=your-rest-api-key-here
-```
+\`\`\`
 
 ### Step 6: Install OneSignal SDK
-```bash
+\`\`\`bash
 npm install react-onesignal
-```
+\`\`\`
 
 ### Step 7: Test It!
 1. Start your dev server: `npm run dev`
@@ -83,7 +83,7 @@ npm install react-onesignal
 
 ## 🔧 How It Works
 
-```typescript
+\`\`\`typescript
 // Automatic alerts from financial events
 if (runway < 6 months) {
   pushNotificationService.sendToAll({
@@ -92,7 +92,7 @@ if (runway < 6 months) {
     url: '/runway'
   })
 }
-```
+\`\`\`
 
 ---
 
@@ -135,4 +135,3 @@ Your users will now get real-time financial alerts on their phones, even when th
 - Set up automatic alerts for financial events
 - Customize notification thresholds in Settings
 - Send targeted alerts to specific users
-

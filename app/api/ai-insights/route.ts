@@ -1,76 +1,59 @@
-import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
+import { getUserCompanies, getCompanyInsights, createAIInsight } from "@/lib/firebase/db"
+import { getAuthUser } from "@/lib/firebase/server-auth"
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const supabase = await createClient()
-
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser()
-    if (userError || !user) {
+    const user = await getAuthUser(request)
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     // Get user's company
-    const { data: company } = await supabase.from("companies").select("id").eq("user_id", user.id).single()
-
-    if (!company) {
+    const companies = await getUserCompanies(user.uid)
+    if (companies.length === 0) {
       return NextResponse.json({ insights: [] })
     }
 
-    const { data: insights, error } = await supabase
-      .from("ai_insights")
-      .select("*")
-      .eq("company_id", company.id)
-      .order("created_at", { ascending: false })
-      .limit(10)
-
-    if (error) throw error
+    const companyId = companies[0].id
+    const insights = await getCompanyInsights(companyId, 10)
 
     return NextResponse.json({ insights })
   } catch (error) {
-    console.error("[v0] Error fetching insights:", error)
+    console.error("[Firebase] Error fetching insights:", error)
     return NextResponse.json({ error: "Failed to fetch insights" }, { status: 500 })
   }
 }
 
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient()
-
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser()
-    if (userError || !user) {
+    const user = await getAuthUser(request)
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     // Get user's company
-    const { data: company } = await supabase.from("companies").select("id").eq("user_id", user.id).single()
-
-    if (!company) {
+    const companies = await getUserCompanies(user.uid)
+    if (companies.length === 0) {
       return NextResponse.json({ error: "Company not found" }, { status: 404 })
     }
 
+    const companyId = companies[0].id
     const body = await request.json()
 
-    const { data: insight, error } = await supabase
-      .from("ai_insights")
-      .insert({
-        company_id: company.id,
-        ...body,
-      })
-      .select()
-      .single()
+    const insightId = await createAIInsight({
+      companyId,
+      type: body.type,
+      title: body.title,
+      description: body.description,
+      severity: body.severity || 'info',
+      data: body.data,
+      isRead: false,
+    })
 
-    if (error) throw error
-
-    return NextResponse.json({ insight })
+    return NextResponse.json({ insight: { id: insightId, ...body } })
   } catch (error) {
-    console.error("[v0] Error creating insight:", error)
+    console.error("[Firebase] Error creating insight:", error)
     return NextResponse.json({ error: "Failed to create insight" }, { status: 500 })
   }
 }

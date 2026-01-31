@@ -2,7 +2,8 @@
 
 import type React from "react"
 
-import { createClient } from "@/lib/supabase/client"
+import { signInWithGoogle, signInWithEmail } from "@/lib/firebase/auth"
+import { createCompany, getUserCompanies } from "@/lib/firebase/db"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -22,23 +23,30 @@ export default function LoginPage() {
   const router = useRouter()
 
   const handleGoogleLogin = async () => {
-    const supabase = createClient()
     setIsGoogleLoading(true)
     setError(null)
 
     try {
-      console.log('[Login] Starting Google OAuth...')
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          }
-        }
-      })
-      if (error) throw error
+      console.log('[Login] Starting Google OAuth with Firebase...')
+      const result = await signInWithGoogle()
+      
+      console.log('[Login] Google auth successful:', result.user.email)
+      
+      // Check if user has a company, if not create one
+      const companies = await getUserCompanies(result.user.uid)
+      if (companies.length === 0) {
+        console.log('[Login] No company found, creating default company...')
+        await createCompany({
+          userId: result.user.uid,
+          name: result.user.displayName ? `${result.user.displayName}'s Company` : 'My Company',
+          industry: 'Technology',
+          teamSize: 1,
+          fundingStage: 'pre-seed',
+        })
+      }
+      
+      console.log('[Login] Redirecting to dashboard...')
+      router.push("/dashboard")
     } catch (error: unknown) {
       console.error('[Login] Google OAuth Error:', error)
       setError(error instanceof Error ? error.message : "Failed to sign in with Google")
@@ -48,72 +56,29 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    const supabase = createClient()
     setIsLoading(true)
     setError(null)
 
     try {
-      console.log('[Login] Starting authentication...')
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-      if (error) throw error
+      console.log('[Login] Starting email/password authentication with Firebase...')
+      const result = await signInWithEmail(email, password)
       
-      console.log('[Login] Auth successful, checking profile...')
+      console.log('[Login] Auth successful, checking company...')
       
-      // Profile and company will be created by database triggers
-      // Just verify they exist (don't wait if tables don't exist)
-      if (data.user) {
-        try {
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', data.user.id)
-            .single()
-          
-          // If no profile exists, create one (only if table exists)
-          if (!profile && !profileError) {
-            console.log('[Login] Creating profile...')
-            await supabase
-              .from('profiles')
-              .insert({
-                id: data.user.id,
-                email: data.user.email || email,
-                full_name: data.user.user_metadata?.full_name || email.split('@')[0],
-                company_name: data.user.user_metadata?.company_name || 'My Company',
-              })
-          }
-          
-          // Verify user has a company
-          const { data: company, error: companyError } = await supabase
-            .from('companies')
-            .select('*')
-            .eq('user_id', data.user.id)
-            .single()
-          
-          // If no company exists, create one (only if table exists)
-          if (!company && !companyError) {
-            console.log('[Login] Creating company...')
-            await supabase
-              .from('companies')
-              .insert({
-                user_id: data.user.id,
-                name: data.user.user_metadata?.company_name || 'My Company',
-                industry: 'Technology',
-                founded_date: new Date().toISOString(),
-                team_size: 1,
-                funding_stage: 'pre-seed',
-              })
-          }
-        } catch (dbError) {
-          // If database operations fail (tables don't exist), continue anyway
-          console.warn('[Login] Database check skipped:', dbError)
-        }
+      // Check if user has a company, if not create one
+      const companies = await getUserCompanies(result.user.uid)
+      if (companies.length === 0) {
+        console.log('[Login] No company found, creating default company...')
+        await createCompany({
+          userId: result.user.uid,
+          name: 'My Company',
+          industry: 'Technology',
+          teamSize: 1,
+          fundingStage: 'pre-seed',
+        })
       }
       
       console.log('[Login] Redirecting to dashboard...')
-      // Redirect to dashboard - router.push for faster navigation
       router.push("/dashboard")
     } catch (error: unknown) {
       console.error('[Login] Error:', error)

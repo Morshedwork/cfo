@@ -1,79 +1,64 @@
-import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
+import { getUserCompanies, getCompanySales, createSale } from "@/lib/firebase/db"
+import { getAuthUser } from "@/lib/firebase/server-auth"
 
 export async function GET(request: Request) {
   try {
-    const supabase = await createClient()
-
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser()
-    if (userError || !user) {
+    const user = await getAuthUser(request)
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     // Get user's company
-    const { data: company } = await supabase.from("companies").select("id").eq("user_id", user.id).single()
-
-    if (!company) {
+    const companies = await getUserCompanies(user.uid)
+    if (companies.length === 0) {
       return NextResponse.json({ sales: [] })
     }
 
+    const companyId = companies[0].id
     const { searchParams } = new URL(request.url)
     const limit = searchParams.get("limit") ? Number.parseInt(searchParams.get("limit")!) : 100
 
-    const { data: sales, error } = await supabase
-      .from("sales")
-      .select("*")
-      .eq("company_id", company.id)
-      .order("date", { ascending: false })
-      .limit(limit)
-
-    if (error) throw error
+    const sales = await getCompanySales(companyId, limit)
 
     return NextResponse.json({ sales })
   } catch (error) {
-    console.error("[v0] Error fetching sales:", error)
+    console.error("[Firebase] Error fetching sales:", error)
     return NextResponse.json({ error: "Failed to fetch sales" }, { status: 500 })
   }
 }
 
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient()
-
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser()
-    if (userError || !user) {
+    const user = await getAuthUser(request)
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     // Get user's company
-    const { data: company } = await supabase.from("companies").select("id").eq("user_id", user.id).single()
-
-    if (!company) {
+    const companies = await getUserCompanies(user.uid)
+    if (companies.length === 0) {
       return NextResponse.json({ error: "Company not found" }, { status: 404 })
     }
 
+    const companyId = companies[0].id
     const body = await request.json()
 
-    const { data: sale, error } = await supabase
-      .from("sales")
-      .insert({
-        company_id: company.id,
-        ...body,
-      })
-      .select()
-      .single()
+    const saleId = await createSale({
+      companyId,
+      date: body.date,
+      productName: body.productName || body.product_name,
+      quantity: body.quantity,
+      unitPrice: body.unitPrice || body.unit_price,
+      totalAmount: body.totalAmount || body.total_amount,
+      channel: body.channel,
+      customerName: body.customerName || body.customer_name,
+      status: body.status || 'completed',
+    })
 
-    if (error) throw error
-
-    return NextResponse.json({ sale })
+    return NextResponse.json({ sale: { id: saleId, ...body } })
   } catch (error) {
-    console.error("[v0] Error creating sale:", error)
+    console.error("[Firebase] Error creating sale:", error)
     return NextResponse.json({ error: "Failed to create sale" }, { status: 500 })
   }
 }

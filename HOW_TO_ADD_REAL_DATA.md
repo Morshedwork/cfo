@@ -21,14 +21,14 @@ That's why it falls back to showing "Demo Company" data.
 4. Ask any question
 5. Look for this log:
 
-```
+\`\`\`
 [Voice API] Fetched data: {
   hasCompany: false,          ← Your company data
   transactionCount: 0,        ← Your transactions
   hasProfile: true            ← Your user profile
 }
 [Voice API] No real data found, using demo data
-```
+\`\`\`
 
 **If you see:**
 - `hasCompany: false` = No company data
@@ -98,14 +98,14 @@ That's why it falls back to showing "Demo Company" data.
 ### If You Want to Test with Real Data NOW:
 
 1. **Get FMP API Key:**
-   ```bash
+   \`\`\`bash
    # 1. Go to https://site.financialmodelingprep.com/developer/docs
    # 2. Sign up (free tier is fine)
    # 3. Copy your API key
-   ```
+   \`\`\`
 
 2. **Add to .env.local:**
-   ```env
+   \`\`\`env
    # Financial Modeling Prep API
    FMP_API_KEY=your_fmp_key_here
    
@@ -114,13 +114,13 @@ That's why it falls back to showing "Demo Company" data.
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_key
    OPENROUTER_API_KEY=your_openrouter_key
    NEXT_PUBLIC_ELEVENLABS_API_KEY=your_elevenlabs_key
-   ```
+   \`\`\`
 
 3. **Restart Server:**
-   ```bash
+   \`\`\`bash
    # Stop (Ctrl+C)
    npm run dev
-   ```
+   \`\`\`
 
 4. **Load Data:**
    - Go to Dashboard
@@ -140,7 +140,7 @@ That's why it falls back to showing "Demo Company" data.
 
 Here's the flow:
 
-```
+\`\`\`
 User asks question
     ↓
 Voice Assistant sends userId to API
@@ -158,7 +158,7 @@ If data found:
 If NO data found:
     ⚠️ Return demo data
     ⚠️ AI answers with generic "Demo Company" numbers
-```
+\`\`\`
 
 ---
 
@@ -167,31 +167,31 @@ If NO data found:
 ### After Adding Data, Check Console:
 
 **Before (Demo Data):**
-```
+\`\`\`
 [Voice API] Fetched data: {
   hasCompany: false,
   transactionCount: 0,
   hasProfile: true
 }
 [Voice API] No real data found, using demo data
-```
+\`\`\`
 
 **After (Real Data):** ✅
-```
+\`\`\`
 [Voice API] Fetched data: {
   hasCompany: true,           ← ✅ Company found!
   transactionCount: 45,       ← ✅ Transactions found!
   hasProfile: true
 }
-```
+\`\`\`
 
 **Ask Voice Assistant:**
-```
+\`\`\`
 "What's my company name?"
 
 Demo data response: "Demo Company"
 Real data response: "Apple Inc." (or your actual company)
-```
+\`\`\`
 
 ---
 
@@ -278,12 +278,12 @@ To see your REAL data on dashboard:
 ## Need Help?
 
 ### Check Logs:
-```bash
+\`\`\`bash
 # In browser console (F12)
 # Look for these messages:
 [Voice API] Fetched data: {...}
 [Voice API] No real data found, using demo data  ← This means no data yet!
-```
+\`\`\`
 
 ### Common Issues:
 
@@ -303,4 +303,3 @@ To see your REAL data on dashboard:
 ---
 
 Once you add data (any of the 3 options), your voice assistant will immediately start using your real financial data instead of demo data! 🎯
-

@@ -203,7 +203,3 @@ export const DEMO_COMPANIES = [
   { symbol: 'DIS', name: 'The Walt Disney Company' },
   { symbol: 'NKE', name: 'Nike Inc.' },
 ];
-
-
-
-

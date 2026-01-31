@@ -38,10 +38,10 @@ I've successfully integrated Google OAuth authentication into your CFO app. Here
    - Name it: "AI CFO App"
 
 4. **Add Authorized Redirect URIs:**
-   ```
+   \`\`\`
    http://localhost:3000/auth/callback
    https://your-project-ref.supabase.co/auth/v1/callback
-   ```
+   \`\`\`
    ⚠️ Replace `your-project-ref` with your actual Supabase project reference
 
 5. **Save Your Credentials:**
@@ -69,16 +69,16 @@ I've successfully integrated Google OAuth authentication into your CFO app. Here
 ### Step 3: Create Your Environment File
 
 1. **Copy the template:**
-   ```powershell
+   \`\`\`powershell
    # On Windows PowerShell:
    Copy-Item .env.local.template .env.local
-   ```
+   \`\`\`
 
 2. **Edit `.env.local`** with your Supabase credentials:
-   ```env
+   \`\`\`env
    NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
-   ```
+   \`\`\`
 
    **Where to find these:**
    - Supabase Dashboard > Settings > API
@@ -89,9 +89,9 @@ I've successfully integrated Google OAuth authentication into your CFO app. Here
 ### Step 4: Test Your Setup
 
 1. **Start the development server:**
-   ```powershell
+   \`\`\`powershell
    pnpm dev
-   ```
+   \`\`\`
 
 2. **Test Google Sign-In:**
    - Go to http://localhost:3000/auth/login
@@ -130,9 +130,9 @@ I've successfully integrated Google OAuth authentication into your CFO app. Here
 When deploying to Vercel/production:
 1. Add environment variables in your hosting platform
 2. Update Google Cloud Console redirect URIs to include your production domain:
-   ```
+   \`\`\`
    https://your-domain.com/auth/callback
-   ```
+   \`\`\`
 
 ---
 
@@ -145,9 +145,9 @@ When deploying to Vercel/production:
 1. Go to Google Cloud Console > Credentials
 2. Edit your OAuth client
 3. Add this exact URI:
-   ```
+   \`\`\`
    https://your-project-ref.supabase.co/auth/v1/callback
-   ```
+   \`\`\`
 
 ### Error: "Invalid client"
 **Cause:** Client ID or Secret is incorrect in Supabase
@@ -255,4 +255,3 @@ Your app uses **Supabase** for authentication, database, and backend services. T
 ---
 
 **Ready to test?** Follow the steps above and you'll have Google OAuth working in minutes! 🚀
-

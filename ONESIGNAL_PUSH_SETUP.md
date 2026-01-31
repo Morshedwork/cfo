@@ -15,9 +15,9 @@
 ### Step 1: Create OneSignal Account (5 minutes)
 
 1. **Go to OneSignal:**
-   ```
+   \`\`\`
    https://onesignal.com
-   ```
+   \`\`\`
 
 2. **Click "Get Started Free"**
    - Sign up with email or Google
@@ -49,9 +49,9 @@
 ### Step 3: Get Your API Keys
 
 1. **Go to Settings → Keys & IDs:**
-   ```
+   \`\`\`
    Click on your app → Settings → Keys & IDs
-   ```
+   \`\`\`
 
 2. **Copy these TWO values:**
    
@@ -70,14 +70,14 @@
 
 Open your `.env.local` file and update these lines:
 
-```bash
+\`\`\`bash
 # =======================================
 # ONESIGNAL PUSH NOTIFICATIONS
 # =======================================
 
 NEXT_PUBLIC_ONESIGNAL_APP_ID=a1b2c3d4-e5f6-7890-abcd-ef1234567890
 ONESIGNAL_REST_API_KEY=os_v2_app_xxxxxxxxxxxxx
-```
+\`\`\`
 
 **Replace with your actual keys!**
 
@@ -87,18 +87,18 @@ ONESIGNAL_REST_API_KEY=os_v2_app_xxxxxxxxxxxxx
 
 Stop your current server (Ctrl+C) and restart:
 
-```bash
+\`\`\`bash
 pnpm dev
-```
+\`\`\`
 
 ---
 
 ### Step 6: Test on Desktop
 
 1. **Go to Notification Settings:**
-   ```
+   \`\`\`
    http://localhost:3000/settings/notifications
-   ```
+   \`\`\`
 
 2. **You'll see the "📱 Mobile Push Notifications" card**
 
@@ -143,14 +143,14 @@ pnpm dev
 If you want to test from outside your WiFi:
 
 1. **Install ngrok:**
-   ```bash
+   \`\`\`bash
    npm install -g ngrok
-   ```
+   \`\`\`
 
 2. **Start ngrok:**
-   ```bash
+   \`\`\`bash
    ngrok http 3000
-   ```
+   \`\`\`
 
 3. **Copy the HTTPS URL** (looks like: `https://abc123.ngrok.io`)
 
@@ -171,39 +171,39 @@ If you want to test from outside your WiFi:
 
 ### Test Low Runway Alert
 
-```typescript
+\`\`\`typescript
 import { sendLowRunwayAlert } from '@/lib/push-notification-service'
 
 // Send alert for 5.2 months runway with $45,000 cash
 await sendLowRunwayAlert(5.2, 45000)
-```
+\`\`\`
 
 ### Test Payment Received
 
-```typescript
+\`\`\`typescript
 import { sendPaymentReceivedAlert } from '@/lib/push-notification-service'
 
 // Send alert for $25,000 payment from Acme Corp
 await sendPaymentReceivedAlert(25000, 'Acme Corp')
-```
+\`\`\`
 
 ### Test Large Expense
 
-```typescript
+\`\`\`typescript
 import { sendLargeExpenseAlert } from '@/lib/push-notification-service'
 
 // Send alert for $15,000 expense
 await sendLargeExpenseAlert(15000, 'New Server Equipment')
-```
+\`\`\`
 
 ---
 
 ## 📊 View Push Notification Stats
 
 1. **Go to OneSignal Dashboard:**
-   ```
+   \`\`\`
    https://app.onesignal.com
-   ```
+   \`\`\`
 
 2. **Click on your app**
 
@@ -362,6 +362,3 @@ When deploying to production:
 ---
 
 **🎉 You're all set! Your financial alerts will now reach users anywhere, anytime!**
-
-
-

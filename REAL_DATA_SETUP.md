@@ -26,16 +26,16 @@ Your AI Virtual CFO now supports loading **real financial data** from public com
 
 Add the following to your `.env.local` file:
 
-```env
+\`\`\`env
 # Financial Modeling Prep API (for real company data)
 FMP_API_KEY=your_api_key_here
-```
+\`\`\`
 
 ### Step 3: Restart Development Server
 
-```bash
+\`\`\`bash
 npm run dev
-```
+\`\`\`
 
 ### Step 4: Load Real Company Data
 
@@ -68,7 +68,7 @@ The system includes data for these popular companies (and many more):
 
 ### Data Transformation Pipeline
 
-```
+\`\`\`
 Financial Modeling Prep API
     ↓
 Fetch Company Profile + Financial Statements
@@ -84,7 +84,7 @@ Generate AI Insights
 Populate Your Database
     ↓
 Dashboard Updates with Real Data
-```
+\`\`\`
 
 ### What Gets Loaded
 
@@ -141,7 +141,7 @@ When you load a company's data, the system:
 
 You can load any publicly traded company by their stock symbol:
 
-```typescript
+\`\`\`typescript
 // In your code or API call
 const response = await fetch('/api/load-real-company', {
   method: 'POST',
@@ -151,13 +151,13 @@ const response = await fetch('/api/load-real-company', {
     clearExisting: true
   })
 });
-```
+\`\`\`
 
 ### Adjust Data Distribution
 
 Edit `lib/financial-data-transformer.ts` to customize how data is transformed:
 
-```typescript
+\`\`\`typescript
 // Change expense breakdown percentages
 const opex = Math.abs(statement.operatingExpenses);
 
@@ -167,19 +167,19 @@ transactions.push({
   category: 'Payroll',
   // ...
 });
-```
+\`\`\`
 
 ### Keep Demo Data
 
 If you want to keep your demo data and add real data:
 
-```typescript
+\`\`\`typescript
 // Set clearExisting to false
 body: JSON.stringify({
   symbol: 'AAPL',
   clearExisting: false // Keeps existing transactions
 })
-```
+\`\`\`
 
 ## 📈 API Endpoints
 
@@ -187,15 +187,15 @@ body: JSON.stringify({
 
 **POST** `/api/load-real-company`
 
-```json
+\`\`\`json
 {
   "symbol": "AAPL",
   "clearExisting": true
 }
-```
+\`\`\`
 
 **Response:**
-```json
+\`\`\`json
 {
   "success": true,
   "message": "Successfully loaded data for Apple Inc.",
@@ -208,7 +208,7 @@ body: JSON.stringify({
     "periodsLoaded": 12
   }
 }
-```
+\`\`\`
 
 ### List Available Companies
 
@@ -303,7 +303,3 @@ This integration uses publicly available financial data from SEC filings via Fin
 ---
 
 **Ready to use real company data?** Get your API key and start exploring! 🚀
-
-
-
-

@@ -20,17 +20,17 @@
 
 ### 1. Install Dependencies
 
-```bash
+\`\`\`bash
 npm install
 # or
 pnpm install
-```
+\`\`\`
 
 ### 2. Environment Setup
 
 Create `.env.local` file:
 
-```env
+\`\`\`env
 # Supabase (Required for auth)
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
@@ -40,7 +40,7 @@ GEMINI_API_KEY=your_gemini_api_key
 
 # Financial Modeling Prep (Optional - for real company data)
 FMP_API_KEY=your_fmp_api_key
-```
+\`\`\`
 
 ### 3. Configure Supabase Authentication
 
@@ -55,9 +55,9 @@ Quick steps:
 
 ### 4. Run Development Server
 
-```bash
+\`\`\`bash
 npm run dev
-```
+\`\`\`
 
 Open [http://localhost:3000](http://localhost:3000) to see the app.
 
@@ -115,7 +115,7 @@ Works without GEMINI_API_KEY:
 
 ## 📦 Project Structure
 
-```
+\`\`\`
 cfo/
 ├── app/                    # Next.js app directory
 │   ├── api/               # API routes
@@ -138,7 +138,7 @@ cfo/
 │   └── supabase/         # Supabase clients
 ├── scripts/              # Database scripts
 └── public/               # Static assets
-```
+\`\`\`
 
 ## 🔧 Configuration
 
@@ -254,7 +254,7 @@ The app has intelligent fallbacks:
 
 ## 📝 Development
 
-```bash
+\`\`\`bash
 # Run development server
 npm run dev
 
@@ -266,15 +266,15 @@ npm start
 
 # Lint code
 npm run lint
-```
+\`\`\`
 
 ## 🚢 Deployment
 
 ### Vercel (Recommended)
 
-```bash
+\`\`\`bash
 vercel
-```
+\`\`\`
 
 Or connect your GitHub repo to Vercel dashboard.
 

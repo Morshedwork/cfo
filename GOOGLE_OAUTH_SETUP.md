@@ -27,10 +27,10 @@ Visit: https://console.cloud.google.com/
 
 ### 1.5 Set Authorized Redirect URIs
 Add these redirect URIs (replace with your actual Supabase project URL):
-```
+\`\`\`
 https://your-project-ref.supabase.co/auth/v1/callback
 http://localhost:3000/auth/callback
-```
+\`\`\`
 
 **Find your Supabase project URL:**
 - Go to https://supabase.com/dashboard
@@ -74,21 +74,21 @@ Click "Save" at the bottom
 ### 3.1 Create `.env.local` file
 Copy `.env.local.template` to `.env.local`:
 
-```bash
+\`\`\`bash
 # On Windows PowerShell:
 Copy-Item .env.local.template .env.local
 
 # On macOS/Linux:
 cp .env.local.template .env.local
-```
+\`\`\`
 
 ### 3.2 Add Your Supabase Credentials
 Edit `.env.local` and add:
 
-```env
+\`\`\`env
 NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
-```
+\`\`\`
 
 **Where to find these:**
 1. Go to https://supabase.com/dashboard
@@ -109,9 +109,9 @@ I've already prepared the code for you. The Google sign-in button will appear on
 ## 🧪 Step 5: Test Your Setup
 
 ### 5.1 Start Development Server
-```bash
+\`\`\`bash
 pnpm dev
-```
+\`\`\`
 
 ### 5.2 Test Google Login
 1. Go to http://localhost:3000/auth/login
@@ -130,9 +130,9 @@ pnpm dev
 
 ### Error: "redirect_uri_mismatch"
 **Solution:** Make sure your redirect URI in Google Cloud Console matches:
-```
+\`\`\`
 https://your-project-ref.supabase.co/auth/v1/callback
-```
+\`\`\`
 
 ### Error: "Invalid client"
 **Solution:** Double-check that:
@@ -162,10 +162,10 @@ https://your-project-ref.supabase.co/auth/v1/callback
 When deploying to Vercel/production:
 1. Add environment variables in your hosting platform
 2. Update authorized redirect URIs in Google Cloud Console:
-   ```
+   \`\`\`
    https://your-domain.com/auth/callback
    https://your-project-ref.supabase.co/auth/v1/callback
-   ```
+   \`\`\`
 
 ---
 
@@ -188,4 +188,3 @@ After setting up Google OAuth:
 ---
 
 **Need help?** Check the Supabase logs or browser console for specific error messages.
-

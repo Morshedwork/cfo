@@ -79,4 +79,3 @@ console.log('Next steps:');
 console.log('1. Restart your dev server: pnpm dev');
 console.log('2. Visit: http://localhost:3000/auth/login');
 console.log('3. Set up Google OAuth: Follow GOOGLE_AUTH_CHECKLIST.md\n');
-

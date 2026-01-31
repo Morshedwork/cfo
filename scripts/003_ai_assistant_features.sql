@@ -177,14 +177,14 @@ CREATE TABLE IF NOT EXISTS chat_messages (
 -- Indexes for Performance
 -- ====================
 
-CREATE INDEX idx_financial_forecasts_company ON financial_forecasts(company_id, created_at DESC);
-CREATE INDEX idx_scenarios_company ON scenarios(company_id, created_at DESC);
-CREATE INDEX idx_investor_kpis_company ON investor_kpis(company_id, period_end DESC);
-CREATE INDEX idx_risk_alerts_company_status ON risk_alerts(company_id, status, created_at DESC);
-CREATE INDEX idx_risk_thresholds_company_active ON risk_thresholds(company_id, is_active);
-CREATE INDEX idx_cap_table_snapshots_company ON cap_table_snapshots(company_id, is_current DESC);
-CREATE INDEX idx_strategic_insights_company ON strategic_insights(company_id, status, created_at DESC);
-CREATE INDEX idx_chat_messages_company ON chat_messages(company_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_financial_forecasts_company ON financial_forecasts(company_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_scenarios_company ON scenarios(company_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_investor_kpis_company ON investor_kpis(company_id, period_end DESC);
+CREATE INDEX IF NOT EXISTS idx_risk_alerts_company_status ON risk_alerts(company_id, status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_risk_thresholds_company_active ON risk_thresholds(company_id, is_active);
+CREATE INDEX IF NOT EXISTS idx_cap_table_snapshots_company ON cap_table_snapshots(company_id, is_current DESC);
+CREATE INDEX IF NOT EXISTS idx_strategic_insights_company ON strategic_insights(company_id, status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_company ON chat_messages(company_id, created_at DESC);
 
 -- ====================
 -- Row Level Security
@@ -202,33 +202,43 @@ ALTER TABLE strategic_insights ENABLE ROW LEVEL SECURITY;
 ALTER TABLE chat_messages ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies (users can only access their company's data)
+DROP POLICY IF EXISTS financial_forecasts_policy ON financial_forecasts;
 CREATE POLICY financial_forecasts_policy ON financial_forecasts
   FOR ALL USING (company_id IN (SELECT id FROM companies WHERE user_id = auth.uid()));
 
+DROP POLICY IF EXISTS scenarios_policy ON scenarios;
 CREATE POLICY scenarios_policy ON scenarios
   FOR ALL USING (company_id IN (SELECT id FROM companies WHERE user_id = auth.uid()));
 
+DROP POLICY IF EXISTS investor_kpis_policy ON investor_kpis;
 CREATE POLICY investor_kpis_policy ON investor_kpis
   FOR ALL USING (company_id IN (SELECT id FROM companies WHERE user_id = auth.uid()));
 
+DROP POLICY IF EXISTS data_rooms_policy ON data_rooms;
 CREATE POLICY data_rooms_policy ON data_rooms
   FOR ALL USING (company_id IN (SELECT id FROM companies WHERE user_id = auth.uid()));
 
+DROP POLICY IF EXISTS risk_thresholds_policy ON risk_thresholds;
 CREATE POLICY risk_thresholds_policy ON risk_thresholds
   FOR ALL USING (company_id IN (SELECT id FROM companies WHERE user_id = auth.uid()));
 
+DROP POLICY IF EXISTS risk_alerts_policy ON risk_alerts;
 CREATE POLICY risk_alerts_policy ON risk_alerts
   FOR ALL USING (company_id IN (SELECT id FROM companies WHERE user_id = auth.uid()));
 
+DROP POLICY IF EXISTS cap_table_snapshots_policy ON cap_table_snapshots;
 CREATE POLICY cap_table_snapshots_policy ON cap_table_snapshots
   FOR ALL USING (company_id IN (SELECT id FROM companies WHERE user_id = auth.uid()));
 
+DROP POLICY IF EXISTS equity_scenarios_policy ON equity_scenarios;
 CREATE POLICY equity_scenarios_policy ON equity_scenarios
   FOR ALL USING (company_id IN (SELECT id FROM companies WHERE user_id = auth.uid()));
 
+DROP POLICY IF EXISTS strategic_insights_policy ON strategic_insights;
 CREATE POLICY strategic_insights_policy ON strategic_insights
   FOR ALL USING (company_id IN (SELECT id FROM companies WHERE user_id = auth.uid()));
 
+DROP POLICY IF EXISTS chat_messages_policy ON chat_messages;
 CREATE POLICY chat_messages_policy ON chat_messages
   FOR ALL USING (company_id IN (SELECT id FROM companies WHERE user_id = auth.uid()));
 
@@ -257,6 +267,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Trigger to auto-create thresholds for new companies
+DROP TRIGGER IF EXISTS create_default_thresholds_trigger ON companies;
 CREATE TRIGGER create_default_thresholds_trigger
   AFTER INSERT ON companies
   FOR EACH ROW
@@ -269,4 +280,3 @@ COMMENT ON TABLE risk_alerts IS 'Automated financial risk alerts and warnings';
 COMMENT ON TABLE cap_table_snapshots IS 'Company equity ownership snapshots and scenarios';
 COMMENT ON TABLE strategic_insights IS 'AI-generated strategic business insights';
 COMMENT ON TABLE chat_messages IS 'Enhanced chat history with rich message types';
-

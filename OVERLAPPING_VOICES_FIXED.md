@@ -47,7 +47,7 @@ Your voice assistant no longer has overlapping audio! Here's what I fixed:
 ### File: `app/voice-assistant/page.tsx`
 
 **Before:**
-```typescript
+\`\`\`typescript
 // Speak welcome message with browser voice
 if (voiceService.isSupported()) {
   const simpleVoice = getSimpleVoice()
@@ -56,13 +56,13 @@ if (voiceService.isSupported()) {
     simpleVoice.speak("Hey! I'm Aura...", ...)
   }, 500)
 }
-```
+\`\`\`
 
 **After:**
-```typescript
+\`\`\`typescript
 // Don't auto-play welcome message - let user start when ready
 // User can click the mic to begin the conversation
-```
+\`\`\`
 
 ✅ **Result:** No auto-play on page load
 
@@ -73,12 +73,12 @@ if (voiceService.isSupported()) {
 **Changes:**
 
 1. **Added Flag to Track Audio State**
-```typescript
+\`\`\`typescript
 private isPlayingAudio: boolean = false
-```
+\`\`\`
 
 2. **Prevent Overlapping in speak()**
-```typescript
+\`\`\`typescript
 // Prevent overlapping: if already playing, stop everything
 if (this.isPlayingAudio) {
   console.log('[Voice] ⚠️ Already playing audio - stopping previous')
@@ -92,28 +92,28 @@ this.isPlayingAudio = true
 
 // Longer delay to ensure everything is fully stopped
 await new Promise(resolve => setTimeout(resolve, 200))
-```
+\`\`\`
 
 3. **Clear Flag on Audio End**
-```typescript
+\`\`\`typescript
 audio.onended = () => {
   // ... cleanup code ...
   this.isPlayingAudio = false // Clear flag
   if (onEnd) onEnd()
 }
-```
+\`\`\`
 
 4. **Clear Flag on Audio Error**
-```typescript
+\`\`\`typescript
 audio.onerror = (event) => {
   // ... error handling ...
   this.isPlayingAudio = false // Clear flag
   if (onError) onError(...)
 }
-```
+\`\`\`
 
 5. **Clear Flag in stopSpeaking()**
-```typescript
+\`\`\`typescript
 stopSpeaking(): void {
   console.log('[Voice] 🛑 Stopping all audio...')
   
@@ -122,7 +122,7 @@ stopSpeaking(): void {
   
   // Stop audio playback...
 }
-```
+\`\`\`
 
 ---
 
@@ -131,42 +131,42 @@ stopSpeaking(): void {
 ### Flow When User Clicks Mic:
 
 1. **User asks question**
-   ```
+   \`\`\`
    [Voice] 🎤 New speak request
-   ```
+   \`\`\`
 
 2. **Check if already playing**
-   ```
+   \`\`\`
    [Voice] ⚠️ Already playing audio - stopping previous (if applicable)
-   ```
+   \`\`\`
 
 3. **Stop ALL audio**
-   ```
+   \`\`\`
    [Voice] 🛑 Stopping all audio...
    [Voice] ✅ Audio stopped
-   ```
+   \`\`\`
 
 4. **Set flag**
-   ```
+   \`\`\`
    isPlayingAudio = true
-   ```
+   \`\`\`
 
 5. **Wait 200ms**
-   ```
+   \`\`\`
    (ensures previous audio is fully stopped)
-   ```
+   \`\`\`
 
 6. **Start new audio**
-   ```
+   \`\`\`
    [ElevenLabs] Audio blob received: 45678 bytes
    [ElevenLabs] ✅ Audio playing successfully
-   ```
+   \`\`\`
 
 7. **On finish, clear flag**
-   ```
+   \`\`\`
    [ElevenLabs] ✅ Audio finished playing
    isPlayingAudio = false
-   ```
+   \`\`\`
 
 ---
 
@@ -175,9 +175,9 @@ stopSpeaking(): void {
 **To verify the fix:**
 
 1. **Hard Refresh Browser**
-   ```
+   \`\`\`
    Ctrl + Shift + R
-   ```
+   \`\`\`
 
 2. **Open Voice Assistant Page**
    - **Expect:** No audio plays automatically ✅
@@ -192,12 +192,12 @@ stopSpeaking(): void {
    - **Expect:** NO overlapping ✅
 
 5. **Check Console (F12)**
-   ```
+   \`\`\`
    [Voice] 🎤 New speak request
    [Voice] 🛑 Stopping all audio...
    [ElevenLabs] ✅ Audio playing successfully
    [ElevenLabs] ✅ Audio finished playing
-   ```
+   \`\`\`
    **Expect:** Clean logs, no errors ✅
 
 ---
@@ -205,7 +205,7 @@ stopSpeaking(): void {
 ## 📊 Before vs After
 
 ### Before (with overlapping):
-```
+\`\`\`
 [Page Load]
 → Welcome message auto-plays
 
@@ -218,10 +218,10 @@ stopSpeaking(): void {
 [User asks another question immediately]
 → Response 2 starts playing
 → ❌ OVERLAP: Both play at same time!
-```
+\`\`\`
 
 ### After (no overlapping):
-```
+\`\`\`
 [Page Load]
 → Welcome message shown (text only)
 → ✅ No audio
@@ -237,14 +237,14 @@ stopSpeaking(): void {
 → Wait 200ms
 → Response 2 starts playing
 → ✅ NO OVERLAP - clean audio!
-```
+\`\`\`
 
 ---
 
 ## 🔍 Console Log Examples
 
 ### ✅ **Normal Flow (No Overlapping):**
-```
+\`\`\`
 [Voice] 🎤 New speak request
 [Voice] 🛑 Stopping all audio...
 [Voice] Key found: true
@@ -253,10 +253,10 @@ stopSpeaking(): void {
 [ElevenLabs] Audio loaded, duration: 3.5 seconds
 [ElevenLabs] ✅ Audio playing successfully
 [ElevenLabs] ✅ Audio finished playing
-```
+\`\`\`
 
 ### ✅ **Rapid Questions (Properly Stopped):**
-```
+\`\`\`
 [Voice] 🎤 New speak request
 [Voice] 🛑 Stopping all audio...
 [ElevenLabs] ✅ Audio playing successfully
@@ -266,7 +266,7 @@ stopSpeaking(): void {
 [Voice] 🛑 Stopping all audio...
 [Voice] ✅ Audio stopped
 [ElevenLabs] ✅ Audio playing successfully
-```
+\`\`\`
 
 ---
 
@@ -292,4 +292,3 @@ stopSpeaking(): void {
 **Hard refresh your browser (`Ctrl+Shift+R`) and test it now!** 🎯
 
 **You should have a clean, professional voice experience with NO overlapping!** ✨
-

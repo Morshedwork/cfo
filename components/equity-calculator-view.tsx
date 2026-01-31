@@ -291,4 +291,3 @@ export function EquityCalculatorView({ result }: EquityCalculatorViewProps) {
     </div>
   )
 }
-

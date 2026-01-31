@@ -3,9 +3,9 @@
 ## ❌ The Problem
 
 You're seeing this error:
-```
+\`\`\`
 Error 400: redirect_uri_mismatch
-```
+\`\`\`
 
 This happens because Google Cloud Console doesn't have the correct redirect URI.
 
@@ -38,9 +38,9 @@ You need to add your **Supabase callback URL** to Google Cloud Console.
 4. **Add Authorized Redirect URI:**
    
    Under "Authorized redirect URIs", add this **EXACT** URL:
-   ```
+   \`\`\`
    https://YOUR-PROJECT-REF.supabase.co/auth/v1/callback
-   ```
+   \`\`\`
    
    **⚠️ Important:** Replace `YOUR-PROJECT-REF` with your actual Supabase project reference!
    
@@ -50,9 +50,9 @@ You need to add your **Supabase callback URL** to Google Cloud Console.
    Then add: `https://abcdefghijklmnop.supabase.co/auth/v1/callback`
 
 5. **Also add (for local development):**
-   ```
+   \`\`\`
    http://localhost:3000/auth/callback
-   ```
+   \`\`\`
    
    **Note:** This one is optional but good to have.
 
@@ -64,28 +64,28 @@ You need to add your **Supabase callback URL** to Google Cloud Console.
 
 In Google Cloud Console, you should have:
 
-```
+\`\`\`
 Authorized redirect URIs:
 ✅ https://YOUR-PROJECT-REF.supabase.co/auth/v1/callback
 ✅ http://localhost:3000/auth/callback (optional)
-```
+\`\`\`
 
 ---
 
 ## 📝 Common Mistakes to Avoid
 
 ### ❌ Wrong:
-```
+\`\`\`
 http://YOUR-PROJECT-REF.supabase.co/auth/v1/callback  (missing 's' in https)
 https://YOUR-PROJECT-REF.supabase.co/auth/callback    (missing /v1/)
 https://localhost:3000/auth/callback                   (localhost should be http)
-```
+\`\`\`
 
 ### ✅ Correct:
-```
+\`\`\`
 https://YOUR-PROJECT-REF.supabase.co/auth/v1/callback
 http://localhost:3000/auth/callback
-```
+\`\`\`
 
 ---
 
@@ -176,7 +176,7 @@ Once you've added the correct redirect URI, the error will disappear and Google 
 
 **What it should look like in Google Cloud Console:**
 
-```
+\`\`\`
 OAuth 2.0 Client ID
 ─────────────────────────────────────
 
@@ -189,9 +189,8 @@ Authorized redirect URIs:
 └─────────────────────────────────────────────────────┘
 
                [ Cancel ]  [ SAVE ]
-```
+\`\`\`
 
 ---
 
 **Need more help?** Check the browser console (F12) for additional error details.
-

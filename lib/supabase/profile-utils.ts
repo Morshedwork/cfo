@@ -264,4 +264,3 @@ export async function updateUserProfile(updates: Partial<UserProfile>): Promise<
     }
   }
 }
-

@@ -226,4 +226,3 @@ export async function sendLargeExpenseAlert(amount: number, description: string)
     data: { type: 'large_expense', amount, description },
   })
 }
-

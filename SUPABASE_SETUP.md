@@ -30,7 +30,7 @@ This guide explains how to configure Supabase to **skip email confirmation** for
 
 Run this SQL in your Supabase SQL Editor:
 
-```sql
+\`\`\`sql
 -- Disable email confirmation requirement
 UPDATE auth.config 
 SET enable_signup = true;
@@ -49,7 +49,7 @@ CREATE TRIGGER on_auth_user_created
   BEFORE INSERT ON auth.users
   FOR EACH ROW
   EXECUTE FUNCTION public.auto_confirm_user();
-```
+\`\`\`
 
 ## ✅ What This Does
 
@@ -65,7 +65,7 @@ With email confirmation disabled:
 
 The sign-up page (`app/auth/sign-up/page.tsx`) has been updated with smart logic:
 
-```typescript
+\`\`\`typescript
 // Automatic handling of email confirmation
 if (data.user && data.session) {
   // User is auto-confirmed, redirect to onboarding
@@ -75,16 +75,16 @@ if (data.user && data.session) {
   await supabase.auth.signInWithPassword({ email, password })
   router.push("/onboarding")
 }
-```
+\`\`\`
 
 ## 📋 Environment Variables
 
 Make sure you have these in your `.env.local`:
 
-```env
+\`\`\`env
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-```
+\`\`\`
 
 ## 🔐 Security Considerations
 
@@ -126,13 +126,13 @@ Consider these options:
 ### Problem: "Email not confirmed" error
 
 **Solution:**
-```sql
+\`\`\`sql
 -- Manually confirm a specific user
 UPDATE auth.users 
 SET email_confirmed_at = NOW(),
     confirmed_at = NOW()
 WHERE email = 'user@example.com';
-```
+\`\`\`
 
 ### Problem: Users not getting logged in after signup
 
@@ -145,14 +145,14 @@ WHERE email = 'user@example.com';
 
 ### Magic Link Login (Email only, no password)
 
-```typescript
+\`\`\`typescript
 const { error } = await supabase.auth.signInWithOtp({
   email: 'user@example.com',
   options: {
     emailRedirectTo: `${window.location.origin}/onboarding`,
   },
 })
-```
+\`\`\`
 
 ### Social Auth (Google, GitHub, etc.)
 
@@ -160,14 +160,14 @@ const { error } = await supabase.auth.signInWithOtp({
 2. Add credentials
 3. Use in code:
 
-```typescript
+\`\`\`typescript
 const { error } = await supabase.auth.signInWithOAuth({
   provider: 'google',
   options: {
     redirectTo: `${window.location.origin}/onboarding`,
   },
 })
-```
+\`\`\`
 
 ## ✨ Summary
 
@@ -181,4 +181,3 @@ Your authentication is now configured for **instant access** without email confi
 ---
 
 **Need help?** Check the [Supabase Auth Documentation](https://supabase.com/docs/guides/auth)
-

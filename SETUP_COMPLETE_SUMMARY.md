@@ -47,23 +47,23 @@ I've successfully integrated **Google OAuth authentication** into your CFO app u
 
 ### **Option 1: Quick Start (Recommended)**
 Follow the checklist:
-```
+\`\`\`
 📄 Open: GOOGLE_AUTH_CHECKLIST.md
-```
+\`\`\`
 This has a simple step-by-step checklist you can follow.
 
 ### **Option 2: Detailed Guide**
 Read the complete guide:
-```
+\`\`\`
 📄 Open: GOOGLE_AUTH_QUICKSTART.md
-```
+\`\`\`
 This explains everything in detail with screenshots context.
 
 ### **Option 3: Technical Details**
 For in-depth configuration:
-```
+\`\`\`
 📄 Open: GOOGLE_OAUTH_SETUP.md
-```
+\`\`\`
 
 ---
 
@@ -109,7 +109,7 @@ For in-depth configuration:
 ## 🎨 UI Preview
 
 **Login Page:**
-```
+\`\`\`
 ┌────────────────────────────────────┐
 │      Aura - Your AI CFO            │
 ├────────────────────────────────────┤
@@ -123,7 +123,7 @@ For in-depth configuration:
 │                                    │
 │  Don't have an account? Sign up    │
 └────────────────────────────────────┘
-```
+\`\`\`
 
 ---
 
@@ -150,9 +150,9 @@ For in-depth configuration:
 
 ### Issue: "redirect_uri_mismatch"
 **Fix:** Add exact redirect URI to Google Console:
-```
+\`\`\`
 https://[your-project].supabase.co/auth/v1/callback
-```
+\`\`\`
 
 ### Issue: "Invalid client"
 **Fix:** Double-check Client ID and Secret in Supabase
@@ -179,16 +179,16 @@ After setup, verify these work:
 When ready to deploy:
 
 1. **Add environment variables to Vercel/hosting:**
-   ```
+   \`\`\`
    NEXT_PUBLIC_SUPABASE_URL=https://[your-project].supabase.co
    NEXT_PUBLIC_SUPABASE_ANON_KEY=[your-key]
-   ```
+   \`\`\`
 
 2. **Update Google OAuth redirect URIs:**
-   ```
+   \`\`\`
    https://your-domain.com/auth/callback
    https://[your-project].supabase.co/auth/v1/callback
-   ```
+   \`\`\`
 
 3. **Test on production site**
 
@@ -274,4 +274,3 @@ You provided Firebase config, but **your app uses Supabase**:
 ---
 
 **Ready to configure?** Open `GOOGLE_AUTH_CHECKLIST.md` and follow the steps!
-

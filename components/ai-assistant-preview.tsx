@@ -374,4 +374,3 @@ export function AIAssistantPreview({ autoPlay = false }: AIAssistantPreviewProps
     </section>
   )
 }
-

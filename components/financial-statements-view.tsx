@@ -579,4 +579,3 @@ function generateTextReport(pl: ProfitLossStatement, cf: CashFlowStatement, insi
   
   return lines.join('\n')
 }
-

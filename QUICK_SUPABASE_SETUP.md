@@ -6,10 +6,10 @@
 
 Go to your Supabase project → **SQL Editor** → Run these scripts **in order**:
 
-```bash
+\`\`\`bash
 1. scripts/000_create_profiles.sql  ← Run this FIRST
 2. scripts/001_create_schema.sql   ← Run this SECOND
-```
+\`\`\`
 
 ### 2. Configure Authentication
 
@@ -25,10 +25,10 @@ Go to **Authentication** → **Settings**:
 
 Create/update `.env.local`:
 
-```env
+\`\`\`env
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
-```
+\`\`\`
 
 ### 4. Test It!
 
@@ -50,7 +50,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
 
 When a user signs up:
 
-```
+\`\`\`
 User Signs Up
     ↓
 Auth User Created (auth.users)
@@ -60,7 +60,7 @@ Profile Created (profiles) ← Automatic via trigger
 Company Created (companies) ← Automatic via trigger
     ↓
 Redirect to Onboarding
-```
+\`\`\`
 
 ## 📊 Database Tables
 
@@ -76,20 +76,20 @@ Redirect to Onboarding
 ## 🔧 Troubleshooting
 
 ### Profile not created?
-```sql
+\`\`\`sql
 -- Check if trigger exists
 SELECT * FROM pg_trigger WHERE tgname = 'on_auth_user_created';
 
 -- If not, re-run scripts/000_create_profiles.sql
-```
+\`\`\`
 
 ### Company not created?
-```sql
+\`\`\`sql
 -- Check if trigger exists
 SELECT * FROM pg_trigger WHERE tgname = 'on_profile_created';
 
 -- If not, re-run scripts/000_create_profiles.sql
-```
+\`\`\`
 
 ### "Not authenticated" error?
 1. Check `.env.local` has correct values
@@ -97,40 +97,40 @@ SELECT * FROM pg_trigger WHERE tgname = 'on_profile_created';
 3. Clear browser cache and try again
 
 ### RLS blocking access?
-```sql
+\`\`\`sql
 -- Check RLS is enabled
 SELECT tablename, rowsecurity 
 FROM pg_tables 
 WHERE schemaname = 'public';
 
 -- All should show 'true'
-```
+\`\`\`
 
 ## 🛠️ Manual Commands
 
 ### Check if user has profile:
-```typescript
+\`\`\`typescript
 import { getCurrentUserProfile } from '@/lib/supabase/profile-utils'
 
 const profile = await getCurrentUserProfile()
 console.log('Profile:', profile)
-```
+\`\`\`
 
 ### Check if user has company:
-```typescript
+\`\`\`typescript
 import { getCurrentUserCompany } from '@/lib/supabase/profile-utils'
 
 const company = await getCurrentUserCompany()
 console.log('Company:', company)
-```
+\`\`\`
 
 ### Ensure profile exists (creates if missing):
-```typescript
+\`\`\`typescript
 import { ensureUserProfile } from '@/lib/supabase/profile-utils'
 
 const { profile, company, error } = await ensureUserProfile()
 if (error) console.error('Error:', error)
-```
+\`\`\`
 
 ## 📝 What's Different Now?
 
@@ -163,4 +163,3 @@ For detailed setup instructions, see:
 - `SUPABASE_PROFILE_SETUP.md` - Complete guide
 - `SUPABASE_SETUP.md` - General Supabase setup
 - `SUPABASE_SETUP_GUIDE.md` - Alternative guide
-

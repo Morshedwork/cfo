@@ -46,30 +46,30 @@
 ### 1. Run Database Setup
 Go to your Supabase Dashboard and run the SQL setup:
 
-```bash
+\`\`\`bash
 1. Open: https://supabase.com/dashboard/project/vhshwuolgaqscgebeebb
 2. Go to: SQL Editor
 3. Open: scripts/setup_database.sql
 4. Copy all contents and paste into SQL Editor
 5. Click: RUN (or press Ctrl+Enter)
-```
+\`\`\`
 
 ### 2. Disable Email Confirmation
-```bash
+\`\`\`bash
 1. Go to: Authentication → Providers → Email
 2. Scroll to: "Confirm email"
 3. UNCHECK: "Enable email confirmations"
 4. Click: Save
-```
+\`\`\`
 
 ### 3. Verify Tables Created
 Run this query in SQL Editor:
-```sql
+\`\`\`sql
 SELECT table_name 
 FROM information_schema.tables 
 WHERE table_schema = 'public' 
 ORDER BY table_name;
-```
+\`\`\`
 
 Expected tables:
 - ✅ ai_insights
@@ -101,18 +101,18 @@ Expected tables:
 5. No profile data should be visible
 
 ### 5. Clear Browser Data (if still having issues)
-```bash
+\`\`\`bash
 1. Press F12 (open DevTools)
 2. Go to: Application tab
 3. Click: Clear storage
 4. Click: Clear site data
 5. Refresh page (Ctrl+R)
-```
+\`\`\`
 
 ## How It Works Now
 
 ### Sign Up Flow
-```
+\`\`\`
 1. User submits sign-up form
    ↓
 2. Supabase creates auth.users entry
@@ -122,10 +122,10 @@ Expected tables:
 4. Database trigger creates companies entry
    ↓
 5. Redirect to /onboarding
-```
+\`\`\`
 
 ### Sign In Flow
-```
+\`\`\`
 1. User submits login form
    ↓
 2. Supabase authenticates
@@ -137,10 +137,10 @@ Expected tables:
 5. Full page reload → /dashboard
    ↓
 6. AuthProvider loads user + profile
-```
+\`\`\`
 
 ### Sign Out Flow
-```
+\`\`\`
 1. User clicks "Sign Out"
    ↓
 2. Call supabase.auth.signOut()
@@ -154,29 +154,29 @@ Expected tables:
 6. AuthProvider detects no user
    ↓
 7. Show unauthenticated navbar
-```
+\`\`\`
 
 ## Debugging
 
 If you still see issues, check the browser console (F12) for these logs:
 
 **On Login:**
-```
+\`\`\`
 Loading profile for user: <user-id>
 Profile loaded: { email: ..., full_name: ... }
-```
+\`\`\`
 
 **On Logout:**
-```
+\`\`\`
 [Auth] Starting sign out...
 [Auth] Sign out complete, redirecting...
-```
+\`\`\`
 
 **On Page Load:**
-```
+\`\`\`
 Auth state changed: SIGNED_IN <user-id>
 Profile updated: { email: ..., full_name: ... }
-```
+\`\`\`
 
 ## Common Issues
 
@@ -207,4 +207,3 @@ Profile updated: { email: ..., full_name: ... }
 ---
 
 **All auth issues should now be resolved!** 🎉
-

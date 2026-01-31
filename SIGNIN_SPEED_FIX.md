@@ -7,10 +7,10 @@ Sign in was taking way too long - users waited 2-3+ seconds after entering crede
 
 ### 1. **Artificial Loading Delays (MAIN ISSUE)**
 Every page had hardcoded 1.5 second delays:
-```tsx
+\`\`\`tsx
 const [loading, setLoading] = useState(true)
 setTimeout(() => setLoading(false), 1500) // 1.5 second wait!
-```
+\`\`\`
 
 ### 2. **Slow Database Checks**
 Login was checking/creating profile and company sequentially, adding delays
@@ -37,15 +37,15 @@ Using `window.location.href` instead of `router.push()` for page transitions
 - ✅ `app/page.tsx` (Home) - Already fixed
 
 **Before:**
-```tsx
+\`\`\`tsx
 const [loading, setLoading] = useState(true)
 setTimeout(() => setLoading(false), 1500) // SLOW! ❌
-```
+\`\`\`
 
 **After:**
-```tsx
+\`\`\`tsx
 const [loading, setLoading] = useState(false) // INSTANT! ✅
-```
+\`\`\`
 
 ### 2. Optimized Login Flow
 
@@ -58,7 +58,7 @@ const [loading, setLoading] = useState(false) // INSTANT! ✅
 - ✅ Use `router.push()` instead of `window.location.href`
 
 **Before (Slow):**
-```tsx
+\`\`\`tsx
 // Authenticate
 await supabase.auth.signInWithPassword()
 
@@ -70,10 +70,10 @@ await checkCompany() // BLOCKS!
 
 // Full page reload (slow)
 window.location.href = "/dashboard"
-```
+\`\`\`
 
 **After (Fast):**
-```tsx
+\`\`\`tsx
 // Authenticate
 await supabase.auth.signInWithPassword()
 
@@ -87,7 +87,7 @@ try {
 
 // Fast navigation
 router.push("/dashboard")
-```
+\`\`\`
 
 ### 3. Better Error Handling
 
@@ -101,7 +101,7 @@ User still gets logged in and can access the app!
 ## Performance Improvements
 
 ### Before (Slow) 🐌
-```
+\`\`\`
 Click "Sign In"
     ↓
 Authenticate (500ms)
@@ -115,10 +115,10 @@ Full page reload (500ms)
 Dashboard loading delay (1500ms) ← MAIN ISSUE!
     ↓
 Total: ~3.1 seconds
-```
+\`\`\`
 
 ### After (Fast) ⚡
-```
+\`\`\`
 Click "Sign In"
     ↓
 Authenticate (500ms)
@@ -130,7 +130,7 @@ Fast navigation (100ms)
 Dashboard loads instantly (0ms) ← FIXED!
     ↓
 Total: ~0.8 seconds
-```
+\`\`\`
 
 **Result: 74% faster!** 🚀
 
@@ -138,7 +138,7 @@ Total: ~0.8 seconds
 
 Open browser console (F12) during login to see:
 
-```
+\`\`\`
 [Login] Starting authentication...
 [Login] Auth successful, checking profile...
 [Login] Redirecting to dashboard...
@@ -146,7 +146,7 @@ Open browser console (F12) during login to see:
 [Auth] Loading profile for user: abc123...
 [Auth] Profile loaded: { ... }
 [Auth] Initial session load complete
-```
+\`\`\`
 
 ## Testing Sign In Speed
 
@@ -226,4 +226,3 @@ If sign in is still slow, check:
 **Before:** 3+ seconds to dashboard  
 **After:** < 1 second to dashboard  
 **Improvement:** 70%+ faster! 🚀
-

@@ -59,10 +59,10 @@ Use this checklist to ensure you complete all required steps.
   - [ ] Copy `.env.local.template` to `.env.local`
   - [ ] Or create new `.env.local` file
 - [ ] **Add to `.env.local`:**
-  ```env
+  \`\`\`env
   NEXT_PUBLIC_SUPABASE_URL=https://[your-project-ref].supabase.co
   NEXT_PUBLIC_SUPABASE_ANON_KEY=[your-anon-key]
-  ```
+  \`\`\`
   - [ ] Replace `[your-project-ref]` with your actual project reference
   - [ ] Replace `[your-anon-key]` with your actual anon key
 
@@ -71,9 +71,9 @@ Use this checklist to ensure you complete all required steps.
 ## 🧪 Testing
 
 - [ ] **Start development server:**
-  ```powershell
+  \`\`\`powershell
   pnpm dev
-  ```
+  \`\`\`
 - [ ] **Test Login Page:**
   - [ ] Go to http://localhost:3000/auth/login
   - [ ] See "Continue with Google" button
@@ -102,9 +102,9 @@ Use this checklist to ensure you complete all required steps.
 - [ ] **Deploy to Vercel/Production**
 - [ ] **Update Google Cloud Console:**
   - [ ] Add production redirect URI:
-    ```
+    \`\`\`
     https://your-domain.com/auth/callback
-    ```
+    \`\`\`
 - [ ] **Update Vercel/Hosting Environment Variables:**
   - [ ] Add `NEXT_PUBLIC_SUPABASE_URL`
   - [ ] Add `NEXT_PUBLIC_SUPABASE_ANON_KEY`
@@ -150,4 +150,3 @@ If all items are checked and tests pass:
 ---
 
 **Questions?** Check `GOOGLE_AUTH_QUICKSTART.md` for detailed explanations!
-

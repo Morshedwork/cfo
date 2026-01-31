@@ -22,7 +22,7 @@
 - **Before:** 80+ words, detailed instructions
 - **After:** 30 words, direct and concise
 
-```
+\`\`\`
 OLD: "You are Aura, a smart AI CFO assistant. Be conversational, insightful, 
 and helpful. Answer in 50-80 words. NO asterisks or markdown. Use natural 
 language - talk like a smart colleague, not a robot. Think step-by-step, 
@@ -31,13 +31,13 @@ then give clear, actionable answers with specific numbers."
 NEW: "You are Aura, a smart AI CFO assistant. Be conversational and helpful. 
 Answer in 40-60 words MAXIMUM. NO asterisks or markdown. Give clear, direct 
 answers with specific numbers. Be quick and actionable."
-```
+\`\`\`
 
 ### **Financial Data Prompt:**
 - **Before:** 300+ words with detailed instructions
 - **After:** 100 words, condensed format
 
-```
+\`\`\`
 OLD:
 PLATFORM CAPABILITIES:
 Dashboard - Real-time cash tracking, burn rate, runway analysis
@@ -62,7 +62,7 @@ Revenue: $28,000/mo | MRR: $28,000 | Growth: 18%
 Question: "What's my runway?"
 
 Be conversational, give specific numbers, and be actionable. Answer directly.
-```
+\`\`\`
 
 **Result:** **50% shorter prompts = faster processing!**
 
@@ -119,7 +119,7 @@ Be conversational, give specific numbers, and be actionable. Answer directly.
 ## 📊 **TOTAL SPEED IMPROVEMENT:**
 
 ### **Before (OLD):**
-```
+\`\`\`
 User asks question
   ↓ (5-10 seconds)
 AI generates response with DeepSeek R1
@@ -129,10 +129,10 @@ ElevenLabs generates voice
 Voice starts playing
   ↓
 TOTAL: 7-13 seconds
-```
+\`\`\`
 
 ### **After (NEW):**
-```
+\`\`\`
 User asks question
   ↓ (1-3 seconds) ⚡
 AI generates response with DeepSeek Chat
@@ -142,7 +142,7 @@ ElevenLabs Turbo generates voice
 Voice starts playing
   ↓
 TOTAL: 2-5 seconds ⚡
-```
+\`\`\`
 
 ## 🚀 **60-70% FASTER OVERALL!**
 
@@ -186,9 +186,9 @@ TOTAL: 2-5 seconds ⚡
 ## 🧪 **Test It:**
 
 1. **Clear session storage:**
-   ```javascript
+   \`\`\`javascript
    sessionStorage.removeItem('aura_voice_welcome_played')
-   ```
+   \`\`\`
 
 2. **Hard refresh:** `Ctrl+Shift+R`
 
@@ -242,6 +242,3 @@ TOTAL: 2-5 seconds ⚡
 ---
 
 **Hard refresh now and feel the difference!** ⚡🚀
-
-
-

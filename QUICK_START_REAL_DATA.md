@@ -3,34 +3,34 @@
 ## ⚡ 2-Minute Setup
 
 ### Step 1: Get API Key (1 min)
-```
+\`\`\`
 1. Visit: https://site.financialmodelingprep.com/developer/docs
 2. Click "Get Started Free"
 3. Sign up (no credit card)
 4. Copy your API key
-```
+\`\`\`
 
 ### Step 2: Add to Project (30 sec)
-```bash
+\`\`\`bash
 # Open or create .env.local
 echo "FMP_API_KEY=your_api_key_here" >> .env.local
-```
+\`\`\`
 
 ### Step 3: Restart Server (30 sec)
-```bash
+\`\`\`bash
 # Stop server (Ctrl+C)
 npm run dev
 # Server running on http://localhost:3000
-```
+\`\`\`
 
 ### Step 4: Load Data (10 sec)
-```
+\`\`\`
 1. Open http://localhost:3000/dashboard
 2. Click "Load Real Company Data" button (top right)
 3. Click any company
 4. Wait 5 seconds
 5. Done! 🎉
-```
+\`\`\`
 
 ---
 
@@ -67,23 +67,23 @@ npm run dev
 ## 🎯 Quick Commands
 
 ### Load via API
-```bash
+\`\`\`bash
 curl -X POST http://localhost:3000/api/load-real-company \
   -H "Content-Type: application/json" \
   -d '{"symbol":"AAPL","clearExisting":true}'
-```
+\`\`\`
 
 ### Check Available Companies
-```bash
+\`\`\`bash
 curl http://localhost:3000/api/load-real-company
-```
+\`\`\`
 
 ---
 
 ## ⚠️ Common Issues
 
 ### "API key not set"
-```bash
+\`\`\`bash
 # Make sure you added it to .env.local
 cat .env.local | grep FMP_API_KEY
 
@@ -91,23 +91,23 @@ cat .env.local | grep FMP_API_KEY
 echo "FMP_API_KEY=your_key" >> .env.local
 
 # Restart server
-```
+\`\`\`
 
 ### "Rate limit exceeded"
-```bash
+\`\`\`bash
 # Free tier: 250 requests/day
 # Each load uses ~5 requests
 # Can load ~50 companies/day
 # Wait 24 hours or upgrade plan
-```
+\`\`\`
 
 ### "Company not found"
-```bash
+\`\`\`bash
 # Complete onboarding first:
 # 1. Sign up at /auth/sign-up
 # 2. Complete /onboarding
 # 3. Then load real data
-```
+\`\`\`
 
 ---
 
@@ -124,13 +124,13 @@ echo "FMP_API_KEY=your_key" >> .env.local
 ## 🎓 Examples
 
 ### Load Apple
-```javascript
+\`\`\`javascript
 POST /api/load-real-company
 {
   "symbol": "AAPL",
   "clearExisting": true
 }
-```
+\`\`\`
 
 **Result:**
 - Company: Apple Inc.
@@ -141,12 +141,12 @@ POST /api/load-real-company
 - Insights: 3
 
 ### Load Tesla
-```javascript
+\`\`\`javascript
 {
   "symbol": "TSLA",
   "clearExisting": true
 }
-```
+\`\`\`
 
 **Result:**
 - Company: Tesla Inc.
@@ -219,7 +219,3 @@ Your AI Virtual CFO now has access to **500+ real companies**!
 ---
 
 *Need help? Check `REAL_DATA_SETUP.md` for detailed troubleshooting*
-
-
-
-

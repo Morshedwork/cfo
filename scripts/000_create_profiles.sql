@@ -34,14 +34,23 @@ CREATE POLICY "Users can insert their own profile"
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.profiles (id, email, full_name, company_name)
-  VALUES (
-    NEW.id,
-    NEW.email,
-    COALESCE(NEW.raw_user_meta_data->>'full_name', ''),
-    COALESCE(NEW.raw_user_meta_data->>'company_name', '')
-  );
+  -- Check if profile already exists (shouldn't happen, but be safe)
+  IF NOT EXISTS (SELECT 1 FROM public.profiles WHERE id = NEW.id) THEN
+    INSERT INTO public.profiles (id, email, full_name, company_name)
+    VALUES (
+      NEW.id,
+      NEW.email,
+      COALESCE(NEW.raw_user_meta_data->>'full_name', ''),
+      COALESCE(NEW.raw_user_meta_data->>'company_name', '')
+    );
+  END IF;
   RETURN NEW;
+EXCEPTION
+  WHEN OTHERS THEN
+    -- Log error but allow user creation to proceed
+    -- This prevents the entire signup from failing if profile creation has issues
+    RAISE WARNING 'Failed to create profile for user %: %', NEW.id, SQLERRM;
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
@@ -55,16 +64,25 @@ CREATE TRIGGER on_auth_user_created
 CREATE OR REPLACE FUNCTION public.handle_new_company()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.companies (user_id, name, industry, founded_date, team_size, funding_stage)
-  VALUES (
-    NEW.id,
-    COALESCE(NEW.company_name, 'My Company'),
-    'Technology',
-    CURRENT_DATE,
-    1,
-    'pre-seed'
-  );
+  -- Check if company already exists for this user
+  IF NOT EXISTS (SELECT 1 FROM public.companies WHERE user_id = NEW.id) THEN
+    INSERT INTO public.companies (user_id, name, industry, founded_date, team_size, funding_stage)
+    VALUES (
+      NEW.id,
+      COALESCE(NULLIF(NEW.company_name, ''), 'My Company'),
+      'Technology',
+      CURRENT_DATE,
+      1,
+      'pre-seed'
+    );
+  END IF;
   RETURN NEW;
+EXCEPTION
+  WHEN OTHERS THEN
+    -- Log error but don't fail the profile creation
+    -- This allows user signup to succeed even if company creation fails
+    RAISE WARNING 'Failed to create company for user %: %', NEW.id, SQLERRM;
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 

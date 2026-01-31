@@ -74,35 +74,23 @@ export default function SignUpPage() {
         },
       })
       
-      if (error) throw error
+      if (error) {
+        console.error('[Sign Up] Auth error:', error)
+        // Supabase errors can have different formats
+        const errorMessage = error.message || error.toString() || 'Unknown error'
+        throw new Error(errorMessage)
+      }
+
+      if (!data.user) {
+        throw new Error('User creation failed. No user data returned.')
+      }
 
       // Check if user is automatically confirmed (no email confirmation required)
-      if (data.user && data.session) {
+      if (data.session) {
         // User is auto-confirmed and logged in
-        // Profile and company are created automatically via database triggers
-        
-        // Verify profile was created
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', data.user.id)
-          .single()
-        
-        if (profileError && profileError.code !== 'PGRST116') {
-          console.error('Profile creation error:', profileError)
-        }
-        
-        // Verify company was created
-        const { data: company, error: companyError } = await supabase
-          .from('companies')
-          .select('*')
-          .eq('user_id', data.user.id)
-          .single()
-        
-        if (companyError && companyError.code !== 'PGRST116') {
-          console.error('Company creation error:', companyError)
-        }
-        
+        // Profile and company should be created automatically via database triggers
+        // If triggers don't work, we'll create them on the onboarding page
+        console.log('[Sign Up] User created successfully, redirecting to onboarding...')
         window.location.href = "/onboarding"
       } else if (data.user && !data.session) {
         // Email confirmation is required - check if user needs to verify
@@ -124,7 +112,32 @@ export default function SignUpPage() {
         window.location.href = "/onboarding"
       }
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred")
+      console.error('[Sign Up] Error:', error)
+      
+      if (error instanceof Error) {
+        // Provide more helpful error messages
+        const errorMsg = error.message.toLowerCase()
+        
+        if (errorMsg.includes('user already registered') || errorMsg.includes('already registered')) {
+          setError('This email is already registered. Please sign in instead.')
+        } else if (errorMsg.includes('invalid email') || errorMsg.includes('email format')) {
+          setError('Please enter a valid email address.')
+        } else if (errorMsg.includes('password') && (errorMsg.includes('short') || errorMsg.includes('length'))) {
+          setError('Password must be at least 6 characters long.')
+        } else if (errorMsg.includes('relation') || errorMsg.includes('does not exist')) {
+          setError('Database tables not found. Please run the SQL scripts in Supabase first.')
+        } else if (errorMsg.includes('permission denied') || errorMsg.includes('row-level security')) {
+          setError('Permission denied. Please check your database RLS policies.')
+        } else if (errorMsg.includes('database error') || errorMsg.includes('failed to create')) {
+          // Show the actual database error message
+          setError(error.message)
+        } else {
+          // Show the actual error message for debugging
+          setError(error.message || 'Failed to create account. Please try again.')
+        }
+      } else {
+        setError('An unexpected error occurred. Please check the browser console for details.')
+      }
     } finally {
       setIsLoading(false)
     }

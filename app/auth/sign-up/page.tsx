@@ -2,8 +2,9 @@
 
 import type React from "react"
 
-import { signInWithGoogle, signUpWithEmail } from "@/lib/firebase/auth"
-import { createCompany } from "@/lib/firebase/db"
+import { signInWithGoogle, signUpWithEmail } from "@/lib/supabase/auth-client"
+import { ensureUserProfile } from "@/lib/supabase/profile-utils"
+import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -27,27 +28,12 @@ export default function SignUpPage() {
   const handleGoogleSignUp = async () => {
     setIsGoogleLoading(true)
     setError(null)
-
     try {
-      console.log('[Sign Up] Starting Google OAuth with Firebase...')
-      const result = await signInWithGoogle()
-      
-      console.log('[Sign Up] Google auth successful:', result.user.email)
-      
-      // Create company for new user
-      await createCompany({
-        userId: result.user.uid,
-        name: companyName || (result.user.displayName ? `${result.user.displayName}'s Company` : 'My Company'),
-        industry: 'Technology',
-        teamSize: 1,
-        fundingStage: 'pre-seed',
-      })
-      
-      console.log('[Sign Up] Redirecting to onboarding...')
-      router.push("/onboarding")
-    } catch (error: unknown) {
-      console.error('[Sign Up] Google OAuth Error:', error)
-      setError(error instanceof Error ? error.message : "Failed to sign up with Google")
+      await signInWithGoogle()
+      // OAuth redirects away; after callback user lands on dashboard. Ensure profile/company then optionally set company name.
+      // We can't await after redirect. So company name will be set on first load or in onboarding.
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to sign up with Google")
       setIsGoogleLoading(false)
     }
   }
@@ -70,26 +56,32 @@ export default function SignUpPage() {
     }
 
     try {
-      console.log('[Sign Up] Creating account with Firebase...')
-      const fullName = email.split('@')[0] // Use email prefix as default name
-      const result = await signUpWithEmail(email, password, fullName)
-      
-      console.log('[Sign Up] Account created successfully:', result.user.email)
-      
-      // Create company for new user
-      await createCompany({
-        userId: result.user.uid,
-        name: companyName || 'My Company',
-        industry: 'Technology',
-        teamSize: 1,
-        fundingStage: 'pre-seed',
-      })
-      
-      console.log('[Sign Up] Company created, redirecting to onboarding...')
+      const fullName = email.split("@")[0]
+      const supabase = createClient()
+      const { data, supabase: authClient } = await signUpWithEmail(email, password, fullName, supabase)
+
+      // When email confirmation is required, Supabase returns user but no session
+      if (!data.session) {
+        router.push("/auth/sign-up-success")
+        return
+      }
+
+      const { profile, company, error: ensureError } = await ensureUserProfile(authClient)
+      if (ensureError) {
+        setError(ensureError)
+        setIsLoading(false)
+        return
+      }
+      if (companyName && company) {
+        await authClient
+          .from("companies")
+          .update({ name: companyName, updated_at: new Date().toISOString() })
+          .eq("id", company.id)
+      }
       router.push("/onboarding")
-    } catch (error: unknown) {
-      console.error('[Sign Up] Error:', error)
-      setError(error instanceof Error ? error.message : "An error occurred")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred")
+    } finally {
       setIsLoading(false)
     }
   }
@@ -104,7 +96,7 @@ export default function SignUpPage() {
               Aura
             </h1>
           </div>
-          <p className="text-muted-foreground">Your AI-Powered Virtual CFO</p>
+          <p className="text-muted-foreground">Strategic Financial Growth Manager</p>
         </div>
 
         <Card className="border-primary/20 shadow-xl">
@@ -115,7 +107,6 @@ export default function SignUpPage() {
           <CardContent>
             <form onSubmit={handleSignUp}>
               <div className="flex flex-col gap-6">
-                {/* Google Sign-Up Button */}
                 <Button
                   type="button"
                   variant="outline"
@@ -127,7 +118,6 @@ export default function SignUpPage() {
                   {isGoogleLoading ? "Connecting..." : "Continue with Google"}
                 </Button>
 
-                {/* Divider */}
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
                     <span className="w-full border-t" />
@@ -145,7 +135,6 @@ export default function SignUpPage() {
                     id="company"
                     type="text"
                     placeholder="Your Company"
-                    required
                     value={companyName}
                     onChange={(e) => setCompanyName(e.target.value)}
                   />

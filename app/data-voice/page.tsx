@@ -146,7 +146,7 @@ export default function DataVoiceManagement() {
                   <Sparkles className="h-5 w-5 text-primary" />
                   <CardTitle>Voice Input</CardTitle>
                 </div>
-                <CardDescription>Speak naturally to add data with Gemini AI</CardDescription>
+                <CardDescription>Speak naturally to add data with OpenAI</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex flex-col items-center gap-4 py-8">

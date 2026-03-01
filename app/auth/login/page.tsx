@@ -2,8 +2,8 @@
 
 import type React from "react"
 
-import { signInWithGoogle, signInWithEmail } from "@/lib/firebase/auth"
-import { createCompany, getUserCompanies } from "@/lib/firebase/db"
+import { signInWithGoogle, signInWithEmail } from "@/lib/supabase/auth-client"
+import { ensureUserProfile } from "@/lib/supabase/profile-utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -25,31 +25,11 @@ export default function LoginPage() {
   const handleGoogleLogin = async () => {
     setIsGoogleLoading(true)
     setError(null)
-
     try {
-      console.log('[Login] Starting Google OAuth with Firebase...')
-      const result = await signInWithGoogle()
-      
-      console.log('[Login] Google auth successful:', result.user.email)
-      
-      // Check if user has a company, if not create one
-      const companies = await getUserCompanies(result.user.uid)
-      if (companies.length === 0) {
-        console.log('[Login] No company found, creating default company...')
-        await createCompany({
-          userId: result.user.uid,
-          name: result.user.displayName ? `${result.user.displayName}'s Company` : 'My Company',
-          industry: 'Technology',
-          teamSize: 1,
-          fundingStage: 'pre-seed',
-        })
-      }
-      
-      console.log('[Login] Redirecting to dashboard...')
-      router.push("/dashboard")
-    } catch (error: unknown) {
-      console.error('[Login] Google OAuth Error:', error)
-      setError(error instanceof Error ? error.message : "Failed to sign in with Google")
+      await signInWithGoogle()
+      // Redirect happens via OAuth; callback will call ensureUserProfile if needed
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to sign in with Google")
       setIsGoogleLoading(false)
     }
   }
@@ -58,31 +38,13 @@ export default function LoginPage() {
     e.preventDefault()
     setIsLoading(true)
     setError(null)
-
     try {
-      console.log('[Login] Starting email/password authentication with Firebase...')
-      const result = await signInWithEmail(email, password)
-      
-      console.log('[Login] Auth successful, checking company...')
-      
-      // Check if user has a company, if not create one
-      const companies = await getUserCompanies(result.user.uid)
-      if (companies.length === 0) {
-        console.log('[Login] No company found, creating default company...')
-        await createCompany({
-          userId: result.user.uid,
-          name: 'My Company',
-          industry: 'Technology',
-          teamSize: 1,
-          fundingStage: 'pre-seed',
-        })
-      }
-      
-      console.log('[Login] Redirecting to dashboard...')
+      await signInWithEmail(email, password)
+      await ensureUserProfile()
       router.push("/dashboard")
-    } catch (error: unknown) {
-      console.error('[Login] Error:', error)
-      setError(error instanceof Error ? error.message : "An error occurred")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred")
+    } finally {
       setIsLoading(false)
     }
   }
@@ -97,7 +59,7 @@ export default function LoginPage() {
               Aura
             </h1>
           </div>
-          <p className="text-muted-foreground">Your AI-Powered Virtual CFO</p>
+          <p className="text-muted-foreground">Strategic Financial Growth Manager</p>
         </div>
 
         <Card className="border-primary/20 shadow-xl">
@@ -108,7 +70,6 @@ export default function LoginPage() {
           <CardContent>
             <form onSubmit={handleLogin}>
               <div className="flex flex-col gap-6">
-                {/* Google Sign-In Button */}
                 <Button
                   type="button"
                   variant="outline"
@@ -120,7 +81,6 @@ export default function LoginPage() {
                   {isGoogleLoading ? "Connecting..." : "Continue with Google"}
                 </Button>
 
-                {/* Divider */}
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
                     <span className="w-full border-t" />

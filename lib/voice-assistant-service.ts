@@ -14,10 +14,10 @@ export class VoiceAssistantService {
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
       if (SpeechRecognition) {
         this.recognition = new SpeechRecognition()
-        this.recognition.continuous = false
-        this.recognition.interimResults = false
+        this.recognition.continuous = true
+        this.recognition.interimResults = true
         this.recognition.lang = 'en-US'
-        this.recognition.maxAlternatives = 1
+        this.recognition.maxAlternatives = 3
       }
 
       // Initialize Speech Synthesis and load voices
@@ -51,11 +51,16 @@ export class VoiceAssistantService {
   }
 
   /**
-   * Start listening for voice input
+   * Start listening for voice input.
+   * Uses continuous mode and accumulates all final segments so multi-sentence or longer utterances are captured in one result.
+   * @param onResult - called with final transcript when user stops speaking (may be multiple sentences, accumulated)
+   * @param onError - called on recognition error
+   * @param onInterimResult - optional; called with live transcript while user is still speaking (real-time)
    */
   startListening(
     onResult: (transcript: string) => void,
-    onError?: (error: string) => void
+    onError?: (error: string) => void,
+    onInterimResult?: (transcript: string) => void
   ): void {
     if (!this.recognition) {
       onError?.('Speech recognition not supported in this browser')
@@ -67,46 +72,66 @@ export class VoiceAssistantService {
       return
     }
 
+    this.recognition.continuous = true
+    this.recognition.interimResults = true
+    this.recognition.maxAlternatives = 3
+
+    const accumulated: string[] = []
+    const MIN_CONFIDENCE = 0.35
+
     this.recognition.onresult = (event: any) => {
-      // Get the transcript with improved accuracy
-      const result = event.results[0]
-      const transcript = result[0].transcript
-      const confidence = result[0].confidence
-      
-      console.log('[Voice] Recognized:', transcript, 'Confidence:', confidence)
-      
-      // Only accept high-confidence results for better accuracy
-      if (confidence > 0.5 || !confidence) {
-        onResult(transcript)
-      } else {
-        console.warn('[Voice] Low confidence result, ignoring')
-        onError?.('low-confidence')
+      const results = event.results
+      for (let i = 0; i < results.length; i++) {
+        const item = results[i]
+        const isFinal = item.isFinal
+        type Alt = { transcript: string; confidence?: number }
+        const alternatives: Alt[] = Array.from(item as Iterable<Alt>)
+        const best: Alt | undefined = alternatives[0]
+          ? alternatives.reduce((a, b) => (b.confidence ?? 1) >= (a.confidence ?? 1) ? b : a)
+          : undefined
+        const transcript = (best?.transcript ?? '').trim()
+        const confidence = best?.confidence
+
+        if (isFinal && transcript) {
+          const accept = confidence == null || confidence >= MIN_CONFIDENCE
+          if (accept) {
+            accumulated.push(transcript)
+            console.log('[Voice] Segment:', transcript, 'Confidence:', confidence)
+          } else {
+            console.warn('[Voice] Low confidence segment ignored:', transcript, confidence)
+          }
+        } else if (!isFinal && onInterimResult) {
+          const interimFull = accumulated.length > 0
+            ? accumulated.join(' ') + ' ' + transcript
+            : transcript
+          onInterimResult(interimFull)
+        }
       }
-      
-      this.isListening = false
     }
 
     this.recognition.onerror = (event: any) => {
       const errorType = event.error || 'unknown'
       console.warn('[Voice] Recognition issue:', errorType)
-      
-      // Only report as error if it's not a common/expected error
       if (errorType !== 'no-speech' && errorType !== 'aborted') {
         console.error('[Voice] Recognition error:', errorType)
       }
-      
       onError?.(errorType)
       this.isListening = false
     }
 
     this.recognition.onend = () => {
       this.isListening = false
+      const fullTranscript = accumulated.join(' ').replace(/\s+/g, ' ').trim()
+      if (fullTranscript) {
+        console.log('[Voice] Final accumulated:', fullTranscript)
+        onResult(fullTranscript)
+      }
     }
 
     try {
       this.recognition.start()
       this.isListening = true
-      console.log('[Voice] Started listening')
+      console.log('[Voice] Started listening (continuous, depth mode)')
     } catch (error) {
       console.error('[Voice] Failed to start:', error)
       onError?.('Failed to start voice recognition')

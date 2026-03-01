@@ -1,6 +1,6 @@
 /**
  * Enhanced AI CFO Client
- * Integrates Gemini AI with Financial Engine for advanced FP&A features
+ * Integrates OpenAI with Financial Engine for advanced FP&A features
  */
 
 import { GeminiClient, getGeminiClient } from './gemini-client'

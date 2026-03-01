@@ -22,7 +22,7 @@ import {
 import { cn } from "@/lib/utils"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
-import { createCompany, createAIInsight } from "@/lib/firebase/db"
+import { updateCompany, createAIInsight } from "@/lib/supabase/profile-utils"
 
 export default function OnboardingPage() {
   const [loading, setLoading] = useState(false) // No delay
@@ -73,7 +73,7 @@ export default function OnboardingPage() {
     {
       id: 4,
       title: "All Set!",
-      description: "Your AI CFO is ready",
+      description: "Your Strategic Growth Manager is ready",
       icon: Rocket,
     },
   ]
@@ -87,26 +87,28 @@ export default function OnboardingPage() {
       // Complete onboarding - save to database
       setSaving(true)
       try {
-        // Create company directly via client Firestore (authenticated)
-        const companyId = await createCompany({
+        const { error: companyError } = await updateCompany({
           name: formData.companyName || "My Company",
-          industry: formData.industry,
-          fundingStage: formData.stage,
-          teamSize: Number.parseInt(formData.teamSize) || 0,
-          currentCash: Number.parseFloat(formData.cashBalance) || 0,
-          monthlyBurn: Number.parseFloat(formData.monthlyBurn) || 0,
+          industry: formData.industry || undefined,
+          funding_stage: formData.stage || undefined,
+          team_size: Number.parseInt(formData.teamSize) || undefined,
+          current_cash: Number.parseFloat(formData.cashBalance) || undefined,
+          monthly_burn: Number.parseFloat(formData.monthlyBurn) || undefined,
         })
+        if (companyError) throw new Error(companyError)
 
-        // Generate initial AI insight for this company
-        await createAIInsight({
-          companyId,
+        const burn = Number.parseFloat(formData.monthlyBurn) || 1
+        const cash = Number.parseFloat(formData.cashBalance) || 0
+        const runway = burn > 0 ? (cash / burn).toFixed(1) : "0"
+        const { error: insightError } = await createAIInsight({
           type: "onboarding",
           title: "Welcome to Aura!",
-          description: `Your financial dashboard is ready. Based on your current cash of $${formData.cashBalance} and monthly burn of $${formData.monthlyBurn}, you have approximately ${(Number.parseFloat(formData.cashBalance) / Number.parseFloat(formData.monthlyBurn)).toFixed(1)} months of runway.`,
+          description: `Your financial dashboard is ready. Based on your current cash of $${formData.cashBalance} and monthly burn of $${formData.monthlyBurn}, you have approximately ${runway} months of runway.`,
           severity: "info",
           data: { onboarding_complete: true },
           isRead: false,
         })
+        if (insightError) console.warn("Could not create welcome insight:", insightError)
 
         router.push("/dashboard")
       } catch (error) {
@@ -196,8 +198,8 @@ export default function OnboardingPage() {
             {currentStep === 0 && (
               <div className="space-y-6 text-center py-8">
                 <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                  Aura is your AI-powered virtual CFO designed specifically for early-stage startups. We'll help you
-                  manage your runway, forecast cash flow, and make strategic financial decisions.
+                  Aura is your Strategic Financial Growth Manager for startups and SMEs. We combine accounting and financial
+                  health with market intelligence — so you can optimize capital, guide fundraising, and scale on data.
                 </p>
                 <div className="grid md:grid-cols-3 gap-4 mt-8">
                   {[

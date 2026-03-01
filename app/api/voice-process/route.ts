@@ -1,4 +1,4 @@
-import { getGeminiClient, isFallbackMode } from "@/lib/gemini-client"
+import { getVoiceAIClient, isVoiceFallbackMode } from "@/lib/gemini-client"
 import type { NextRequest } from "next/server"
 
 export const runtime = "edge"
@@ -16,12 +16,13 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const gemini = getGeminiClient()
-    const result = await gemini.processVoiceCommand(command, currentData || {})
+    // Voice AI: uses OpenAI for execution when OPENAI_API_KEY is set
+    const voiceAI = getVoiceAIClient()
+    const result = await voiceAI.processVoiceCommand(command, currentData || {})
 
     return Response.json({
       ...result,
-      demoMode: isFallbackMode(),
+      demoMode: isVoiceFallbackMode(),
       timestamp: new Date().toISOString(),
     })
   } catch (error) {
@@ -32,7 +33,7 @@ export async function POST(req: NextRequest) {
         action: "query_data",
         data: {},
         message: "I'm having trouble processing your voice command right now. Please try again.",
-        demoMode: isFallbackMode(),
+        demoMode: isVoiceFallbackMode(),
       },
       { status: 500 }
     )

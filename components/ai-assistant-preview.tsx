@@ -33,7 +33,7 @@ const demoMessages: ChatMessage[] = [
   {
     id: "1",
     role: "assistant",
-    content: "👋 Hi! I'm Aura, your AI CFO. I analyze financial data in real-time and provide strategic insights for cash flow, runway forecasting, expense optimization, and growth planning.",
+    content: "👋 Hi! I'm Aura, your Strategic Financial Growth Manager. I combine your internal finance with market intelligence — runway, burn, revenue growth, capital allocation, investor summaries, and benchmarks.",
     type: "text",
   },
   {
@@ -120,7 +120,7 @@ export function AIAssistantPreview({ autoPlay = false }: AIAssistantPreviewProps
             Experience AI-Powered Financial Intelligence
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            See how Aura provides CFO-level insights in real-time. Click "Start Demo" to watch the AI assistant in action.
+            See how Aura delivers strategic financial and growth insights in real-time. Click "Start Demo" to watch the AI assistant in action.
           </p>
         </div>
 
@@ -147,7 +147,7 @@ export function AIAssistantPreview({ autoPlay = false }: AIAssistantPreviewProps
                       </div>
                     </div>
                     <div>
-                      <h3 className="font-bold text-sm">AI CFO Assistant</h3>
+                      <h3 className="font-bold text-sm">Strategic Growth Assistant</h3>
                       <p className="text-xs text-muted-foreground">Online • Ready to help</p>
                     </div>
                   </div>
@@ -314,7 +314,7 @@ export function AIAssistantPreview({ autoPlay = false }: AIAssistantPreviewProps
                     { icon: TrendingUp, label: "Runway Forecasting", desc: "Predict cash flow with ML" },
                     { icon: DollarSign, label: "Expense Analysis", desc: "Identify cost savings" },
                     { icon: AlertTriangle, label: "Risk Alerts", desc: "Early warning system" },
-                    { icon: Lightbulb, label: "Strategic Insights", desc: "CFO-level recommendations" },
+                    { icon: Lightbulb, label: "Strategic Insights", desc: "Growth & capital efficiency" },
                   ].map((feature, i) => (
                     <div
                       key={i}
@@ -337,7 +337,7 @@ export function AIAssistantPreview({ autoPlay = false }: AIAssistantPreviewProps
                 <div className="text-center">
                   <h3 className="font-bold text-lg mb-2">Ready to Experience It Yourself?</h3>
                   <p className="text-sm text-muted-foreground mb-4">
-                    Get instant access to your AI CFO assistant
+                    Get instant access to your Strategic Financial Growth Manager
                   </p>
                   <Link href="/ai-assistant">
                     <Button className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90">

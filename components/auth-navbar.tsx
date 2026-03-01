@@ -25,12 +25,6 @@ export function AuthNavbar() {
 
   const navLinks = [
     { href: "/dashboard", label: "Dashboard" },
-    { href: "/runway", label: "Runway" },
-    { href: "/bookkeeping", label: "Bookkeeping" },
-    { href: "/sales", label: "Sales" },
-    { href: "/data-management", label: "Data" },
-    { href: "/ai-assistant", label: "AI Assistant" },
-    { href: "/voice-assistant", label: "Voice AI" },
   ]
 
   // Prevent hydration mismatch by only showing auth state after mount
@@ -93,6 +87,7 @@ export function AuthNavbar() {
   // Auth state loads on client only, so skip loading spinner
 
   // Render neutral state during SSR and initial mount to prevent hydration mismatch
+  // No nav links shown until we know auth state (avoids flashing full nav for unauthenticated users)
   if (!mounted) {
     return (
       <nav className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -101,19 +96,7 @@ export function AuthNavbar() {
             <Sparkles className="h-6 w-6 text-primary" />
             <span className="gradient-text">Aura</span>
           </Link>
-          <div className="hidden md:flex items-center gap-6">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </div>
           <div className="flex items-center gap-4">
-            {/* Placeholder for auth buttons to maintain layout */}
             <div className="h-10 w-32 hidden md:block" />
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild className="md:hidden">
@@ -123,16 +106,12 @@ export function AuthNavbar() {
               </SheetTrigger>
               <SheetContent>
                 <div className="flex flex-col gap-4 mt-8">
-                  {navLinks.map((link) => (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      onClick={() => setIsOpen(false)}
-                      className="text-lg font-medium text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      {link.label}
-                    </Link>
-                  ))}
+                  <Link href="/auth/login">
+                    <Button variant="ghost" className="w-full">Sign In</Button>
+                  </Link>
+                  <Link href="/auth/sign-up">
+                    <Button className="w-full bg-gradient-to-r from-primary to-secondary">Get Started</Button>
+                  </Link>
                 </div>
               </SheetContent>
             </Sheet>
@@ -261,7 +240,7 @@ export function AuthNavbar() {
     )
   }
 
-  // Unauthenticated view
+  // Unauthenticated view: only logo + Sign In / Sign Up (no app nav links)
   console.log('[Navbar] Showing unauthenticated view')
   return (
     <nav className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -270,19 +249,6 @@ export function AuthNavbar() {
           <Sparkles className="h-6 w-6 text-primary" />
           <span className="gradient-text">Aura</span>
         </Link>
-
-        {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center gap-6">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              {link.label}
-            </Link>
-          ))}
-        </div>
 
         <div className="flex items-center gap-4">
           <Link href="/auth/login">
@@ -296,7 +262,7 @@ export function AuthNavbar() {
             </Button>
           </Link>
 
-          {/* Mobile Menu */}
+          {/* Mobile Menu: only auth actions when not signed in */}
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild className="md:hidden">
               <Button variant="ghost" size="icon">
@@ -305,26 +271,14 @@ export function AuthNavbar() {
             </SheetTrigger>
             <SheetContent>
               <div className="flex flex-col gap-4 mt-8">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setIsOpen(false)}
-                    className="text-lg font-medium text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                ))}
-                <div className="flex flex-col gap-2 mt-4">
-                  <Link href="/auth/login">
-                    <Button variant="ghost" className="w-full">
-                      Sign In
-                    </Button>
-                  </Link>
-                  <Link href="/auth/sign-up">
-                    <Button className="w-full bg-gradient-to-r from-primary to-secondary">Get Started</Button>
-                  </Link>
-                </div>
+                <Link href="/auth/login" onClick={() => setIsOpen(false)}>
+                  <Button variant="ghost" className="w-full">
+                    Sign In
+                  </Button>
+                </Link>
+                <Link href="/auth/sign-up" onClick={() => setIsOpen(false)}>
+                  <Button className="w-full bg-gradient-to-r from-primary to-secondary">Get Started</Button>
+                </Link>
               </div>
             </SheetContent>
           </Sheet>

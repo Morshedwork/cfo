@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { LoadingScreen } from "@/components/loading-screen"
-import { AuthNavbar } from "@/components/auth-navbar"
-import { AuthGuard } from "@/components/auth-guard"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -64,10 +62,7 @@ export default function RunwayPage() {
   }
 
   return (
-    <AuthGuard>
-      <div className="min-h-screen bg-background page-transition">
-        <AuthNavbar />
-
+    <div className="min-h-full bg-background page-transition">
       <div className="container py-8">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
@@ -312,7 +307,6 @@ export default function RunwayPage() {
           </CardContent>
         </Card>
       </div>
-      </div>
-    </AuthGuard>
+    </div>
   )
 }

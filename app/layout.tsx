@@ -19,9 +19,9 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Aura - AI Virtual CFO for Startups",
+  title: "Aura - Strategic Financial Growth Manager for Startups",
   description:
-    "The AI-powered financial brain for early-stage startups. Manage runway, forecast cash flow, and make smarter financial decisions.",
+    "Your real-time strategic financial brain: internal finance + market intelligence. Revenue growth optimization, smarter capital allocation, competitive awareness, and data-driven scaling for startups and SMEs.",
   generator: "v0.app",
 }
 

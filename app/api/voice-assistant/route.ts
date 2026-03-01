@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getGeminiClient } from "@/lib/gemini-client"
-import { createBrowserClient } from "@supabase/ssr"
+import { getVoiceAIClient, isVoiceFallbackMode } from "@/lib/gemini-client"
+import { createClient } from "@/lib/supabase/server"
+import { getAgentActions, type AgentAction } from "@/lib/aura-agent"
+import { runMarketIntelAgent } from "@/lib/market-intelligence-agents"
 
 export async function POST(request: NextRequest) {
   try {
-    const { query, userId } = await request.json()
+    const body = await request.json().catch(() => ({}))
+    const { query, userId, recentMessages, competitors: bodyCompetitors } = body
+    const competitors = Array.isArray(bodyCompetitors) ? bodyCompetitors : []
 
     if (!query) {
       return NextResponse.json(
@@ -13,21 +17,96 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log("[Voice API] Processing query:", query)
+    const messages = Array.isArray(recentMessages) ? recentMessages.slice(-16) : []
+    const emotionHint = getEmotionHint(query)
+    if (emotionHint) {
+      console.log("[Voice API] Emotion hint:", emotionHint)
+    }
+    console.log("[Voice API] Processing query (conversational, full context):", query.slice(0, 60), "… | context turns:", messages.length)
 
-    // Get user's financial data context
+    // Get user's financial data context (server Supabase)
     const financialData = await getFinancialContext(userId)
 
-    // Use Gemini to analyze and respond
-    const gemini = getGeminiClient()
-    const response = await gemini.analyzeFinancialData(financialData, query)
+    // Voice AI: uses OpenAI for execution when OPENAI_API_KEY is set
+    const voiceAI = getVoiceAIClient()
+    const response = await voiceAI.analyzeFinancialData(financialData, query, {
+      recentMessages: messages,
+      advanced: true,
+      emotionHint: emotionHint || undefined,
+    })
 
-    // Clean response text - remove any asterisks or markdown
-    const cleanedText = (response.text || '')
-      .replace(/\*\*([^*]+)\*\*/g, '$1')  // Remove bold
-      .replace(/\*([^*]+)\*/g, '$1')       // Remove italic
-      .replace(/^#+\s+/gm, '')              // Remove headers
+    // Clean response text - remove ACTIONS/ACTION line and markdown
+    let cleanedText = (response.text || '')
+      .replace(/\*\*([^*]+)\*\*/g, '$1')
+      .replace(/\*([^*]+)\*/g, '$1')
+      .replace(/^#+\s+/gm, '')
+      .replace(/\n*ACTIONS?:\s*.*$/im, '')
       .trim()
+
+    // Agentic: detect and attach executable actions (rules + LLM output, with context resolution)
+    let actions: AgentAction[] = getAgentActions(query, response.text || '', messages)
+
+    // Run market intelligence agent by voice when user asks (run_market_intel)
+    const marketIntelAction = actions.find((a): a is AgentAction & { type: "run_market_intel"; task: string } => a.type === "run_market_intel")
+    if (marketIntelAction && marketIntelAction.type === "run_market_intel") {
+      try {
+        const task = marketIntelAction.task
+        const context = {
+          companyName: financialData.companyName,
+          industry: financialData.industry,
+          competitors,
+          monthlyRevenue: typeof financialData.monthlyRevenue === "number" ? financialData.monthlyRevenue : undefined,
+          monthlyBurn: typeof financialData.monthlyBurn === "number" ? financialData.monthlyBurn : undefined,
+          cashBalance: typeof financialData.cashBalance === "number" ? financialData.cashBalance : undefined,
+          runwayMonths: financialData.runway != null ? parseFloat(String(financialData.runway)) : undefined,
+          growthRate: financialData.revenueGrowth != null ? parseFloat(String(financialData.revenueGrowth)) : undefined,
+        }
+        const result = await runMarketIntelAgent(task, context, { competitors })
+        const rec = result.recommendations[0]
+        cleanedText = result.summary + (rec ? ` Recommendation: ${rec}` : "") + " Opening Market Intelligence."
+        actions = actions.filter((a) => a.type !== "run_market_intel")
+        if (!actions.some((a) => a.type === "navigate")) {
+          actions = [{ type: "navigate", path: "/dashboard/market-intelligence" }, ...actions]
+        }
+      } catch (e) {
+        console.error("[Voice API] Market intel agent error:", e)
+        cleanedText = "I couldn't run that market intelligence report right now. Try opening Market Intelligence from the dashboard."
+        actions = actions.filter((a) => a.type !== "run_market_intel")
+      }
+    }
+
+    // Execute create_transaction (and add_expense/add_revenue with amount) server-side when possible
+    const createResult = await executeCreateTransactionIfRequested(userId, actions)
+    if (createResult.executed) {
+      cleanedText = createResult.responseOverride ?? cleanedText
+      // Remove the create/add action from client-side actions so we don't double-navigate
+      actions = actions.filter(
+        (a) =>
+          a.type !== "create_transaction" &&
+          !(a.type === "add_expense" && (a as any).amount != null) &&
+          !(a.type === "add_revenue" && (a as any).amount != null)
+      )
+    }
+
+    // If we're executing a navigation/app action, prepend a short confirmation (skip if we already spoke market intel result)
+    const first = actions[0]
+    const hasNavigate = first && (first.type === "navigate" || String(first.type).startsWith("open_"))
+    const didMarketIntel = cleanedText.includes("Recommendation:")
+    if (hasNavigate && first && !didMarketIntel) {
+      const path = first.type === "navigate" ? (first as any).path : first.type === "open_scenarios" ? "/dashboard/scenarios" : first.type === "open_market_intelligence" ? "/dashboard/market-intelligence" : `/${String(first.type).replace("open_", "").replace("_", "-")}`
+      const pageName = path.split('/').filter(Boolean).pop() || 'page'
+      const friendly = pageName.replace(/-/g, ' ')
+      cleanedText = `Opening ${friendly} for you. ${cleanedText}`.trim()
+    }
+
+    // run_report: optionally add navigate action for runway/dashboard
+    const reportAction = actions.find((a) => a.type === "run_report")
+    if (reportAction && reportAction.type === "run_report" && reportAction.report) {
+      const reportPath = reportAction.report === "runway" ? "/runway" : "/dashboard"
+      if (!actions.some((a) => a.type === "navigate")) {
+        actions = [{ type: "navigate", path: reportPath }, ...actions]
+      }
+    }
 
     return NextResponse.json({
       success: true,
@@ -35,11 +114,13 @@ export async function POST(request: NextRequest) {
       insights: response.insights,
       recommendations: response.recommendations,
       data: financialData,
+      actions,
+      demoMode: isVoiceFallbackMode(),
     })
   } catch (error) {
     console.error("[Voice API] Error:", error)
     return NextResponse.json(
-      { 
+      {
         error: "Failed to process voice query",
         details: error instanceof Error ? error.message : "Unknown error"
       },
@@ -49,47 +130,158 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * Get comprehensive financial context for the AI assistant
+ * If the user asked to add an expense/revenue (or create_transaction), create it in Supabase and return a confirmation.
+ */
+async function executeCreateTransactionIfRequested(
+  userId: string | undefined,
+  actions: AgentAction[]
+): Promise<{ executed: boolean; responseOverride?: string }> {
+  const createAction = actions.find(
+    (a) =>
+      a.type === "create_transaction" ||
+      (a.type === "add_expense" && (a as any).amount != null) ||
+      (a.type === "add_revenue" && (a as any).amount != null)
+  ) as
+    | { type: "create_transaction"; kind: "expense" | "revenue"; amount: number; description?: string; category?: string }
+    | { type: "add_expense"; amount?: number; description?: string; category?: string }
+    | { type: "add_revenue"; amount?: number; description?: string; category?: string }
+    | undefined
+
+  if (!createAction || !userId) return { executed: false }
+
+  let amount: number
+  let type: "expense" | "revenue"
+  let description: string
+  let category: string
+
+  if (createAction.type === "create_transaction") {
+    amount = createAction.amount
+    type = createAction.kind
+    description = createAction.description ?? (type === "expense" ? "Expense" : "Revenue")
+    category = createAction.category ?? "Other"
+  } else {
+    amount = (createAction as any).amount!
+    type = createAction.type === "add_expense" ? "expense" : "revenue"
+    description = (createAction as any).description ?? (type === "expense" ? "Expense" : "Revenue")
+    category = (createAction as any).category ?? "Other"
+  }
+
+  const absAmount = Math.abs(amount)
+  const amountForDb = type === "expense" ? -absAmount : absAmount
+  const today = new Date().toISOString().split("T")[0]
+
+  try {
+    const supabase = await createClient()
+    const { data: company, error: companyError } = await supabase
+      .from("companies")
+      .select("id")
+      .eq("user_id", userId)
+      .limit(1)
+      .maybeSingle()
+
+    if (companyError || !company?.id) {
+      console.warn("[Voice API] No company for user, skipping create transaction")
+      return { executed: false }
+    }
+
+    const { error: insertError } = await supabase.from("transactions").insert({
+      company_id: company.id,
+      date: today,
+      description: description.slice(0, 500),
+      amount: amountForDb,
+      category: category.slice(0, 100),
+      type,
+      payment_method: "Voice",
+      vendor: "Aura Strategic Financial Growth Manager",
+      ai_confidence: 0.95,
+      needs_review: false,
+    })
+
+    if (insertError) {
+      console.error("[Voice API] Create transaction error:", insertError)
+      return {
+        executed: true,
+        responseOverride: `I couldn't save that transaction right now. Try adding it from Bookkeeping.`,
+      }
+    }
+
+    const friendly = type === "expense" ? "expense" : "revenue"
+    const responseOverride = `Done. I've logged a ${friendly} of $${absAmount.toLocaleString()}${category && category !== "Other" ? ` under ${category}` : ""}.`
+    return { executed: true, responseOverride }
+  } catch (e) {
+    console.error("[Voice API] executeCreateTransaction error:", e)
+    return { executed: false }
+  }
+}
+
+/**
+ * Detect likely emotion from query text so the model can acknowledge and match tone.
+ * Used for real-time, emotion-aware conversation.
+ */
+function getEmotionHint(query: string): string | null {
+  if (!query || typeof query !== "string") return null
+  const q = query.trim().toLowerCase()
+  if (q.length < 3) return null
+  const hints: { patterns: RegExp[]; hint: string }[] = [
+    { patterns: [/\b(worried|worry|anxious|anxiety|scared|nervous|stressed|stress|overwhelmed|panic|terrified)\b/i], hint: "worry or stress" },
+    { patterns: [/\b(frustrated|frustrating|annoyed|angry|mad|upset|irritated|sick of)\b/i], hint: "frustration" },
+    { patterns: [/\b(excited|exciting|great|awesome|amazing|thrilled|pumped|happy|relieved|relief)\b/i], hint: "excitement or relief" },
+    { patterns: [/\b(confused|don't get|don\'t understand|no idea|unclear|what does that mean)\b/i], hint: "confusion" },
+    { patterns: [/\b(urgent|asap|emergency|quick|immediately|right now|critical)\b/i], hint: "urgency" },
+    { patterns: [/\b(hopeful|hope|optimistic|looking forward|can't wait)\b/i], hint: "hope or optimism" },
+    { patterns: [/\b(disappointed|disappointing|sad|down|discouraged)\b/i], hint: "disappointment" },
+    { patterns: [/\b(just tell me|bottom line|cut to the chase|yes or no)\b/i], hint: "impatience or desire for a direct answer" },
+    { patterns: [/\b(thanks|thank you|perfect|sounds good|got it|okay|ok)\b/i], hint: "satisfaction or acknowledgment" },
+    { patterns: [/\b(why|how come|explain|break down|walk me through)\b/i], hint: "desire for deeper explanation" },
+    { patterns: [/\b(what about|what if|suppose|assuming)\b/i], hint: "exploring scenarios or alternatives" },
+  ]
+  for (const { patterns, hint } of hints) {
+    if (patterns.some((p) => p.test(q))) return hint
+  }
+  return null
+}
+
+/**
+ * Get comprehensive financial context for the AI assistant (voice-native financial OS)
  */
 async function getFinancialContext(userId?: string) {
   try {
-    // If userId provided, try to get real data from Supabase
     if (userId) {
-      const supabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      )
+      const supabase = await createClient()
+      const { data: company, error: companyError } = await supabase
+        .from("companies")
+        .select("*")
+        .eq("user_id", userId)
+        .limit(1)
+        .maybeSingle()
 
-      // Get all data in parallel
-      const [companyResult, transactionsResult, profileResult] = await Promise.all([
-        supabase
-          .from('companies')
-          .select('*')
-          .eq('user_id', userId)
-          .limit(1)
-          .maybeSingle(),
-        supabase
-          .from('transactions')
-          .select('*')
-          .eq('user_id', userId)
-          .order('date', { ascending: false })
-          .limit(100),
-        supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', userId)
-          .limit(1)
-          .maybeSingle()
-      ])
+      if (companyError) {
+        console.warn("[Voice API] Company fetch error:", companyError)
+        return getDemoFinancialData()
+      }
 
-      const company = companyResult.data
-      const transactions = transactionsResult.data || []
-      const profile = profileResult.data
+      let transactions: any[] = []
+      if (company?.id) {
+        const { data: txData } = await supabase
+          .from("transactions")
+          .select("*")
+          .eq("company_id", company.id)
+          .order("date", { ascending: false })
+          .limit(100)
+        transactions = txData ?? []
+      }
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .limit(1)
+        .maybeSingle()
 
       console.log("[Voice API] Fetched data:", {
         hasCompany: !!company,
         transactionCount: transactions.length,
-        hasProfile: !!profile
+        hasProfile: !!profile,
       })
 
       if (company || transactions.length > 0) {
@@ -97,7 +289,6 @@ async function getFinancialContext(userId?: string) {
       }
     }
 
-    // Return demo data if no user data available
     console.log("[Voice API] No real data found, using demo data")
     return getDemoFinancialData()
   } catch (error) {

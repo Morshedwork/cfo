@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { LoadingScreen } from "@/components/loading-screen"
-import { AuthNavbar } from "@/components/auth-navbar"
-import { AuthGuard } from "@/components/auth-guard"
 import { RealDataLoader } from "@/components/real-data-loader"
 import { DashboardNotificationsWidget } from "@/components/dashboard-notifications-widget"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -51,15 +49,11 @@ export default function DashboardPage() {
   const [selectedPeriod, setSelectedPeriod] = useState("6m")
 
   useEffect(() => {
-    // Minimum display time for signature loading screen (2.5 seconds)
+    // Brief display for loading screen (1s) so dashboard content appears sooner
     const minLoadTime = setTimeout(() => {
-      // Start exit animation
       setIsExiting(true)
-      // Remove loading screen after animation completes
-      setTimeout(() => {
-        setLoading(false)
-      }, 500) // Match the fade-out duration
-    }, 2500)
+      setTimeout(() => setLoading(false), 500)
+    }, 1000)
 
     return () => clearTimeout(minLoadTime)
   }, [])
@@ -127,15 +121,12 @@ export default function DashboardPage() {
   }
 
   return (
-    <AuthGuard>
-      <div className="min-h-screen bg-background page-transition">
-        <AuthNavbar />
-
-        <div className="container py-8">
+    <div className="page-transition">
+      <div className="container py-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Financial Dashboard</h1>
-            <p className="text-muted-foreground">Comprehensive real-time view of your startup's financial health</p>
+            <h1 className="text-3xl font-bold mb-2">Strategic Financial Dashboard</h1>
+            <p className="text-muted-foreground">Finance × Growth at a glance — runway, revenue, burn efficiency, and key metrics for data-driven scaling</p>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             <RealDataLoader />
@@ -698,8 +689,7 @@ export default function DashboardPage() {
             View Detailed Forecast
           </Button>
         </div>
-        </div>
       </div>
-    </AuthGuard>
+    </div>
   )
 }

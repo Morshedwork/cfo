@@ -2,7 +2,8 @@
 
 import type React from "react"
 
-import { createClient } from "@/lib/supabase/client"
+import { signInWithGoogle, signUpWithEmail } from "@/lib/firebase/auth"
+import { createCompany } from "@/lib/firebase/db"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -24,23 +25,26 @@ export default function SignUpPage() {
   const router = useRouter()
 
   const handleGoogleSignUp = async () => {
-    const supabase = createClient()
     setIsGoogleLoading(true)
     setError(null)
 
     try {
-      console.log('[Sign Up] Starting Google OAuth...')
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          }
-        }
+      console.log('[Sign Up] Starting Google OAuth with Firebase...')
+      const result = await signInWithGoogle()
+      
+      console.log('[Sign Up] Google auth successful:', result.user.email)
+      
+      // Create company for new user
+      await createCompany({
+        userId: result.user.uid,
+        name: companyName || (result.user.displayName ? `${result.user.displayName}'s Company` : 'My Company'),
+        industry: 'Technology',
+        teamSize: 1,
+        fundingStage: 'pre-seed',
       })
-      if (error) throw error
+      
+      console.log('[Sign Up] Redirecting to onboarding...')
+      router.push("/onboarding")
     } catch (error: unknown) {
       console.error('[Sign Up] Google OAuth Error:', error)
       setError(error instanceof Error ? error.message : "Failed to sign up with Google")
@@ -50,7 +54,6 @@ export default function SignUpPage() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
-    const supabase = createClient()
     setIsLoading(true)
     setError(null)
 
@@ -60,85 +63,33 @@ export default function SignUpPage() {
       return
     }
 
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters")
+      setIsLoading(false)
+      return
+    }
+
     try {
-      // Sign up with auto-confirm (no email verification required)
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/onboarding`,
-          data: {
-            company_name: companyName,
-            full_name: email.split('@')[0], // Use email prefix as default name
-          },
-        },
+      console.log('[Sign Up] Creating account with Firebase...')
+      const fullName = email.split('@')[0] // Use email prefix as default name
+      const result = await signUpWithEmail(email, password, fullName)
+      
+      console.log('[Sign Up] Account created successfully:', result.user.email)
+      
+      // Create company for new user
+      await createCompany({
+        userId: result.user.uid,
+        name: companyName || 'My Company',
+        industry: 'Technology',
+        teamSize: 1,
+        fundingStage: 'pre-seed',
       })
       
-      if (error) {
-        console.error('[Sign Up] Auth error:', error)
-        // Supabase errors can have different formats
-        const errorMessage = error.message || error.toString() || 'Unknown error'
-        throw new Error(errorMessage)
-      }
-
-      if (!data.user) {
-        throw new Error('User creation failed. No user data returned.')
-      }
-
-      // Check if user is automatically confirmed (no email confirmation required)
-      if (data.session) {
-        // User is auto-confirmed and logged in
-        // Profile and company should be created automatically via database triggers
-        // If triggers don't work, we'll create them on the onboarding page
-        console.log('[Sign Up] User created successfully, redirecting to onboarding...')
-        window.location.href = "/onboarding"
-      } else if (data.user && !data.session) {
-        // Email confirmation is required - check if user needs to verify
-        // For development/demo, automatically sign them in
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        })
-        
-        if (signInError) {
-          // If sign in fails, they need to confirm email
-          window.location.href = "/auth/sign-up-success"
-        } else {
-          // Successfully signed in, go to onboarding
-          window.location.href = "/onboarding"
-        }
-      } else {
-        // Fallback: redirect to onboarding
-        window.location.href = "/onboarding"
-      }
+      console.log('[Sign Up] Company created, redirecting to onboarding...')
+      router.push("/onboarding")
     } catch (error: unknown) {
       console.error('[Sign Up] Error:', error)
-      
-      if (error instanceof Error) {
-        // Provide more helpful error messages
-        const errorMsg = error.message.toLowerCase()
-        
-        if (errorMsg.includes('user already registered') || errorMsg.includes('already registered')) {
-          setError('This email is already registered. Please sign in instead.')
-        } else if (errorMsg.includes('invalid email') || errorMsg.includes('email format')) {
-          setError('Please enter a valid email address.')
-        } else if (errorMsg.includes('password') && (errorMsg.includes('short') || errorMsg.includes('length'))) {
-          setError('Password must be at least 6 characters long.')
-        } else if (errorMsg.includes('relation') || errorMsg.includes('does not exist')) {
-          setError('Database tables not found. Please run the SQL scripts in Supabase first.')
-        } else if (errorMsg.includes('permission denied') || errorMsg.includes('row-level security')) {
-          setError('Permission denied. Please check your database RLS policies.')
-        } else if (errorMsg.includes('database error') || errorMsg.includes('failed to create')) {
-          // Show the actual database error message
-          setError(error.message)
-        } else {
-          // Show the actual error message for debugging
-          setError(error.message || 'Failed to create account. Please try again.')
-        }
-      } else {
-        setError('An unexpected error occurred. Please check the browser console for details.')
-      }
-    } finally {
+      setError(error instanceof Error ? error.message : "An error occurred")
       setIsLoading(false)
     }
   }
@@ -216,6 +167,7 @@ export default function SignUpPage() {
                     id="password"
                     type="password"
                     required
+                    minLength={6}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />

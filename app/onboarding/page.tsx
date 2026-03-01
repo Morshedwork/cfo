@@ -21,7 +21,8 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
+import { useAuth } from "@/lib/auth-context"
+import { createCompany, createAIInsight } from "@/lib/firebase/db"
 
 export default function OnboardingPage() {
   const [loading, setLoading] = useState(false) // No delay
@@ -86,46 +87,25 @@ export default function OnboardingPage() {
       // Complete onboarding - save to database
       setSaving(true)
       try {
-        const supabase = createClient()
-
-        // Get current user
-        const {
-          data: { user },
-        } = await supabase.auth.getUser()
-        if (!user) {
-          router.push("/auth/login")
-          return
-        }
-
-        // Create company record
-        const response = await fetch("/api/company", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: formData.companyName,
-            industry: formData.industry,
-            funding_stage: formData.stage,
-            team_size: Number.parseInt(formData.teamSize) || 0,
-            current_cash: Number.parseFloat(formData.cashBalance) || 0,
-            monthly_burn: Number.parseFloat(formData.monthlyBurn) || 0,
-          }),
+        // Create company directly via client Firestore (authenticated)
+        const companyId = await createCompany({
+          name: formData.companyName || "My Company",
+          industry: formData.industry,
+          fundingStage: formData.stage,
+          teamSize: Number.parseInt(formData.teamSize) || 0,
+          currentCash: Number.parseFloat(formData.cashBalance) || 0,
+          monthlyBurn: Number.parseFloat(formData.monthlyBurn) || 0,
         })
 
-        if (!response.ok) throw new Error("Failed to create company")
-
-        const { company } = await response.json()
-
-        // Generate initial AI insights
-        await fetch("/api/ai-insights", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            type: "onboarding",
-            title: "Welcome to Aura!",
-            description: `Your financial dashboard is ready. Based on your current cash of $${formData.cashBalance} and monthly burn of $${formData.monthlyBurn}, you have approximately ${(Number.parseFloat(formData.cashBalance) / Number.parseFloat(formData.monthlyBurn)).toFixed(1)} months of runway.`,
-            severity: "info",
-            data: { onboarding_complete: true },
-          }),
+        // Generate initial AI insight for this company
+        await createAIInsight({
+          companyId,
+          type: "onboarding",
+          title: "Welcome to Aura!",
+          description: `Your financial dashboard is ready. Based on your current cash of $${formData.cashBalance} and monthly burn of $${formData.monthlyBurn}, you have approximately ${(Number.parseFloat(formData.cashBalance) / Number.parseFloat(formData.monthlyBurn)).toFixed(1)} months of runway.`,
+          severity: "info",
+          data: { onboarding_complete: true },
+          isRead: false,
         })
 
         router.push("/dashboard")

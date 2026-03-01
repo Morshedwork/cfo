@@ -1,9 +1,10 @@
 "use client"
 
 import { createContext, useContext, useEffect, useState } from "react"
-import { User } from "@supabase/supabase-js"
-import { createClient } from "@/lib/supabase/client"
-import { UserProfile, getCurrentUserProfile } from "@/lib/supabase/profile-utils"
+import { User } from "firebase/auth"
+import { onAuthStateChange, signOut as firebaseSignOut } from "@/lib/firebase/auth"
+import { getUserProfile } from "@/lib/firebase/db"
+import { UserProfile } from "@/lib/firebase/types"
 
 interface AuthContextType {
   user: User | null
@@ -27,103 +28,85 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Start with false to avoid hydration mismatch (SSR can't check auth)
   const [loading, setLoading] = useState(false)
   const [mounted, setMounted] = useState(false)
-  const supabase = createClient()
 
   useEffect(() => {
     // Mark as mounted (client-side only)
     setMounted(true)
     
-    // Get initial session
-    const getInitialSession = async () => {
-      try {
-        console.log('[Auth] Getting initial session...')
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+    // Listen for auth changes with Firebase
+    const unsubscribe = onAuthStateChange(async (firebaseUser) => {
+      console.log('[Firebase Auth] State changed:', firebaseUser?.email)
+      setUser(firebaseUser)
+      
+      if (firebaseUser) {
+        console.log('[Firebase Auth] User authenticated:', firebaseUser.email)
+        // Don't block on profile load - do it in background
+        // This makes sign-in instant!
+        setProfile(null) // Set null immediately
         
-        if (sessionError) {
-          console.error('[Auth] Session error:', sessionError)
-          return
-        }
-        
-        setUser(session?.user ?? null)
-        
-        if (session?.user) {
-          console.log('[Auth] Loading profile for user:', session.user.id)
-          try {
-            const userProfile = await getCurrentUserProfile()
+        // Load profile in background (non-blocking)
+        getUserProfile(firebaseUser.uid)
+          .then(userProfile => {
             if (userProfile) {
-              console.log('[Auth] Profile loaded:', userProfile.full_name || userProfile.email)
+              console.log('[Firebase Auth] Profile loaded:', userProfile.fullName || userProfile.email)
+              setProfile(userProfile)
             } else {
-              console.log('[Auth] No profile found - user may need to complete onboarding')
+              console.log('[Firebase Auth] No profile found - creating from auth metadata')
+              // Create a basic profile from Firebase auth data
+              const basicProfile: UserProfile = {
+                id: firebaseUser.uid,
+                email: firebaseUser.email || '',
+                fullName: firebaseUser.displayName || undefined,
+                avatarUrl: firebaseUser.photoURL || undefined,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+              }
+              setProfile(basicProfile)
             }
-            setProfile(userProfile)
-          } catch (profileError) {
-            console.error('[Auth] Profile load error:', profileError)
-            // Continue even if profile fails - user is still authenticated
-            setProfile(null)
-          }
-        } else {
-          // Clear profile when user logs out
-          setProfile(null)
-        }
-      } catch (error) {
-        console.error('[Auth] Error getting initial session:', error)
-      } finally {
-        console.log('[Auth] Initial session load complete')
-      }
-    }
-
-    getInitialSession()
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('[Auth] State changed:', event, session?.user?.id)
-        setUser(session?.user ?? null)
-        
-        if (session?.user) {
-          try {
-            const userProfile = await getCurrentUserProfile()
-            if (userProfile) {
-              console.log('[Auth] Profile updated:', userProfile.full_name || userProfile.email)
-            } else {
-              console.log('[Auth] No profile found after auth change')
+          })
+          .catch(profileError => {
+            console.log('[Firebase Auth] Profile load skipped:', profileError)
+            // Don't show error - it's okay to not have a database profile
+            // Use Firebase auth data as fallback
+            const basicProfile: UserProfile = {
+              id: firebaseUser.uid,
+              email: firebaseUser.email || '',
+              fullName: firebaseUser.displayName || undefined,
+              avatarUrl: firebaseUser.photoURL || undefined,
+              createdAt: new Date(),
+              updatedAt: new Date(),
             }
-            setProfile(userProfile)
-          } catch (error) {
-            console.error('[Auth] Profile update error:', error)
-            setProfile(null)
-          }
-        } else {
-          setProfile(null)
-        }
+            setProfile(basicProfile)
+          })
+      } else {
+        // Clear profile when user logs out
+        setProfile(null)
       }
-    )
+      
+      console.log('[Firebase Auth] Auth state update complete')
+    })
 
-    return () => subscription.unsubscribe()
-  }, [supabase])
+    return () => unsubscribe()
+  }, [])
 
   const signOut = async () => {
     try {
-      console.log('[Auth] Starting sign out...')
+      console.log('[Firebase Auth] Starting sign out...')
       
       // Clear local state first (immediate UI feedback)
       setUser(null)
       setProfile(null)
       
-      // Sign out from Supabase (this clears all auth cookies)
-      const { error } = await supabase.auth.signOut()
+      // Sign out from Firebase
+      await firebaseSignOut()
       
-      if (error) {
-        console.error('[Auth] Sign out error:', error)
-      }
+      console.log('[Firebase Auth] Sign out complete, redirecting...')
       
-      console.log('[Auth] Sign out complete, redirecting...')
-      
-      // Force a full page reload to clear all state and cookies
+      // Force a full page reload to clear all state
       // This ensures complete cleanup of auth state
       window.location.href = "/"
     } catch (error) {
-      console.error('[Auth] Error during sign out:', error)
+      console.error('[Firebase Auth] Error during sign out:', error)
       // Still clear state and redirect even on error
       setUser(null)
       setProfile(null)
@@ -133,9 +116,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshProfile = async () => {
     if (user) {
-      console.log('Refreshing profile for user:', user.id)
-      const userProfile = await getCurrentUserProfile()
-      console.log('Profile refreshed:', userProfile)
+      console.log('[Firebase Auth] Refreshing profile for user:', user.uid)
+      const userProfile = await getUserProfile(user.uid)
+      console.log('[Firebase Auth] Profile refreshed:', userProfile)
       setProfile(userProfile)
       return userProfile
     }

@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useAuth } from "@/lib/auth-context"
-import { updateUserProfile } from "@/lib/supabase/profile-utils"
+import { updateUserProfile as updateFirebaseUserProfile } from "@/lib/firebase/auth"
+import { updateUserProfile as updateProfileInDB } from "@/lib/firebase/db"
 import { toast } from "sonner"
 import { Loader2, Save, User, Building2, Mail } from "lucide-react"
 
@@ -25,8 +26,8 @@ export default function SettingsPage() {
   useEffect(() => {
     if (profile) {
       setFormData({
-        full_name: profile.full_name || "",
-        company_name: profile.company_name || "",
+        full_name: profile.fullName || "",
+        company_name: "", // Company name is stored separately in Firebase
         email: profile.email || "",
       })
     }
@@ -38,25 +39,26 @@ export default function SettingsPage() {
 
     try {
       console.log('Updating profile:', formData)
-      const { error } = await updateUserProfile({
-        full_name: formData.full_name,
-        company_name: formData.company_name,
+      if (!user) {
+        toast.error("Not authenticated")
+        return
+      }
+
+      // Update Firebase Auth profile
+      await updateFirebaseUserProfile(formData.full_name)
+      
+      // Update Firestore profile
+      await updateProfileInDB(user.uid, {
+        fullName: formData.full_name,
       })
 
-      if (error) {
-        console.error('Profile update error:', error)
-        toast.error("Failed to update profile", {
-          description: error,
-        })
-      } else {
-        console.log('Profile updated successfully, refreshing...')
-        await refreshProfile()
-        toast.success("Profile updated successfully")
-      }
+      console.log('Profile updated successfully, refreshing...')
+      await refreshProfile()
+      toast.success("Profile updated successfully")
     } catch (error) {
       console.error('Profile update exception:', error)
       toast.error("An error occurred", {
-        description: "Please try again later",
+        description: error instanceof Error ? error.message : "Please try again later",
       })
     } finally {
       setLoading(false)
@@ -97,13 +99,13 @@ export default function SettingsPage() {
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="flex items-center gap-6 pb-6 border-b">
                     <Avatar className="h-20 w-20">
-                      <AvatarImage src={profile?.avatar_url || ""} alt={profile?.full_name || "User"} />
+                      <AvatarImage src={profile?.avatarUrl || ""} alt={profile?.fullName || "User"} />
                       <AvatarFallback className="bg-primary/10 text-primary text-2xl font-semibold">
-                        {getInitials(profile?.full_name)}
+                        {getInitials(profile?.fullName)}
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <h3 className="text-lg font-semibold">{profile?.full_name || "User"}</h3>
+                      <h3 className="text-lg font-semibold">{profile?.fullName || "User"}</h3>
                       <p className="text-sm text-muted-foreground">{profile?.email}</p>
                     </div>
                   </div>
@@ -177,11 +179,11 @@ export default function SettingsPage() {
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
                     <Label className="text-muted-foreground">User ID</Label>
-                    <p className="text-sm font-mono">{user?.id}</p>
+                    <p className="text-sm font-mono">{user?.uid}</p>
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Member Since</Label>
-                    <p className="text-sm">{profile?.created_at ? new Date(profile.created_at).toLocaleDateString() : "N/A"}</p>
+                    <p className="text-sm">{profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString() : "N/A"}</p>
                   </div>
                 </div>
               </CardContent>

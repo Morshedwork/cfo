@@ -1,79 +1,65 @@
-import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
+import { getUserCompanies, getCompanyTransactions, createTransaction } from "@/lib/firebase/db"
+import { getAuthUser } from "@/lib/firebase/server-auth"
 
 export async function GET(request: Request) {
   try {
-    const supabase = await createClient()
-
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser()
-    if (userError || !user) {
+    const user = await getAuthUser(request)
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     // Get user's company
-    const { data: company } = await supabase.from("companies").select("id").eq("user_id", user.id).single()
-
-    if (!company) {
+    const companies = await getUserCompanies(user.uid)
+    if (companies.length === 0) {
       return NextResponse.json({ transactions: [] })
     }
 
+    const companyId = companies[0].id
     const { searchParams } = new URL(request.url)
     const limit = searchParams.get("limit") ? Number.parseInt(searchParams.get("limit")!) : 100
 
-    const { data: transactions, error } = await supabase
-      .from("transactions")
-      .select("*")
-      .eq("company_id", company.id)
-      .order("date", { ascending: false })
-      .limit(limit)
-
-    if (error) throw error
+    const transactions = await getCompanyTransactions(companyId, limit)
 
     return NextResponse.json({ transactions })
   } catch (error) {
-    console.error("[v0] Error fetching transactions:", error)
+    console.error("[Firebase] Error fetching transactions:", error)
     return NextResponse.json({ error: "Failed to fetch transactions" }, { status: 500 })
   }
 }
 
 export async function POST(request: Request) {
   try {
-    const supabase = await createClient()
-
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser()
-    if (userError || !user) {
+    const user = await getAuthUser(request)
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     // Get user's company
-    const { data: company } = await supabase.from("companies").select("id").eq("user_id", user.id).single()
-
-    if (!company) {
+    const companies = await getUserCompanies(user.uid)
+    if (companies.length === 0) {
       return NextResponse.json({ error: "Company not found" }, { status: 404 })
     }
 
+    const companyId = companies[0].id
     const body = await request.json()
 
-    const { data: transaction, error } = await supabase
-      .from("transactions")
-      .insert({
-        company_id: company.id,
-        ...body,
-      })
-      .select()
-      .single()
+    const transactionId = await createTransaction({
+      companyId,
+      date: body.date,
+      description: body.description,
+      amount: body.amount,
+      category: body.category,
+      type: body.type,
+      paymentMethod: body.paymentMethod,
+      vendor: body.vendor,
+      aiConfidence: body.aiConfidence,
+      needsReview: body.needsReview || false,
+    })
 
-    if (error) throw error
-
-    return NextResponse.json({ transaction })
+    return NextResponse.json({ transaction: { id: transactionId, ...body } })
   } catch (error) {
-    console.error("[v0] Error creating transaction:", error)
+    console.error("[Firebase] Error creating transaction:", error)
     return NextResponse.json({ error: "Failed to create transaction" }, { status: 500 })
   }
 }

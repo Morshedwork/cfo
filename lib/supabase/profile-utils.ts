@@ -119,6 +119,7 @@ export async function ensureUserProfile(): Promise<{
 
 /**
  * Gets the current user's profile
+ * Fast-fail with 2 second timeout to prevent blocking sign-in
  */
 export async function getCurrentUserProfile(): Promise<UserProfile | null> {
   const supabase = createBrowserClient(
@@ -139,20 +140,32 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
       return null
     }
     
-    // Use limit(1).maybeSingle() to handle duplicates gracefully
-    const { data, error } = await supabase
+    // Add 2-second timeout to fail fast if table doesn't exist
+    const timeoutPromise = new Promise<null>((resolve) => 
+      setTimeout(() => {
+        console.log('[Profile] Query timeout - table may not exist')
+        resolve(null)
+      }, 2000)
+    )
+    
+    const queryPromise = supabase
       .from('profiles')
       .select('*')
       .eq('id', user.id)
       .limit(1)
       .maybeSingle()
     
+    // Race between query and timeout
+    const result = await Promise.race([queryPromise, timeoutPromise])
+    
+    if (!result) {
+      return null
+    }
+    
+    const { data, error } = result as any
+    
     if (error) {
-      console.error('[Profile] Database error:', error.message)
-      // Check if it's because table doesn't exist
-      if (error.message.includes('relation') || error.message.includes('does not exist')) {
-        console.error('[Profile] ⚠️ CRITICAL: profiles table does not exist! Run database setup SQL.')
-      }
+      console.log('[Profile] Database error (table may not exist):', error.message)
       return null
     }
     
@@ -164,7 +177,7 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
     
     return data
   } catch (error) {
-    console.error('[Profile] Unexpected error:', error)
+    console.log('[Profile] Error loading profile:', error)
     return null
   }
 }

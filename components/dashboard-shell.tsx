@@ -1,11 +1,16 @@
 "use client"
 
+import { usePathname } from "next/navigation"
 import { AuthGuard } from "@/components/auth-guard"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { DashboardSidebar } from "@/components/dashboard-sidebar"
 import { DashboardErrorBoundary } from "@/components/dashboard-error-boundary"
+import { VoiceChatbotWidget } from "@/components/voice-chatbot-widget"
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname()
+  const isVoiceAssistantPage = pathname === "/voice-assistant"
+
   return (
     <AuthGuard>
       <DashboardErrorBoundary>
@@ -18,6 +23,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             </main>
           </div>
         </div>
+        {!isVoiceAssistantPage && <VoiceChatbotWidget />}
       </DashboardErrorBoundary>
     </AuthGuard>
   )

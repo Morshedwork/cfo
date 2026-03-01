@@ -42,6 +42,10 @@ OPENAI_API_KEY=your_openai_api_key
 
 # Financial Modeling Prep (Optional - for real company data)
 FMP_API_KEY=your_fmp_api_key
+
+# Voice TTS: MiniMax first, then ElevenLabs fallback (optional)
+MINIMAX_API_KEY=your_minimax_api_key
+# ELEVENLABS_API_KEY=your_elevenlabs_api_key
 \`\`\`
 
 ### 3. Configure Supabase Authentication

@@ -3,10 +3,14 @@
  * Handles speech-to-text and text-to-speech functionality
  */
 
+/** Pause (silence) after speech to treat as "I'm done" — no manual stop needed. */
+const SILENCE_AFTER_SPEECH_MS = 1300
+
 export class VoiceAssistantService {
   private recognition: any = null
   private synthesis: typeof window.speechSynthesis | null = null
   private isListening = false
+  private silenceTimeoutId: ReturnType<typeof setTimeout> | null = null
 
   constructor() {
     if (typeof window !== 'undefined') {
@@ -77,7 +81,26 @@ export class VoiceAssistantService {
     this.recognition.maxAlternatives = 3
 
     const accumulated: string[] = []
-    const MIN_CONFIDENCE = 0.35
+    const MIN_CONFIDENCE = 0.4
+
+    const clearSilenceTimer = () => {
+      if (this.silenceTimeoutId != null) {
+        clearTimeout(this.silenceTimeoutId)
+        this.silenceTimeoutId = null
+      }
+    }
+
+    // After user has spoken, a short pause = "I'm done" — we stop and process automatically (no button).
+    const scheduleSilenceEnd = () => {
+      clearSilenceTimer()
+      this.silenceTimeoutId = setTimeout(() => {
+        this.silenceTimeoutId = null
+        if (this.recognition && this.isListening) {
+          console.log('[Voice] Silence after speech — ending turn automatically')
+          this.recognition.stop()
+        }
+      }, SILENCE_AFTER_SPEECH_MS)
+    }
 
     this.recognition.onresult = (event: any) => {
       const results = event.results
@@ -95,8 +118,19 @@ export class VoiceAssistantService {
         if (isFinal && transcript) {
           const accept = confidence == null || confidence >= MIN_CONFIDENCE
           if (accept) {
-            accumulated.push(transcript)
-            console.log('[Voice] Segment:', transcript, 'Confidence:', confidence)
+            // Dedupe: avoid same phrase repeated (browser often re-sends same segment)
+            const last = accumulated[accumulated.length - 1]
+            const isDuplicate = last != null && (
+              last === transcript ||
+              last.toLowerCase() === transcript.toLowerCase() ||
+              (transcript.length <= 20 && last.toLowerCase().includes(transcript.toLowerCase()))
+            )
+            if (!isDuplicate) {
+              accumulated.push(transcript)
+              console.log('[Voice] Segment:', transcript, 'Confidence:', confidence)
+              // User said something; pause after this = end of turn (auto, no button)
+              scheduleSilenceEnd()
+            }
           } else {
             console.warn('[Voice] Low confidence segment ignored:', transcript, confidence)
           }
@@ -110,6 +144,7 @@ export class VoiceAssistantService {
     }
 
     this.recognition.onerror = (event: any) => {
+      clearSilenceTimer()
       const errorType = event.error || 'unknown'
       console.warn('[Voice] Recognition issue:', errorType)
       if (errorType !== 'no-speech' && errorType !== 'aborted') {
@@ -120,6 +155,7 @@ export class VoiceAssistantService {
     }
 
     this.recognition.onend = () => {
+      clearSilenceTimer()
       this.isListening = false
       const fullTranscript = accumulated.join(' ').replace(/\s+/g, ' ').trim()
       if (fullTranscript) {
@@ -140,9 +176,13 @@ export class VoiceAssistantService {
   }
 
   /**
-   * Stop listening for voice input
+   * Stop listening for voice input (e.g. user said "stop" or clicked Stop to cancel)
    */
   stopListening(): void {
+    if (this.silenceTimeoutId != null) {
+      clearTimeout(this.silenceTimeoutId)
+      this.silenceTimeoutId = null
+    }
     if (this.recognition && this.isListening) {
       this.recognition.stop()
       this.isListening = false

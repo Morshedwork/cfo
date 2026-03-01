@@ -1,6 +1,5 @@
 /**
- * Voice Service with ElevenLabs Support
- * Tries ElevenLabs first, falls back to browser TTS
+ * Voice Service: MiniMax first (via /api/text-to-speech), then ElevenLabs, then browser TTS
  */
 
 /** Minimal silent WAV to unlock audio on user gesture (browsers block play() until then) */
@@ -53,6 +52,12 @@ export class SimpleVoiceService {
    */
   async speak(text: string, onEnd?: () => void, onError?: (error: Error) => void): Promise<void> {
     console.log("[Voice] 🎤 New speak request")
+    const toSpeak = (text || "").trim()
+    if (!toSpeak) {
+      this.isPlayingAudio = false
+      onEnd?.()
+      return
+    }
 
     // Check if we need to stop existing audio (need longer delay)
     const wasPlaying = this.isPlayingAudio
@@ -67,33 +72,40 @@ export class SimpleVoiceService {
     // Mark as playing to prevent race conditions
     this.isPlayingAudio = true
 
-    // Smart delay: longer if we had to stop something, shorter if starting fresh
+    // Brief delay so audio pipeline is ready (prevents "no voice" on some browsers)
     if (wasPlaying) {
-      await new Promise((resolve) => setTimeout(resolve, 150)) // Need time to stop
+      await new Promise((resolve) => setTimeout(resolve, 120)) // Need time to stop
     } else {
-      await new Promise((resolve) => setTimeout(resolve, 50)) // Quick start
+      await new Promise((resolve) => setTimeout(resolve, 50)) // Start fresh: ensure context ready
     }
 
-    // Try ElevenLabs first
+    // 1) Try server TTS first (MiniMax then ElevenLabs server-side)
+    try {
+      const res = await fetch("/api/text-to-speech", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: toSpeak }),
+      })
+      if (res.ok) {
+        const arrayBuffer = await res.arrayBuffer()
+        if (arrayBuffer.byteLength > 0) {
+          await this.playAudioBuffer(arrayBuffer, onEnd, onError)
+          return
+        }
+      }
+      console.log("[Voice] Server TTS not available (status:", res.status, "), trying client fallback...")
+    } catch (err) {
+      console.warn("[Voice] Server TTS request failed:", (err as Error)?.message)
+    }
+
+    // 2) Fallback: client ElevenLabs
     const elevenLabsKey = process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY
-
-    // Debug logging
-    console.log("[Voice] Checking for ElevenLabs API key...")
-    console.log("[Voice] Key found:", !!elevenLabsKey)
-    if (elevenLabsKey) {
-      console.log("[Voice] Key prefix:", elevenLabsKey.substring(0, 8) + "...")
-    } else {
-      console.log("[Voice] ❌ No NEXT_PUBLIC_ELEVENLABS_API_KEY found in environment")
-      console.log("[Voice] Add it to .env.local and restart server + hard refresh browser")
-    }
-
     if (elevenLabsKey) {
       const preferOgg = typeof navigator !== "undefined" && this.shouldPreferOgg()
       try {
-        await this.speakWithElevenLabs(text, elevenLabsKey, onEnd, onError, preferOgg ? "ogg" : "mp3")
-        return // Success!
+        await this.speakWithElevenLabs(toSpeak, elevenLabsKey, onEnd, onError, preferOgg ? "ogg" : "mp3")
+        return
       } catch (error: any) {
-        // If format/codec not supported (e.g. Safari + MP3), retry with Ogg/Opus
         const msg = error?.message ?? ""
         if (
           msg.includes("not supported") ||
@@ -102,28 +114,60 @@ export class SimpleVoiceService {
           msg.includes("decode")
         ) {
           try {
-            console.log("[Voice] Retrying with Ogg/Opus for better browser compatibility...")
-            await this.speakWithElevenLabs(text, elevenLabsKey, onEnd, onError, "ogg")
+            await this.speakWithElevenLabs(toSpeak, elevenLabsKey, onEnd, onError, "ogg")
             return
           } catch (retryErr) {
             if (onError) onError(retryErr as Error)
             throw retryErr
           }
         }
-        console.error("[Voice] ❌ ElevenLabs failed:", error)
-        this.isPlayingAudio = false // Clear flag on error
+        console.error("[Voice] ElevenLabs failed:", error)
+        this.isPlayingAudio = false
         if (onError) onError(error as Error)
         throw error
       }
-    } else {
-      // No API key - inform user
-      this.isPlayingAudio = false // Clear flag
-      const errorMsg = "ElevenLabs API key not configured. Add NEXT_PUBLIC_ELEVENLABS_API_KEY to .env.local"
-      console.error("[Voice]", errorMsg)
-      if (onError) {
-        onError(new Error(errorMsg))
-      }
-      throw new Error(errorMsg)
+    }
+
+    // 3) Last resort: browser TTS
+    this.isPlayingAudio = false
+    this.speakWithBrowser(text, onEnd, onError)
+  }
+
+  /** Decode and play an audio ArrayBuffer (MP3 from server TTS). */
+  private async playAudioBuffer(
+    arrayBuffer: ArrayBuffer,
+    onEnd?: () => void,
+    onError?: (error: Error) => void,
+  ): Promise<void> {
+    const ctx = this.audioContext ?? new (window.AudioContext || (window as any).webkitAudioContext)()
+    if (!this.audioContext) this.audioContext = ctx
+
+    let hasEnded = false
+    let hasErrored = false
+    const cleanup = () => {
+      if (this.currentSource === source) this.currentSource = null
+      this.isPlayingAudio = false
+    }
+    const source = ctx.createBufferSource()
+    this.currentSource = source
+    source.onended = () => {
+      if (hasEnded || hasErrored) return
+      hasEnded = true
+      cleanup()
+      if (onEnd) onEnd()
+    }
+    try {
+      const audioBuffer = await ctx.decodeAudioData(arrayBuffer.slice(0))
+      source.buffer = audioBuffer
+      source.connect(ctx.destination)
+      if (ctx.state === "suspended") await ctx.resume()
+      source.start(0)
+    } catch (e: any) {
+      hasErrored = true
+      cleanup()
+      const err = new Error(e?.message ?? "Audio decode failed")
+      if (onError) onError(err)
+      throw err
     }
   }
 
@@ -277,16 +321,19 @@ export class SimpleVoiceService {
 
       utterance.onend = () => {
         this.currentUtterance = null
+        this.isPlayingAudio = false
         if (onEnd) onEnd()
       }
 
       utterance.onerror = (event) => {
         console.warn("[Voice] Browser TTS error:", event.error)
         this.currentUtterance = null
+        this.isPlayingAudio = false
         if (onEnd) onEnd() // Continue anyway
       }
 
       this.currentUtterance = utterance
+      this.isPlayingAudio = true
       window.speechSynthesis.speak(utterance)
 
       console.log("[Voice] 🔊 Using browser TTS (fallback)")

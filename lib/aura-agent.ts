@@ -22,12 +22,17 @@ export type AgentAction =
   | { type: "open_settings" }
   | { type: "open_scenarios" }
   | { type: "open_market_intelligence" }
+  | { type: "open_voice_assistant" }
   | { type: "add_expense"; description?: string; amount?: number; category?: string }
   | { type: "add_revenue"; description?: string; amount?: number; category?: string }
   | { type: "create_transaction"; kind: "expense" | "revenue"; amount: number; description?: string; category?: string }
   | { type: "run_report"; report?: "runway" | "burn" | "revenue" | "week" }
   | { type: "summarize"; period?: "week" | "month" }
   | { type: "run_market_intel"; task: MarketIntelTask }
+  | { type: "export_data" }
+  | { type: "compare_periods"; period?: "month" | "quarter" }
+  | { type: "show_top_expenses" }
+  | { type: "show_cash_flow" }
 
 export interface AgentResult {
   response: string
@@ -41,6 +46,7 @@ const ALLOWED_PATHS = [
   "/ai-assistant", "/settings", "/scenarios", "/voice-assistant",
   "/dashboard/scenarios", "/dashboard/market-intelligence",
 ] as const
+const VOICE_ASSISTANT_PATH = "/voice-assistant"
 
 const NAV_TRIGGERS: { patterns: RegExp[]; path: string }[] = [
   { patterns: [/\b(go to|open|show|take me to|navigate to)\s*(the\s*)?dashboard\b/i, /\bdashboard\s*(page)?\s*$/i], path: "/dashboard" },
@@ -52,6 +58,7 @@ const NAV_TRIGGERS: { patterns: RegExp[]; path: string }[] = [
   { patterns: [/\b(go to|open|show)\s*(the\s*)?settings\b/i, /\bsettings\s*$/i, /\b(account|preferences)\s*$/i], path: "/settings" },
   { patterns: [/\b(go to|open|show|run|model)\s*(the\s*)?scenarios\b/i, /\bscenarios\s*$/i, /\bwhat\s*if\b/i, /\bmodel\s+(a\s+)?(scenario|hiring)\b/i, /\bgrowth\s*scenarios\b/i], path: "/dashboard/scenarios" },
   { patterns: [/\b(go to|open|show)\s*(the\s*)?market\s*intelligence\b/i, /\bmarket\s*intelligence\s*$/i, /\bcompetitors?\b.*(research|see|show)/i, /\bbenchmarks?\b/i], path: "/dashboard/market-intelligence" },
+  { patterns: [/\b(go to|open|show)\s*(the\s*)?voice\s*(assistant|ai)?\b/i, /\bvoice\s*(assistant|ai)?\s*$/i, /\btake\s+me\s+to\s+voice\b/i], path: VOICE_ASSISTANT_PATH },
 ]
 
 function detectNavigateAction(query: string): AgentAction | null {
@@ -60,7 +67,7 @@ function detectNavigateAction(query: string): AgentAction | null {
     if (patterns.some((p) => p.test(query))) return { type: "navigate", path }
   }
   // Short commands
-  if (/^(dashboard|runway|bookkeeping|sales|data|ai|settings|scenarios?|market|benchmarks?)$/i.test(trimmed)) {
+  if (/^(dashboard|runway|bookkeeping|sales|data|ai|settings|scenarios?|market|benchmarks?|voice)$/i.test(trimmed)) {
     const map: Record<string, string> = {
       dashboard: "/dashboard",
       runway: "/runway",
@@ -73,6 +80,7 @@ function detectNavigateAction(query: string): AgentAction | null {
       scenario: "/dashboard/scenarios",
       market: "/dashboard/market-intelligence",
       benchmarks: "/dashboard/market-intelligence",
+      voice: VOICE_ASSISTANT_PATH,
     }
     const path = map[trimmed] ?? map["dashboard"]
     return { type: "navigate", path }
@@ -160,6 +168,56 @@ function detectMarketIntelAction(query: string): AgentAction | null {
   return null
 }
 
+const EXPORT_TRIGGERS: RegExp[] = [
+  /\b(export|download)\s+(my\s*)?(data|transactions|financials?)\b/i,
+  /\b(export|download)\s+(transactions?|report)\b/i,
+  /\bdownload\s+my\s+data\b/i,
+  /\bexport\s+(to\s+)?(csv|excel)\b/i,
+]
+
+function detectExportDataAction(query: string): AgentAction | null {
+  if (EXPORT_TRIGGERS.some((p) => p.test(query))) return { type: "export_data" }
+  return null
+}
+
+const COMPARE_TRIGGERS: { patterns: RegExp[]; period: "month" | "quarter" }[] = [
+  { patterns: [/\bcompare\s+(last\s+)?month\s+to\s+(this|current)\s*month\b/i, /\bcompare\s+this\s+month\s+to\s+last\b/i, /\bmonth\s*over\s*month\b/i], period: "month" },
+  { patterns: [/\bcompare\s+(this|last)\s+quarter\b/i, /\bquarter\s*over\s*quarter\b/i, /\bcompare\s+quarters?\b/i], period: "quarter" },
+]
+
+function detectComparePeriodsAction(query: string): AgentAction | null {
+  for (const { patterns, period } of COMPARE_TRIGGERS) {
+    if (patterns.some((p) => p.test(query))) return { type: "compare_periods", period }
+  }
+  if (/\bcompare\s+(periods?|months?)\b/i.test(query)) return { type: "compare_periods", period: "month" }
+  return null
+}
+
+const TOP_EXPENSES_TRIGGERS: RegExp[] = [
+  /\b(what'?s|what\s+is)\s+(my\s+)?(biggest|top|largest)\s+expense\b/i,
+  /\b(show|see)\s+(my\s+)?(top\s+)?expenses?\b/i,
+  /\bexpense\s+breakdown\b/i,
+  /\b(where|how)\s+(am\s+i|are\s+we)\s+spending\s+(the\s+most|money)\b/i,
+  /\bbreak\s+down\s+(my\s+)?expenses?\b/i,
+]
+
+function detectShowTopExpensesAction(query: string): AgentAction | null {
+  if (TOP_EXPENSES_TRIGGERS.some((p) => p.test(query))) return { type: "show_top_expenses" }
+  return null
+}
+
+const CASH_FLOW_TRIGGERS: RegExp[] = [
+  /\b(show|see)\s+(my\s+)?(cash\s+flow|burn\s+trend)\b/i,
+  /\bcash\s+flow\s+(trend|chart|view)\b/i,
+  /\bburn\s+trend\b/i,
+  /\b(how|what)\s+is\s+(my\s+)?(cash\s+flow|burn)\s+(doing|trend)\b/i,
+]
+
+function detectShowCashFlowAction(query: string): AgentAction | null {
+  if (CASH_FLOW_TRIGGERS.some((p) => p.test(query))) return { type: "show_cash_flow" }
+  return null
+}
+
 /**
  * Parse LLM response for "ACTIONS: ..." or "ACTION: ..." line at the end (advanced agent output)
  */
@@ -216,6 +274,15 @@ function parseActionsFromLlmResponse(text: string): AgentAction[] {
   // run_market_intel overview|competitors|ad_spend|seo|benchmarks|opportunities
   const marketIntelMatch = line.match(/run_market_intel\s+(overview|competitors|ad_spend|seo|benchmarks|opportunities)/i)
   if (marketIntelMatch) actions.push({ type: "run_market_intel", task: marketIntelMatch[1].toLowerCase() as MarketIntelTask })
+  // export_data
+  if (/\bexport_data\b/i.test(line)) actions.push({ type: "export_data" })
+  // compare_periods month|quarter
+  const compareMatch = line.match(/compare_periods\s+(month|quarter)?/i)
+  if (compareMatch) actions.push({ type: "compare_periods", period: (compareMatch[1]?.toLowerCase() as "month" | "quarter") || "month" })
+  // show_top_expenses
+  if (/\bshow_top_expenses\b/i.test(line)) actions.push({ type: "show_top_expenses" })
+  // show_cash_flow
+  if (/\bshow_cash_flow\b/i.test(line)) actions.push({ type: "show_cash_flow" })
   return actions
 }
 
@@ -239,6 +306,14 @@ export function detectActions(query: string): AgentAction[] {
   if (report) actions.push(report)
   const marketIntel = detectMarketIntelAction(query)
   if (marketIntel) actions.push(marketIntel)
+  const exportData = detectExportDataAction(query)
+  if (exportData) actions.push(exportData)
+  const comparePeriods = detectComparePeriodsAction(query)
+  if (comparePeriods) actions.push(comparePeriods)
+  const topExpenses = detectShowTopExpensesAction(query)
+  if (topExpenses) actions.push(topExpenses)
+  const cashFlow = detectShowCashFlowAction(query)
+  if (cashFlow) actions.push(cashFlow)
   return actions
 }
 

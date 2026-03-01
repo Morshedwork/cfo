@@ -283,18 +283,45 @@ export class GeminiClient {
     return STATIC_MSG_NO_KEY
   }
 
-  async analyzeFinancialData(data: any, query: string, options?: { recentMessages?: { role: string; text: string }[]; advanced?: boolean; emotionHint?: string }): Promise<any> {
+  /** Same as analyzeFinancialData but streams text chunks for instant display (OpenAI only). Caller must accumulate for post-processing. */
+  async *streamAnalyzeFinancialData(
+    data: any,
+    query: string,
+    options?: { recentMessages?: { role: string; text: string }[]; advanced?: boolean; emotionHint?: string; currentSection?: string }
+  ): AsyncGenerator<string, void, unknown> {
     const recent = options?.recentMessages ?? []
     const advanced = options?.advanced ?? true
     const emotionHint = options?.emotionHint
+    const currentSection = options?.currentSection
+    const fullKnowledge = this.buildFullKnowledgeContext(data)
+    let systemPrompt = this.buildVoiceSystemPrompt(advanced, fullKnowledge)
+    if (currentSection) {
+      systemPrompt += `\n\nCONTEXT: The user is currently on the "${currentSection}" section of the app. When relevant, tailor your reply to this section (e.g. on Bookkeeping: suggest logging expenses or reviewing transactions; on Runway: focus on runway and burn; on Dashboard: offer overview or navigation). Keep answers conversational and helpful for where they are.`
+    }
+    if (emotionHint) {
+      systemPrompt += `\n\nCURRENT TURN: The user's message may convey ${emotionHint}. Acknowledge it in one short phrase and match your tone accordingly.`
+    }
+    const messages = recent.slice(-24).map((m) => ({ role: m.role, text: m.text }))
+    const maxTokens = advanced ? 400 : 180
+    yield* this.streamConversationalVoice(systemPrompt, messages, query, maxTokens)
+  }
+
+  async analyzeFinancialData(data: any, query: string, options?: { recentMessages?: { role: string; text: string }[]; advanced?: boolean; emotionHint?: string; currentSection?: string }): Promise<any> {
+    const recent = options?.recentMessages ?? []
+    const advanced = options?.advanced ?? true
+    const emotionHint = options?.emotionHint
+    const currentSection = options?.currentSection
 
     const fullKnowledge = this.buildFullKnowledgeContext(data)
     let systemPrompt = this.buildVoiceSystemPrompt(advanced, fullKnowledge)
+    if (currentSection) {
+      systemPrompt += `\n\nCONTEXT: The user is currently on the "${currentSection}" section of the app. When relevant, tailor your reply to this section (e.g. on Bookkeeping: suggest logging expenses or reviewing transactions; on Runway: focus on runway and burn; on Dashboard: offer overview or navigation). Keep answers conversational and helpful for where they are.`
+    }
     if (emotionHint) {
       systemPrompt += `\n\nCURRENT TURN: The user's message may convey ${emotionHint}. Acknowledge it in one short phrase and match your tone accordingly.`
     }
     const messages = recent.slice(-24)
-    const maxTokens = advanced ? 320 : 150
+    const maxTokens = advanced ? 400 : 180
 
     if (advanced) {
       const response = await this.generateConversationalVoice(systemPrompt, messages, query, maxTokens, data)
@@ -379,15 +406,19 @@ YOUR FULL KNOWLEDGE (use this to answer anything):
 ${fullKnowledge}
 
 AGENT CAPABILITIES (when user wants to do something, end with exactly one ACTIONS: line):
-- OPEN a page: ACTIONS: navigate /path (paths: /dashboard, /runway, /bookkeeping, /sales, /data-management, /ai-assistant, /settings, /dashboard/scenarios, /dashboard/market-intelligence).
+- OPEN a page: ACTIONS: navigate /path (paths: /dashboard, /runway, /bookkeeping, /sales, /data-management, /ai-assistant, /settings, /dashboard/scenarios, /dashboard/market-intelligence, /voice-assistant).
 - LOG expense/revenue: ACTIONS: add_expense amount=X category=Y or add_revenue amount=X category=Y.
 - RUN REPORT: ACTIONS: run_report runway|burn|revenue|week.
 - SUMMARIZE: give a short spoken summary; optional ACTIONS: summarize week|month.
 - Growth scenarios / what-if: short answer + optional ACTIONS: navigate /dashboard/scenarios.
 - Market intelligence: short answer + ACTIONS: run_market_intel overview|competitors|ad_spend|seo|benchmarks|opportunities.
+- Export/download data: short answer + ACTIONS: export_data.
+- Compare periods (month/quarter): give comparison from their data, then ACTIONS: compare_periods month|quarter.
+- Top expenses / expense breakdown: state biggest category, then ACTIONS: show_top_expenses.
+- Cash flow / burn trend: short answer, then ACTIONS: show_cash_flow.
 
-Reply in 50–95 words, conversational and voice-friendly. No markdown. If executing a task, end with exactly one ACTIONS: line. Always consider emotion first, then answer.`
-      : `You're Aura. Answer in 40-60 words MAX. NO markdown. Be conversational and actionable. Acknowledge the user's emotion when clear (worried, frustrated, excited) in one phrase, then answer.\n\n${fullKnowledge}`
+Reply in 50–95 words, conversational and voice-friendly. No markdown. If executing a task, end with exactly one ACTIONS: line. Always consider emotion first, then answer. Lead with the single most important number or action; be specific and concise.`
+      : `You're Aura. Answer in 40-60 words MAX. NO markdown. Be conversational and actionable. Lead with the key number or action. Acknowledge the user's emotion when clear (worried, frustrated, excited) in one phrase, then answer.\n\n${fullKnowledge}`
   }
 
   /** Multi-turn conversational voice: full chat history + current query for real-time dialogue. */
@@ -408,6 +439,96 @@ Reply in 50–95 words, conversational and voice-friendly. No markdown. If execu
       return this.generateOpenRouterConversation(systemPrompt, recentMessages, currentQuery, maxOutputTokens)
     }
     return this.generateGeminiConversation(systemPrompt, recentMessages, currentQuery, maxOutputTokens)
+  }
+
+  /**
+   * Stream conversational voice response (OpenAI only). Yields text chunks for instant display.
+   * Falls back to single yield of full text for non-OpenAI or fallback mode.
+   */
+  async *streamConversationalVoice(
+    systemPrompt: string,
+    recentMessages: { role: string; text: string }[],
+    currentQuery: string,
+    maxTokens: number
+  ): AsyncGenerator<string, void, unknown> {
+    if (this.apiKey === "fallback-mode") {
+      yield STATIC_MSG_NO_KEY
+      return
+    }
+    if (this.useOpenAI) {
+      yield* this.streamOpenAIConversation(systemPrompt, recentMessages, currentQuery, maxTokens)
+      return
+    }
+    if (this.useOpenRouter) {
+      const full = await this.generateOpenRouterConversation(systemPrompt, recentMessages, currentQuery, maxTokens)
+      yield full
+      return
+    }
+    const full = await this.generateGeminiConversation(systemPrompt, recentMessages, currentQuery, maxTokens)
+    yield full
+  }
+
+  private async *streamOpenAIConversation(
+    systemPrompt: string,
+    recentMessages: { role: string; text: string }[],
+    currentQuery: string,
+    maxTokens: number
+  ): AsyncGenerator<string, void, unknown> {
+    const messages: { role: "system" | "user" | "assistant"; content: string }[] = [
+      { role: "system", content: systemPrompt },
+      ...recentMessages.map((m) => ({
+        role: (m.role === "assistant" ? "assistant" : "user") as "user" | "assistant",
+        content: m.text,
+      })),
+      { role: "user", content: currentQuery },
+    ]
+    const res = await fetch(this.openaiUrl, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${this.apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: this.openaiModel,
+        messages,
+        temperature: 0.74,
+        max_tokens: maxTokens,
+        stream: true,
+      }),
+    })
+    if (!res.ok || !res.body) {
+      const err = await res.text()
+      console.error("[OpenAI] Stream error:", res.status, err)
+      yield STATIC_MSG_ERROR
+      return
+    }
+    const reader = res.body.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ""
+    try {
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split("\n")
+        buffer = lines.pop() ?? ""
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            const data = line.slice(6)
+            if (data === "[DONE]") continue
+            try {
+              const parsed = JSON.parse(data)
+              const content = parsed.choices?.[0]?.delta?.content
+              if (typeof content === "string" && content) yield content
+            } catch {
+              // skip invalid JSON
+            }
+          }
+        }
+      }
+    } finally {
+      reader.releaseLock()
+    }
   }
 
   private async generateOpenAIConversation(
@@ -434,7 +555,7 @@ Reply in 50–95 words, conversational and voice-friendly. No markdown. If execu
         body: JSON.stringify({
           model: this.openaiModel,
           messages,
-          temperature: 0.78,
+          temperature: 0.74,
           max_tokens: maxTokens,
         }),
       })
@@ -475,7 +596,7 @@ Reply in 50–95 words, conversational and voice-friendly. No markdown. If execu
         body: JSON.stringify({
           model: this.openRouterModel,
           messages,
-          temperature: 0.78,
+          temperature: 0.74,
           max_tokens: maxTokens,
           top_p: 0.95,
         }),
@@ -511,7 +632,7 @@ Reply in 50–95 words, conversational and voice-friendly. No markdown. If execu
         systemInstruction: { parts: [{ text: systemPrompt }] },
         contents,
         generationConfig: {
-          temperature: 0.78,
+          temperature: 0.74,
           topK: 40,
           topP: 0.95,
           maxOutputTokens: maxTokens,
@@ -561,6 +682,12 @@ Reply in 50–95 words, conversational and voice-friendly. No markdown. If execu
     // Remove markdown headers
     clean = clean.replace(/^#+\s+/gm, '')
     return clean
+  }
+
+  /** Parse raw LLM text into { text, insights, recommendations } (e.g. after streaming). */
+  parseResponseFromRaw(rawText: string): { text: string; insights: string[]; recommendations: string[] } {
+    const cleaned = this.removeMarkdown(rawText)
+    return this.parseFinancialResponse(cleaned)
   }
 
   async categorizeTransaction(

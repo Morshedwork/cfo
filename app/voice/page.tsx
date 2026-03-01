@@ -213,8 +213,8 @@ export default function VoicePage() {
                       <Sparkles className="h-5 w-5 text-primary-foreground" />
                     </div>
                     <div>
-                      <CardTitle>Aura Financial Assistant</CardTitle>
-                      <CardDescription>Powered by AI — real-time answers, not templates</CardDescription>
+                      <CardTitle>Aura Growth Manager</CardTitle>
+                      <CardDescription>Strategic financial + market intelligence — real-time answers</CardDescription>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">

@@ -1,14 +1,18 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getVoiceAIClient, isVoiceFallbackMode } from "@/lib/gemini-client"
 import { createClient } from "@/lib/supabase/server"
+import { getAuthUser } from "@/lib/supabase/server-auth"
 import { getAgentActions, type AgentAction } from "@/lib/aura-agent"
 import { runMarketIntelAgent } from "@/lib/market-intelligence-agents"
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}))
-    const { query, userId, recentMessages, competitors: bodyCompetitors } = body
+    const { query, userId: bodyUserId, recentMessages, competitors: bodyCompetitors } = body
     const competitors = Array.isArray(bodyCompetitors) ? bodyCompetitors : []
+
+    // Use client userId when present to avoid blocking on server auth (faster first response)
+    const userId = bodyUserId ?? (await getAuthUser(request))?.id ?? undefined
 
     if (!query) {
       return NextResponse.json(
@@ -17,12 +21,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const messages = Array.isArray(recentMessages) ? recentMessages.slice(-16) : []
+    const messages = Array.isArray(recentMessages) ? recentMessages.slice(-6) : []
     const emotionHint = getEmotionHint(query)
+    const taskHint = getTaskHint(query)
     if (emotionHint) {
       console.log("[Voice API] Emotion hint:", emotionHint)
     }
-    console.log("[Voice API] Processing query (conversational, full context):", query.slice(0, 60), "… | context turns:", messages.length)
+    if (taskHint) {
+      console.log("[Voice API] Task hint:", taskHint)
+    }
+    console.log("[Voice API] Processing query (conversational, full context):", query.slice(0, 60), "… | context turns:", messages.length, "| userId:", userId ? "present" : "none")
 
     // Get user's financial data context (server Supabase)
     const financialData = await getFinancialContext(userId)
@@ -33,6 +41,7 @@ export async function POST(request: NextRequest) {
       recentMessages: messages,
       advanced: true,
       emotionHint: emotionHint || undefined,
+      taskHint: taskHint || undefined,
     })
 
     // Clean response text - remove ACTIONS/ACTION line and markdown
@@ -215,6 +224,19 @@ async function executeCreateTransactionIfRequested(
 }
 
 /**
+ * Detect high-value task intents (e.g. investor summary) so the model can respond with the right format.
+ */
+function getTaskHint(query: string): string | null {
+  if (!query || typeof query !== "string") return null
+  const q = query.trim().toLowerCase()
+  if (/\b(investor\s+summary|investor\s+update|investor\s+report)\b/i.test(q)) return "investor_summary"
+  if (/\b(generate|give\s+me|create|prepare|get\s+me)\s+(an?\s+)?investor\s+summary\b/i.test(q)) return "investor_summary"
+  if (/\b(summary|update|report)\s+(for\s+)?(this\s+)?(quarter|q[1-4])\b/i.test(q) && /\binvestor\b/i.test(q)) return "investor_summary"
+  if (/\bquarterly\s+(investor\s+)?summary\b/i.test(q)) return "investor_summary"
+  return null
+}
+
+/**
  * Detect likely emotion from query text so the model can acknowledge and match tone.
  * Used for real-time, emotion-aware conversation.
  */
@@ -260,23 +282,20 @@ async function getFinancialContext(userId?: string) {
         return getDemoFinancialData()
       }
 
-      let transactions: any[] = []
-      if (company?.id) {
-        const { data: txData } = await supabase
-          .from("transactions")
-          .select("*")
-          .eq("company_id", company.id)
-          .order("date", { ascending: false })
-          .limit(100)
-        transactions = txData ?? []
-      }
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", userId)
-        .limit(1)
-        .maybeSingle()
+      // Fetch transactions and profile in parallel for lower latency
+      const [txResult, profileResult] = await Promise.all([
+        company?.id
+          ? supabase
+              .from("transactions")
+              .select("*")
+              .eq("company_id", company.id)
+              .order("date", { ascending: false })
+              .limit(50)
+          : Promise.resolve({ data: [] as any[] }),
+        supabase.from("profiles").select("*").eq("id", userId).limit(1).maybeSingle(),
+      ])
+      const transactions = txResult.data ?? []
+      const profile = profileResult.data ?? null
 
       console.log("[Voice API] Fetched data:", {
         hasCompany: !!company,
@@ -287,9 +306,11 @@ async function getFinancialContext(userId?: string) {
       if (company || transactions.length > 0) {
         return calculateFinancialMetrics(company, transactions, profile)
       }
+      console.log("[Voice API] No real data found, using demo data (user has no company or transactions)")
+    } else {
+      console.log("[Voice API] No real data found, using demo data (no userId – sign in or wait for auth to load)")
     }
 
-    console.log("[Voice API] No real data found, using demo data")
     return getDemoFinancialData()
   } catch (error) {
     console.error("[Voice API] Error fetching financial data:", error)

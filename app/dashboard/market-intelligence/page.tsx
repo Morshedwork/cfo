@@ -31,11 +31,51 @@ import {
   CheckCircle2,
 } from "lucide-react"
 import Link from "next/link"
+import {
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+  LineChart,
+  Line,
+} from "recharts"
 
 const STORAGE_KEY = "aura_competitor_domains"
 
 type AgentResult = { summary: string; bullets: string[]; recommendations: string[] }
 type TabTask = "overview" | "competitors" | "ad_spend" | "seo" | "benchmarks" | "opportunities"
+
+// Sample data for trend and benchmark charts (replace with API data when available)
+const revenueTrendData = [
+  { month: "Jan", revenue: 12000, marketAvg: 14500 },
+  { month: "Feb", revenue: 15000, marketAvg: 15200 },
+  { month: "Mar", revenue: 18000, marketAvg: 16100 },
+  { month: "Apr", revenue: 22000, marketAvg: 16800 },
+  { month: "May", revenue: 28000, marketAvg: 17500 },
+  { month: "Jun", revenue: 35000, marketAvg: 18200 },
+]
+
+const benchmarkComparisonData = [
+  { metric: "Gross Margin", you: 72, industry: 65, unit: "%" },
+  { metric: "Burn Multiple", you: 2.1, industry: 2.8, unit: "x" },
+  { metric: "Revenue Growth", you: 85, industry: 55, unit: "%" },
+  { metric: "CAC Payback", you: 14, industry: 18, unit: "mo" },
+]
+
+const adSpendTrendData = [
+  { month: "Jan", spend: 12, meta: 5, google: 4, linkedin: 3 },
+  { month: "Feb", spend: 14, meta: 6, google: 5, linkedin: 3 },
+  { month: "Mar", spend: 15, meta: 6, google: 5, linkedin: 4 },
+  { month: "Apr", spend: 17, meta: 7, google: 6, linkedin: 4 },
+  { month: "May", spend: 18, meta: 8, google: 6, linkedin: 4 },
+  { month: "Jun", spend: 20, meta: 9, google: 7, linkedin: 4 },
+]
 
 export default function MarketIntelligencePage() {
   const [competitors, setCompetitors] = useState<string[]>([])
@@ -225,6 +265,65 @@ export default function MarketIntelligencePage() {
 
           <TabsContent value="overview" className="space-y-6">
             <AgentRunCard task="overview" title="Overview" />
+
+            {/* Trends & graphs */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-primary" />
+                Trends & visuals
+              </h3>
+              <div className="grid md:grid-cols-2 gap-6">
+                <Card className="border-2 border-primary/20 overflow-hidden">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base">Revenue vs market trend</CardTitle>
+                    <CardDescription>Your revenue vs segment average (last 6 months)</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={260}>
+                      <AreaChart data={revenueTrendData}>
+                        <defs>
+                          <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.6} />
+                            <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.05} />
+                          </linearGradient>
+                          <linearGradient id="colorMarket" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.4} />
+                            <stop offset="95%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.05} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                        <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                        <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `$${v / 1000}k`} />
+                        <Tooltip formatter={(v: number) => [`$${v.toLocaleString()}`, ""]} labelFormatter={(l) => l} />
+                        <Area type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#colorRevenue)" name="You" />
+                        <Area type="monotone" dataKey="marketAvg" stroke="hsl(var(--muted-foreground))" strokeWidth={2} fill="url(#colorMarket)" name="Segment avg" />
+                        <Legend />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+                <Card className="border-2 border-accent/20 overflow-hidden">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base">You vs industry benchmarks</CardTitle>
+                    <CardDescription>Key metrics compared to segment (higher is better where applicable)</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={260}>
+                      <BarChart data={benchmarkComparisonData} layout="vertical" margin={{ left: 0, right: 20 }}>
+                        <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                        <XAxis type="number" tick={{ fontSize: 11 }} />
+                        <YAxis type="category" dataKey="metric" width={100} tick={{ fontSize: 11 }} />
+                        <Tooltip formatter={(v: number, _n: string, props: { payload: { unit: string } }) => [`${v}${props.payload?.unit ?? ""}`, ""]} />
+                        <Bar dataKey="you" fill="hsl(var(--primary))" name="You" radius={[0, 4, 4, 0]} />
+                        <Bar dataKey="industry" fill="hsl(var(--muted-foreground))" name="Industry" radius={[0, 4, 4, 0]} />
+                        <Legend />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+
             <div className="grid md:grid-cols-2 gap-6">
               <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
                 <CardHeader>
@@ -356,24 +455,40 @@ export default function MarketIntelligencePage() {
 
           <TabsContent value="ad-spend" className="space-y-6">
             <AgentRunCard task="ad_spend" title="Ad spend" />
-            <Card>
+            <Card className="border-2 border-primary/20 overflow-hidden">
               <CardHeader>
-                <CardTitle>Estimated Ad Spend Trends</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-primary" />
+                  Estimated ad spend trend
+                </CardTitle>
                 <CardDescription>
-                  Analyze estimated ad spending trends for your category and competitors to inform budget allocation
-                  and ROI expectations.
+                  Simulated channel mix over 6 months ($k). Run the agent for your segment benchmarks.
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="rounded-lg border border-dashed border-border bg-muted/30 p-8 text-center text-muted-foreground">
-                  <BarChart3 className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p className="font-medium">Ad spend estimates</p>
-                  <p className="text-sm mt-1">
-                    Run the agent above for segment benchmarks, or ask Aura in the AI Assistant: &quot;What are typical ad spend levels
-                    in our segment?&quot;
-                  </p>
-                </div>
+                <ResponsiveContainer width="100%" height={280}>
+                  <LineChart data={adSpendTrendData}>
+                    <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                    <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                    <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `$${v}k`} />
+                    <Tooltip formatter={(v: number) => [`$${v}k`, ""]} />
+                    <Legend />
+                    <Line type="monotone" dataKey="spend" stroke="hsl(var(--primary))" strokeWidth={2} name="Total" dot={{ r: 4 }} />
+                    <Line type="monotone" dataKey="meta" stroke="hsl(var(--chart-1))" strokeWidth={2} name="Meta" dot={{ r: 3 }} />
+                    <Line type="monotone" dataKey="google" stroke="hsl(var(--chart-2))" strokeWidth={2} name="Google" dot={{ r: 3 }} />
+                    <Line type="monotone" dataKey="linkedin" stroke="hsl(var(--chart-3))" strokeWidth={2} name="LinkedIn" dot={{ r: 3 }} />
+                  </LineChart>
+                </ResponsiveContainer>
               </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Ad spend intelligence</CardTitle>
+                <CardDescription>
+                  Run the agent above for segment benchmarks, or ask Aura in the AI Assistant: &quot;What are typical ad spend levels
+                  in our segment?&quot;
+                </CardDescription>
+              </CardHeader>
             </Card>
           </TabsContent>
 
@@ -401,28 +516,44 @@ export default function MarketIntelligencePage() {
 
           <TabsContent value="benchmarks" className="space-y-6">
             <AgentRunCard task="benchmarks" title="Benchmarks" />
+            <Card className="border-2 border-primary/20 overflow-hidden">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5 text-primary" />
+                  You vs industry benchmarks
+                </CardTitle>
+                <CardDescription>
+                  Compare key metrics to segment. Run the agent for your actual benchmarks.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={280}>
+                  <BarChart data={benchmarkComparisonData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                    <XAxis dataKey="metric" tick={{ fontSize: 11 }} />
+                    <YAxis tick={{ fontSize: 11 }} />
+                    <Tooltip formatter={(v: number, _n: string, props: { payload: { unit: string } }) => [`${v} ${props.payload?.unit ?? ""}`, ""]} />
+                    <Legend />
+                    <Bar dataKey="you" fill="hsl(var(--primary))" name="You" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="industry" fill="hsl(var(--muted-foreground))" name="Industry" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
             <Card>
               <CardHeader>
                 <CardTitle>Industry Benchmarks</CardTitle>
                 <CardDescription>
-                  Compare your revenue, margins, burn efficiency, and growth against industry benchmarks for your
-                  segment. Reduce blind spots with data.
+                  Run the agent to get benchmark comparisons, or ask in the AI Assistant: &quot;How does our margin compare to the industry?&quot;
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="rounded-lg border border-dashed border-border bg-muted/30 p-8 text-center text-muted-foreground">
-                  <TrendingUp className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p className="font-medium">Benchmarks</p>
-                  <p className="text-sm mt-1">
-                    Run the agent to get benchmark comparisons, or ask in the AI Assistant: &quot;How does our margin compare to the industry?&quot;
-                  </p>
-                  <Link href="/ai-assistant" className="inline-block mt-4">
-                    <Button variant="outline" size="sm" className="gap-2">
-                      Ask in AI Assistant
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </Link>
-                </div>
+                <Link href="/ai-assistant" className="inline-block">
+                  <Button variant="outline" size="sm" className="gap-2">
+                    Ask in AI Assistant
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
           </TabsContent>

@@ -291,10 +291,10 @@ export default function HomePage() {
                     <p className="text-sm font-semibold text-primary">Try asking:</p>
                     <div className="grid gap-2">
                       {[
-                        '"What\'s my runway and burn?"',
-                        '"Generate an investor summary"',
-                        '"How do we compare to benchmarks?"',
-                        '"Run a growth scenario"'
+                        '"What\'s our runway if we hire two engineers?"',
+                        '"Generate an investor summary for this quarter."',
+                        '"Benchmark our margins against industry standards."',
+                        '"Simulate a 20% revenue growth scenario."'
                       ].map((query, i) => (
                         <div 
                           key={i}
@@ -499,9 +499,9 @@ export default function HomePage() {
               },
               {
                 icon: Mic,
-                title: "Voice Co-Pilot",
+                title: "Voice-Enabled Strategic Co-Pilot",
                 description:
-                  "Join founder meetings by voice. Ask for reports, scenarios, or summaries — hands-free.",
+                  "Join founder meetings by voice. Ask for runway, investor summaries, scenarios, or benchmarks — hands-free.",
                 href: "/voice-assistant",
               },
             ].map((feature, i) => (
@@ -628,7 +628,7 @@ export default function HomePage() {
               {
                 icon: DollarSign,
                 title: "SME-Optimized Pricing",
-                description: "CFO-level intelligence at startup pricing",
+                description: "Strategic financial intelligence at startup pricing",
                 impact: "1/10th cost",
               },
             ].map((feature, i) => (
@@ -676,7 +676,7 @@ export default function HomePage() {
                 sdg: "SDG 9",
                 title: "Industry, Innovation & Infrastructure",
                 icon: Sparkles,
-                description: "Pioneering AI-powered fintech solutions to democratize CFO-level financial intelligence",
+                description: "Pioneering AI-powered fintech solutions to democratize strategic financial intelligence",
                 color: "from-[#fd6925] to-[#fd6925]/70",
               },
               {

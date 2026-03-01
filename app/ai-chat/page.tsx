@@ -194,8 +194,8 @@ export default function AIChat() {
                       <Sparkles className="h-5 w-5 text-primary-foreground" />
                     </div>
                     <div>
-                      <CardTitle>Aura AI Advisor</CardTitle>
-                      <CardDescription>Powered by OpenAI</CardDescription>
+                      <CardTitle>Aura Growth Manager</CardTitle>
+                      <CardDescription>Strategic financial + market intelligence</CardDescription>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">

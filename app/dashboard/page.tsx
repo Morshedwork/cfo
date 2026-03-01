@@ -126,7 +126,7 @@ export default function DashboardPage() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold mb-2">Strategic Financial Dashboard</h1>
-            <p className="text-muted-foreground">Finance × Growth at a glance — runway, revenue, burn efficiency, and key metrics for data-driven scaling</p>
+            <p className="text-muted-foreground">Finance × Growth at a Glance — runway, revenue, burn, and growth trajectory</p>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
             <RealDataLoader />

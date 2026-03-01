@@ -2,8 +2,6 @@ import express from "express";
 import fetch from "node-fetch";
 import dotenv from "dotenv";
 
-console.log("Starting server...");
-
 dotenv.config();
 
 const app = express();
@@ -99,5 +97,4 @@ app.post("/agent/stop", async (req, res) => {
   return res.status(r.status).json(data);
 });
 
-console.log("Attempting to start server...");
 app.listen(3000, () => console.log("CAI server running on http://localhost:3000"));

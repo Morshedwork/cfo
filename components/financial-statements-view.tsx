@@ -163,7 +163,7 @@ export function FinancialStatementsView({ profitLoss, cashFlow, insights }: Fina
             <div>
               <p className="text-sm font-semibold mb-2 flex items-center gap-2 text-blue-600">
                 <Sparkles className="h-4 w-4" />
-                CFO Recommendations
+                Growth Manager Recommendations
               </p>
               <ul className="space-y-1">
                 {insights.recommendations.map((rec, i) => (
@@ -565,7 +565,7 @@ function generateTextReport(pl: ProfitLossStatement, cf: CashFlowStatement, insi
   }
   
   if (insights.recommendations.length > 0) {
-    lines.push('💡 CFO RECOMMENDATIONS')
+    lines.push('💡 GROWTH MANAGER RECOMMENDATIONS')
     insights.recommendations.forEach(rec => {
       lines.push(`  • ${rec}`)
     })

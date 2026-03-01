@@ -8,7 +8,7 @@ import { runMarketIntelAgent } from "@/lib/market-intelligence-agents"
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}))
-    const { query, userId: bodyUserId, recentMessages, competitors: bodyCompetitors } = body
+    const { query, userId: bodyUserId, recentMessages, competitors: bodyCompetitors, currentSection, stream: wantStream } = body
     const competitors = Array.isArray(bodyCompetitors) ? bodyCompetitors : []
 
     // Use client userId when present to avoid blocking on server auth (faster first response)
@@ -30,18 +30,156 @@ export async function POST(request: NextRequest) {
     if (taskHint) {
       console.log("[Voice API] Task hint:", taskHint)
     }
-    console.log("[Voice API] Processing query (conversational, full context):", query.slice(0, 60), "… | context turns:", messages.length, "| userId:", userId ? "present" : "none")
+    console.log("[Voice API] Processing query (conversational, full context):", query.slice(0, 60), "… | context turns:", messages.length, wantStream ? "| stream" : "", "| userId:", userId ? "present" : "none")
 
     // Get user's financial data context (server Supabase)
     const financialData = await getFinancialContext(userId)
-
-    // Voice AI: uses OpenAI for execution when OPENAI_API_KEY is set
     const voiceAI = getVoiceAIClient()
+
+    // Streaming: instant first tokens (OpenAI only)
+    if (wantStream) {
+      const encoder = new TextEncoder()
+      const stream = new ReadableStream({
+        async start(controller) {
+          try {
+            let fullText = ""
+            for await (const chunk of voiceAI.streamAnalyzeFinancialData(financialData, query, {
+              recentMessages: messages,
+              advanced: true,
+              emotionHint: emotionHint || undefined,
+              currentSection: typeof currentSection === "string" ? currentSection : undefined,
+            })) {
+              fullText += chunk
+              controller.enqueue(encoder.encode(JSON.stringify({ t: "chunk", d: chunk }) + "\n"))
+            }
+            const parsed = voiceAI.parseResponseFromRaw(fullText)
+            let cleanedText = (parsed.text || "")
+              .replace(/\*\*([^*]+)\*\*/g, "$1")
+              .replace(/\*([^*]+)\*/g, "$1")
+              .replace(/^#+\s+/gm, "")
+              .replace(/\n*ACTIONS?:\s*.*$/im, "")
+              .trim()
+            let actions: AgentAction[] = getAgentActions(query, fullText, messages)
+
+            const marketIntelAction = actions.find((a): a is AgentAction & { type: "run_market_intel"; task: string } => a.type === "run_market_intel")
+            if (marketIntelAction && marketIntelAction.type === "run_market_intel") {
+              try {
+                const task = marketIntelAction.task
+                const context = {
+                  companyName: financialData.companyName,
+                  industry: financialData.industry,
+                  competitors,
+                  monthlyRevenue: typeof financialData.monthlyRevenue === "number" ? financialData.monthlyRevenue : undefined,
+                  monthlyBurn: typeof financialData.monthlyBurn === "number" ? financialData.monthlyBurn : undefined,
+                  cashBalance: typeof financialData.cashBalance === "number" ? financialData.cashBalance : undefined,
+                  runwayMonths: financialData.runway != null ? parseFloat(String(financialData.runway)) : undefined,
+                  growthRate: financialData.revenueGrowth != null ? parseFloat(String(financialData.revenueGrowth)) : undefined,
+                }
+                const result = await runMarketIntelAgent(task, context, { competitors })
+                const rec = result.recommendations[0]
+                cleanedText = result.summary + (rec ? ` Recommendation: ${rec}` : "") + " Opening Market Intelligence."
+                actions = actions.filter((a) => a.type !== "run_market_intel")
+                if (!actions.some((a) => a.type === "navigate")) {
+                  actions = [{ type: "navigate", path: "/dashboard/market-intelligence" }, ...actions]
+                }
+              } catch (e) {
+                console.error("[Voice API] Market intel agent error:", e)
+                cleanedText = "I couldn't run that market intelligence report right now. Try opening Market Intelligence from the dashboard."
+                actions = actions.filter((a) => a.type !== "run_market_intel")
+              }
+            }
+
+            const createResult = await executeCreateTransactionIfRequested(userId, actions)
+            if (createResult.executed) {
+              cleanedText = createResult.responseOverride ?? cleanedText
+              actions = actions.filter(
+                (a) =>
+                  a.type !== "create_transaction" &&
+                  !(a.type === "add_expense" && (a as any).amount != null) &&
+                  !(a.type === "add_revenue" && (a as any).amount != null)
+              )
+            }
+
+            const first = actions[0]
+            const hasNavigate = first && (first.type === "navigate" || String(first.type).startsWith("open_"))
+            const didMarketIntel = cleanedText.includes("Recommendation:")
+            if (hasNavigate && first && !didMarketIntel) {
+              const path = first.type === "navigate" ? (first as any).path : first.type === "open_scenarios" ? "/dashboard/scenarios" : first.type === "open_market_intelligence" ? "/dashboard/market-intelligence" : `/${String(first.type).replace("open_", "").replace("_", "-")}`
+              const pageName = path.split("/").filter(Boolean).pop() || "page"
+              const friendly = pageName.replace(/-/g, " ")
+              cleanedText = `Opening ${friendly} for you. ${cleanedText}`.trim()
+            }
+
+            const reportAction = actions.find((a) => a.type === "run_report")
+            if (reportAction && reportAction.type === "run_report" && reportAction.report) {
+              const reportPath = reportAction.report === "runway" ? "/runway" : "/dashboard"
+              if (!actions.some((a) => a.type === "navigate")) {
+                actions = [{ type: "navigate", path: reportPath }, ...actions]
+              }
+            }
+
+            // export_data, compare_periods, show_top_expenses, show_cash_flow → add navigate and friendly message
+            const featureNavMap: { type: string; path: string; label: string }[] = [
+              { type: "export_data", path: "/data-management", label: "Data" },
+              { type: "compare_periods", path: "/dashboard", label: "Dashboard" },
+              { type: "show_top_expenses", path: "/dashboard", label: "Dashboard" },
+              { type: "show_cash_flow", path: "/runway", label: "Runway" },
+            ]
+            for (const { type, path, label } of featureNavMap) {
+              if (actions.some((a) => a.type === type) && !actions.some((a) => a.type === "navigate")) {
+                actions = [{ type: "navigate", path }, ...actions]
+                if (!cleanedText.toLowerCase().includes("opening")) {
+                  cleanedText = `Opening ${label} for you. ${cleanedText}`.trim()
+                }
+                break
+              }
+            }
+
+            controller.enqueue(
+              encoder.encode(
+                JSON.stringify({
+                  t: "done",
+                  success: true,
+                  response: cleanedText,
+                  insights: parsed.insights,
+                  recommendations: parsed.recommendations,
+                  data: financialData,
+                  actions,
+                  demoMode: isVoiceFallbackMode(),
+                }) + "\n"
+              )
+            )
+          } catch (err) {
+            console.error("[Voice API] Stream error:", err)
+            controller.enqueue(
+              encoder.encode(
+                JSON.stringify({
+                  t: "done",
+                  success: false,
+                  error: err instanceof Error ? err.message : "Stream failed",
+                }) + "\n"
+              )
+            )
+          } finally {
+            controller.close()
+          }
+        },
+      })
+      return new Response(stream, {
+        headers: {
+          "Content-Type": "application/x-ndjson",
+          "Cache-Control": "no-store",
+        },
+      })
+    }
+
+    // Non-streaming path
     const response = await voiceAI.analyzeFinancialData(financialData, query, {
       recentMessages: messages,
       advanced: true,
       emotionHint: emotionHint || undefined,
       taskHint: taskHint || undefined,
+      currentSection: typeof currentSection === "string" ? currentSection : undefined,
     })
 
     // Clean response text - remove ACTIONS/ACTION line and markdown
@@ -114,6 +252,23 @@ export async function POST(request: NextRequest) {
       const reportPath = reportAction.report === "runway" ? "/runway" : "/dashboard"
       if (!actions.some((a) => a.type === "navigate")) {
         actions = [{ type: "navigate", path: reportPath }, ...actions]
+      }
+    }
+
+    // export_data, compare_periods, show_top_expenses, show_cash_flow → add navigate and friendly message
+    const featureNavMap: { type: string; path: string; label: string }[] = [
+      { type: "export_data", path: "/data-management", label: "Data" },
+      { type: "compare_periods", path: "/dashboard", label: "Dashboard" },
+      { type: "show_top_expenses", path: "/dashboard", label: "Dashboard" },
+      { type: "show_cash_flow", path: "/runway", label: "Runway" },
+    ]
+    for (const { type, path, label } of featureNavMap) {
+      if (actions.some((a) => a.type === type) && !actions.some((a) => a.type === "navigate")) {
+        actions = [{ type: "navigate", path }, ...actions]
+        if (!cleanedText.toLowerCase().includes("opening")) {
+          cleanedText = `Opening ${label} for you. ${cleanedText}`.trim()
+        }
+        break
       }
     }
 

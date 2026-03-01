@@ -53,6 +53,10 @@ type AgentAction =
   | { type: "run_report"; report?: "runway" | "burn" | "revenue" | "week" }
   | { type: "summarize"; period?: "week" | "month" }
   | { type: "run_market_intel"; task: string }
+  | { type: "export_data" }
+  | { type: "compare_periods"; period?: "month" | "quarter" }
+  | { type: "show_top_expenses" }
+  | { type: "show_cash_flow" }
 
 interface Message {
   id: string
@@ -83,6 +87,7 @@ const NAV_PATHS: Record<string, string> = {
   open_settings: "/settings",
   open_scenarios: "/dashboard/scenarios",
   open_market_intelligence: "/dashboard/market-intelligence",
+  open_voice_assistant: "/voice-assistant",
 }
 
 // Sample trend data for visuals (matches dashboard context; replace with API when available)
@@ -147,9 +152,11 @@ export default function VoiceAssistantPage() {
   const [isSupported, setIsSupported] = useState(false)
   const [currentTranscript, setCurrentTranscript] = useState("")
   const [interimTranscript, setInterimTranscript] = useState("")
+  const [listenedPendingWork, setListenedPendingWork] = useState(false) // true between "heard you" and starting the query
   const [showChat, setShowChat] = useState(false)
   const [continuousMode, setContinuousMode] = useState(false)
   const [autoModeEnabled, setAutoModeEnabled] = useState(true) // Auto-detect conversation intent
+  const [diverseStopListening, setDiverseStopListening] = useState(true) // Understand "stop" / "wait" anywhere in what you say
   const [financialDataStatus, setFinancialDataStatus] = useState<FinancialData | null>(null) // Track data source
   const [demoMode, setDemoMode] = useState(false) // True when no API key — show hint to enable real AI
   const [clickToHearHint, setClickToHearHint] = useState(false) // Show when auto-play was blocked
@@ -312,26 +319,58 @@ export default function VoiceAssistantPage() {
         setIsListening(false)
 
         const trimmed = transcript.trim().toLowerCase()
-        const stopPhrases = [
+        const baseStopPhrases = [
           "stop", "wait", "cancel", "never mind", "nevermind", "hold on",
           "stop listening", "stop speaking", "that's it", "that is it", "enough", "pause",
         ]
-        const isStopCommand = stopPhrases.some((p) => trimmed === p || trimmed.startsWith(p + " ") || trimmed.endsWith(" " + p))
+        const diverseStopPhrases = [
+          ...baseStopPhrases,
+          "stop it", "hold up", "wait a sec", "wait a second", "wait wait", "hold on a sec",
+          "nevermind", "cancel that", "shush", "quiet", "cut", "abort", "disregard",
+          "forget it", "skip it", "not anymore", "actually stop", "okay stop", "just stop",
+          "that's enough", "thats enough", "i said stop", "pause listening", "stop talking",
+        ]
+        const stopPhrases = diverseStopListening ? diverseStopPhrases : baseStopPhrases
+        const isStopCommand = stopPhrases.some((p) => {
+          if (trimmed === p || trimmed.startsWith(p + " ") || trimmed.endsWith(" " + p)) return true
+          if (diverseStopListening && (trimmed.includes(" " + p + " ") || trimmed.includes(" " + p) || trimmed.includes(p + " "))) return true
+          return false
+        })
 
         if (isStopCommand) {
+          const simpleVoice = getSimpleVoice()
+          simpleVoice.stopSpeaking()
           handleStopListening()
           if (voiceEnabled) {
-            const simpleVoice = getSimpleVoice()
             simpleVoice.speak("Stopped.", () => {}, () => {})
           }
           setCurrentTranscript("")
+          return
+        }
+
+        // Ignore TTS echo: phrases the mic often picks up from our own "Got it, I'll keep listening" / "Just wait..." etc.
+        const ttsEchoPhrases = [
+          "got it on", "got it", "just wait so", "just wait", "alright", "i'll keep listening",
+          "keep listening", "talk when you're ready", "paused", "click the mic", "you're in control",
+          "auto mode on", "auto mode off", "figure out when",
+        ]
+        const isTtsEcho = ttsEchoPhrases.some((p) => trimmed === p || trimmed.startsWith(p + " ") || trimmed.includes(" " + p + " "))
+        if (isTtsEcho) {
+          setCurrentTranscript("")
+          if (continuousMode) {
+            setTimeout(() => { if (continuousMode && shouldContinueListeningRef.current) handleStartListening() }, 600)
+          }
           return
         }
         
         // Only process if there's actual content (minimum 2 words for better detection)
         const wordCount = trimmed.split(/\s+/).filter(Boolean).length
         if (transcript.trim().length > 0 && wordCount >= 2) {
-          handleVoiceQuery(transcript)
+          setListenedPendingWork(true)
+          setTimeout(() => {
+            setListenedPendingWork(false)
+            handleVoiceQuery(transcript)
+          }, 0)
         } else if (transcript.trim().length > 0 && wordCount === 1) {
           console.warn('[Voice] Single word detected, might be noise - ignoring')
           if (continuousMode) {
@@ -379,6 +418,7 @@ export default function VoiceAssistantPage() {
   }
 
   const handleStopListening = () => {
+    setListenedPendingWork(false)
     const voiceService = getVoiceService()
     voiceService.stopListening()
     setIsListening(false)
@@ -415,6 +455,19 @@ export default function VoiceAssistantPage() {
       }
       if (action.type === "run_market_intel") {
         router.push("/dashboard/market-intelligence")
+        continue
+      }
+      if (action.type === "export_data") {
+        router.push("/data-management")
+        continue
+      }
+      if (action.type === "compare_periods" || action.type === "show_top_expenses") {
+        router.push("/dashboard")
+        continue
+      }
+      if (action.type === "show_cash_flow") {
+        router.push("/runway")
+        continue
       }
       // create_transaction is handled server-side; no client nav needed
     }
@@ -488,19 +541,25 @@ export default function VoiceAssistantPage() {
   const handleVoiceQuery = async (query: string) => {
     if (!query.trim()) return
 
-    // Track conversation
     conversationCountRef.current += 1
     lastInteractionTimeRef.current = Date.now()
 
-    // Add user message
     const userMessage: Message = {
       id: Date.now().toString(),
       type: 'user',
       text: query,
       timestamp: new Date(),
     }
+    setListenedPendingWork(false)
     setMessages(prev => [...prev, userMessage])
     setIsProcessing(true)
+    getVoiceService().stopListening()
+
+    const assistantId = (Date.now() + 1).toString()
+    const recentForApi = messages.slice(0, -1).slice(-16).map((m) => ({
+      role: m.type === "user" ? "user" : "assistant",
+      text: m.text,
+    }))
 
     let slowResponseTimeout: ReturnType<typeof setTimeout> | null = null
     if (voiceEnabled) {
@@ -513,9 +572,7 @@ export default function VoiceAssistantPage() {
       // Call API (server uses last 10 turns; sending 10 reduces payload)
       const response = await fetch('/api/voice-assistant', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           query,
           userId: user?.id,
@@ -524,82 +581,159 @@ export default function VoiceAssistantPage() {
             text: m.text,
           })),
           competitors: getStoredCompetitors(),
+          stream: true,
         }),
       })
 
-      const data = await response.json()
+      const contentType = response.headers.get('content-type') || ''
+      const isStream = response.ok && contentType.includes('application/x-ndjson')
 
-      if (data.success) {
-        if (data.data) {
-          setFinancialDataStatus(data.data)
-        }
-        if (typeof data.demoMode === "boolean") {
-          setDemoMode(data.demoMode)
-        }
-        
-        // Add assistant message (include actions for UI if needed)
-        const assistantMessage: Message = {
-          id: (Date.now() + 1).toString(),
+      if (isStream && response.body) {
+        const reader = response.body.getReader()
+        const decoder = new TextDecoder()
+        let buffer = ''
+        let streamedText = ''
+        setMessages(prev => [...prev, {
+          id: assistantId,
           type: 'assistant',
-          text: data.response,
+          text: '',
           timestamp: new Date(),
-          insights: data.insights,
-          recommendations: data.recommendations,
-          data: data.data,
-          actions: data.actions,
-        }
-        setMessages(prev => [...prev, assistantMessage])
+        }])
 
-        // Show trend chart(s) only when user asked for them (e.g. "show me cash balance", "show me revenue")
-        setRequestedCharts(chartsToShowFromRequest(query, data.actions))
-
-        // Execute agentic actions (navigate, open bookkeeping, etc.) after a short delay so user hears the reply first
-        if (data.actions?.length) {
-          setTimeout(() => executeAgentActions(data.actions), 800)
-        }
-
-        // Speak response with browser voice
-        if (voiceEnabled) {
-          const simpleVoice = getSimpleVoice()
-          
-          // Stop any previous speech first (important!)
-          simpleVoice.stopSpeaking()
-          
-          setIsSpeaking(true)
-          simpleVoice.speak(
-            data.response,
-            () => {
-              setIsSpeaking(false)
-              if (continuousMode) shouldContinueListeningRef.current = true
-            },
-            (err) => {
-              setIsSpeaking(false)
-              if (continuousMode) shouldContinueListeningRef.current = true
-              console.warn("[Voice] Playback failed (e.g. click the mic first to enable sound):", err?.message)
-            }
-          )
-        } else if (continuousMode) {
-          // If voice is disabled but continuous mode is on, still auto-listen
-          shouldContinueListeningRef.current = true
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+          buffer += decoder.decode(value, { stream: true })
+          const lines = buffer.split('\n')
+          buffer = lines.pop() ?? ''
+          for (const line of lines) {
+            if (!line.trim()) continue
+            try {
+              const payload = JSON.parse(line)
+              if (payload.t === 'chunk' && typeof payload.d === 'string') {
+                streamedText += payload.d
+                setMessages(prev => {
+                  const next = [...prev]
+                  const idx = next.findIndex(m => m.id === assistantId)
+                  if (idx !== -1) next[idx] = { ...next[idx], text: streamedText }
+                  return next
+                })
+              } else if (payload.t === 'done') {
+                if (payload.success) {
+                  setFinancialDataStatus(payload.data ?? null)
+                  setDemoMode(!!payload.demoMode)
+                  setRequestedCharts(chartsToShowFromRequest(query, payload.actions))
+                  setMessages(prev => {
+                    const next = [...prev]
+                    const idx = next.findIndex(m => m.id === assistantId)
+                    if (idx !== -1) {
+                      next[idx] = {
+                        ...next[idx],
+                        text: payload.response ?? streamedText,
+                        insights: payload.insights,
+                        recommendations: payload.recommendations,
+                        data: payload.data,
+                        actions: payload.actions,
+                      }
+                    }
+                    return next
+                  })
+                  if (payload.actions?.length) {
+                    setTimeout(() => executeAgentActions(payload.actions), 800)
+                  }
+                  if (voiceEnabled) {
+                    getSimpleVoice().stopSpeaking()
+                    setIsSpeaking(true)
+                    getSimpleVoice().speak(
+                      payload.response ?? streamedText,
+                      () => {
+                        setIsSpeaking(false)
+                        if (continuousMode) shouldContinueListeningRef.current = true
+                      },
+                      () => {
+                        setIsSpeaking(false)
+                        if (continuousMode) shouldContinueListeningRef.current = true
+                      }
+                    )
+                  } else if (continuousMode) {
+                    shouldContinueListeningRef.current = true
+                  }
+                } else {
+                  setMessages(prev => {
+                    const next = [...prev]
+                    const idx = next.findIndex(m => m.id === assistantId)
+                    if (idx !== -1) next[idx] = { ...next[idx], text: payload.error || "Something went wrong. Please try again." }
+                    return next
+                  })
+                  if (continuousMode) shouldContinueListeningRef.current = true
+                }
+              }
+            } catch (_) { /* skip bad lines */ }
+          }
         }
       } else {
-        throw new Error(data.error)
+        const contentType = response.headers.get('content-type') || ''
+        if (!contentType.includes('application/json')) {
+          const text = await response.text()
+          const fallback = response.ok ? 'Invalid response from server.' : (text.slice(0, 200) || `Request failed (${response.status}).`)
+          setMessages(prev => {
+            const next = [...prev]
+            const idx = next.findIndex(m => m.id === assistantId)
+            if (idx !== -1) next[idx] = { ...next[idx], text: fallback }
+            return next
+          })
+        } else {
+          const data = await response.json()
+          if (data.success) {
+          if (data.data) setFinancialDataStatus(data.data)
+          if (typeof data.demoMode === "boolean") setDemoMode(data.demoMode)
+          const assistantMessage: Message = {
+            id: assistantId,
+            type: 'assistant',
+            text: data.response,
+            timestamp: new Date(),
+            insights: data.insights,
+            recommendations: data.recommendations,
+            data: data.data,
+            actions: data.actions,
+          }
+          setMessages(prev => [...prev, assistantMessage])
+          if (data.actions?.length) {
+            setTimeout(() => executeAgentActions(data.actions), 800)
+          }
+          if (voiceEnabled) {
+            getSimpleVoice().stopSpeaking()
+            setIsSpeaking(true)
+            getSimpleVoice().speak(
+              data.response,
+              () => {
+                setIsSpeaking(false)
+                if (continuousMode) shouldContinueListeningRef.current = true
+              },
+              (err: { message?: string }) => {
+                setIsSpeaking(false)
+                if (continuousMode) shouldContinueListeningRef.current = true
+                console.warn("[Voice] Playback failed:", err?.message)
+              }
+            )
+          } else if (continuousMode) {
+            shouldContinueListeningRef.current = true
+          }
+        } else {
+          throw new Error(data.error)
+        }
+        }
       }
     } catch (error) {
       if (slowResponseTimeout) clearTimeout(slowResponseTimeout)
       console.error("Error processing query:", error)
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
+      setMessages(prev => [...prev, {
+        id: assistantId,
         type: 'assistant',
         text: "I'm sorry, I encountered an error processing your request. Please try again.",
         timestamp: new Date(),
-      }
-      setMessages(prev => [...prev, errorMessage])
-      
-      // In continuous mode, still try to continue listening after error
-      if (continuousMode) {
-        shouldContinueListeningRef.current = true
-      }
+      }])
+      if (continuousMode) shouldContinueListeningRef.current = true
     } finally {
       if (slowResponseTimeout) clearTimeout(slowResponseTimeout)
       setIsProcessing(false)
@@ -715,7 +849,7 @@ export default function VoiceAssistantPage() {
                 variant={isListening ? "default" : isSpeaking ? "secondary" : continuousMode ? "default" : "outline"} 
                 className={`px-3 sm:px-4 py-1 text-xs sm:text-sm font-semibold shadow-lg animate-fade-in ${continuousMode && !isListening && !isSpeaking && !isProcessing ? 'animate-pulse' : ''}`}
               >
-                {isListening && "👂 Listening..."}
+                {isListening && "👂 Listening… pause when done"}
                 {isProcessing && "🤔 Thinking..."}
                 {isSpeaking && "💬 Speaking..."}
                 {!isListening && !isProcessing && !isSpeaking && continuousMode && "🎤 Continuous"}
@@ -732,25 +866,36 @@ export default function VoiceAssistantPage() {
             </p>
           </div>
 
-          {/* Live transcript: final + interim (real-time) */}
-          {(currentTranscript || interimTranscript || (isListening && !currentTranscript && !interimTranscript)) && (
+          {/* Live transcript: final + interim (real-time) + thinking state */}
+          {(currentTranscript || interimTranscript || isProcessing || listenedPendingWork || (isListening && !currentTranscript && !interimTranscript)) && (
             <Card className="mt-6 w-full max-w-2xl mx-auto animate-slide-up border border-border bg-card/95 backdrop-blur-sm">
               <CardContent className="p-4 sm:p-6">
                 <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0 animate-pulse" />
+                  <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${isProcessing ? 'bg-amber-500 animate-pulse' : listenedPendingWork ? 'bg-green-500 animate-pulse' : 'bg-primary animate-pulse'}`} />
                   <div className="flex-1 min-w-0 space-y-1">
-                    {currentTranscript && (
+                    {isProcessing && (
+                      <p className="text-base sm:text-lg text-amber-600 dark:text-amber-400 font-medium">Thinking… response in a few seconds.</p>
+                    )}
+                    {listenedPendingWork && !isProcessing && currentTranscript && (
+                      <>
+                        <p className="text-base sm:text-lg">{currentTranscript}</p>
+                        <p className="text-sm text-green-600 dark:text-green-400 font-medium">Got it. Getting your answer…</p>
+                      </>
+                    )}
+                    {!isProcessing && !listenedPendingWork && currentTranscript && (
                       <p className="text-base sm:text-lg">{currentTranscript}</p>
                     )}
-                    {interimTranscript && (
+                    {!isProcessing && interimTranscript && (
                       <p className="text-base sm:text-lg text-muted-foreground italic">{interimTranscript}</p>
                     )}
-                    {isListening && !currentTranscript && !interimTranscript && (
+                    {!isProcessing && !listenedPendingWork && isListening && !currentTranscript && !interimTranscript && (
                       <p className="text-base sm:text-lg text-muted-foreground">Listening...</p>
                     )}
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">Say &quot;Stop&quot; or &quot;Wait&quot; anytime to cancel.</p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  {listenedPendingWork && !isProcessing ? "Heard you. Working on it…" : isProcessing ? "Getting your answer…" : "Just pause when you're done — Aura responds automatically. Say \"Stop\" or \"Wait\" to cancel."}
+                </p>
               </CardContent>
             </Card>
           )}
@@ -978,6 +1123,19 @@ export default function VoiceAssistantPage() {
                     </>
                   )}
                 </Button>
+
+                <Button
+                  size="default"
+                  variant={diverseStopListening ? "default" : "outline"}
+                  className={`px-4 sm:px-6 shadow-lg transition-all duration-300 text-sm sm:text-base ${
+                    diverseStopListening ? 'border-2 border-primary' : ''
+                  }`}
+                  onClick={() => setDiverseStopListening((v) => !v)}
+                  disabled={!isSupported}
+                  title={diverseStopListening ? "Understands stop/wait anywhere in what you say" : "Only exact \"Stop\" or \"Wait\" stops listening"}
+                >
+                  {diverseStopListening ? "Stop in conversation: ON" : "Stop in conversation: OFF"}
+                </Button>
               </div>
               
               {autoModeEnabled && !continuousMode && (
@@ -988,6 +1146,11 @@ export default function VoiceAssistantPage() {
               {continuousMode && (
                 <p className="text-xs text-muted-foreground animate-fade-in text-center max-w-sm px-2">
                   🎤 Speak whenever you're ready
+                </p>
+              )}
+              {diverseStopListening && (
+                <p className="text-xs text-muted-foreground animate-fade-in text-center max-w-sm px-2">
+                  ✋ Pause when done = auto response. Say &quot;stop&quot; or &quot;wait&quot; to cancel
                 </p>
               )}
             </div>
@@ -1106,6 +1269,12 @@ export default function VoiceAssistantPage() {
                     </Badge>
                   </div>
                   <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Stop in conversation</span>
+                    <Badge variant={diverseStopListening ? "default" : "secondary"}>
+                      {diverseStopListening ? 'ON' : 'OFF'}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Voice Output</span>
                     <Badge variant={isSpeaking ? "default" : "secondary"}>
                       {isSpeaking ? 'Speaking' : voiceEnabled ? 'Enabled' : 'Disabled'}
@@ -1181,6 +1350,10 @@ export default function VoiceAssistantPage() {
                   "Open scenarios",
                   "Run competitor research",
                   "Open market intelligence",
+                  "What's my biggest expense?",
+                  "Show my cash flow trend",
+                  "Export my data",
+                  "Compare last month to this month",
                 ].map((question, idx) => (
                   <Button
                     key={idx}
@@ -1213,6 +1386,11 @@ export default function VoiceAssistantPage() {
                   <p>• <strong>Reports:</strong> &quot;run runway report&quot;, &quot;summarize my week&quot;</p>
                   <p>• <strong>Auto Mode:</strong> Keeps listening after 2 questions; 45s silence stops it</p>
                   <p>• <strong>Stop:</strong> Say &quot;Stop&quot;, &quot;Wait&quot;, or &quot;Cancel&quot; — or click Stop to end listening and speaking</p>
+                  <p>• <strong>Insights:</strong> &quot;what&apos;s my biggest expense?&quot;, &quot;show expense breakdown&quot;, &quot;show cash flow trend&quot;, &quot;compare last month to this month&quot;</p>
+                  <p>• <strong>Export:</strong> &quot;export my data&quot;, &quot;download transactions&quot;</p>
+                  <p>• <strong>Market intelligence (by voice):</strong> &quot;run competitor research&quot;, &quot;industry benchmarks&quot;, &quot;analyze ad spend&quot;, &quot;run market overview&quot;</p>
+                  <p>• <strong>Natural turn-taking:</strong> Just pause when you&apos;re done — no button. Aura responds automatically.</p>
+                  <p>• Speak naturally — full dialogue, not just Q&amp;A. Aura can ask clarifying questions and reference earlier parts of the conversation</p>
                 </CardContent>
               </Card>
             </div>

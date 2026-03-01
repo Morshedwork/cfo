@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { LoadingScreen } from "@/components/loading-screen"
-import { AuthNavbar } from "@/components/auth-navbar"
 import { ExcelManager } from "@/components/excel-manager"
 import { FinancialStatementsView } from "@/components/financial-statements-view"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -130,9 +129,7 @@ export default function DataManagementPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background page-transition">
-      <AuthNavbar />
-
+    <div className="min-h-full bg-background page-transition">
       <div className="container py-8">
         {/* Header */}
         <div className="mb-8">

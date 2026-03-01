@@ -1,16 +1,14 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { AuthNavbar } from "@/components/auth-navbar"
-import { AuthGuard } from "@/components/auth-guard"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useAuth } from "@/lib/auth-context"
-import { updateUserProfile as updateFirebaseUserProfile } from "@/lib/firebase/auth"
-import { updateUserProfile as updateProfileInDB } from "@/lib/firebase/db"
+import { updateUserProfile } from "@/lib/supabase/profile-utils"
+import { updateAuthProfile } from "@/lib/supabase/auth-client"
 import { toast } from "sonner"
 import { Loader2, Save, User, Building2, Mail } from "lucide-react"
 
@@ -26,8 +24,8 @@ export default function SettingsPage() {
   useEffect(() => {
     if (profile) {
       setFormData({
-        full_name: profile.fullName || "",
-        company_name: "", // Company name is stored separately in Firebase
+        full_name: profile.full_name ?? profile.fullName ?? "",
+        company_name: profile.company_name ?? "",
         email: profile.email || "",
       })
     }
@@ -44,13 +42,12 @@ export default function SettingsPage() {
         return
       }
 
-      // Update Firebase Auth profile
-      await updateFirebaseUserProfile(formData.full_name)
-      
-      // Update Firestore profile
-      await updateProfileInDB(user.uid, {
-        fullName: formData.full_name,
+      await updateAuthProfile({ full_name: formData.full_name })
+      const { error } = await updateUserProfile({
+        full_name: formData.full_name,
+        company_name: formData.company_name || undefined,
       })
+      if (error) throw new Error(error)
 
       console.log('Profile updated successfully, refreshing...')
       await refreshProfile()
@@ -75,11 +72,8 @@ export default function SettingsPage() {
   }
 
   return (
-    <AuthGuard>
-      <div className="min-h-screen bg-background">
-        <AuthNavbar />
-
-        <div className="container py-8 max-w-4xl">
+    <div className="min-h-full bg-background">
+      <div className="container py-8 max-w-4xl">
           <div className="mb-8">
             <h1 className="text-3xl font-bold mb-2">Settings</h1>
             <p className="text-muted-foreground">Manage your account and preferences</p>
@@ -179,18 +173,17 @@ export default function SettingsPage() {
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
                     <Label className="text-muted-foreground">User ID</Label>
-                    <p className="text-sm font-mono">{user?.uid}</p>
+                    <p className="text-sm font-mono">{user?.id}</p>
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Member Since</Label>
-                    <p className="text-sm">{profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString() : "N/A"}</p>
+                    <p className="text-sm">{profile?.created_at ? new Date(profile.created_at).toLocaleDateString() : profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString() : "N/A"}</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
           </div>
-        </div>
       </div>
-    </AuthGuard>
+    </div>
   )
 }

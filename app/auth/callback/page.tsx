@@ -4,20 +4,13 @@ import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Loader2 } from "lucide-react"
 
-// Firebase handles OAuth callbacks automatically through redirects
-// This page is kept for compatibility but redirects immediately
+// Supabase OAuth callback: code exchange is done in route.ts.
+// This page is shown when redirecting back from provider; route handler redirects to dashboard.
 export default function AuthCallbackPage() {
   const router = useRouter()
 
   useEffect(() => {
-    console.log('[Auth Callback] Firebase handles auth automatically, redirecting to dashboard...')
-    
-    // Small delay to ensure Firebase auth state is updated
-    const timer = setTimeout(() => {
-      router.push('/dashboard')
-    }, 500)
-
-    return () => clearTimeout(timer)
+    router.replace("/dashboard")
   }, [router])
 
   return (
@@ -25,7 +18,7 @@ export default function AuthCallbackPage() {
       <div className="text-center">
         <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
         <p className="text-lg font-medium">Completing sign in...</p>
-        <p className="text-sm text-muted-foreground mt-2">You'll be redirected in a moment</p>
+        <p className="text-sm text-muted-foreground mt-2">Redirecting...</p>
       </div>
     </div>
   )

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { LoadingScreen } from "@/components/loading-screen"
 import { AuthNavbar } from "@/components/auth-navbar"
 import { ParticlesBackground } from "@/components/particles-bg"
+import { useAuth } from "@/lib/auth-context"
 import { FeaturePreview } from "@/components/feature-preview"
 import { AIAssistantPreview } from "@/components/ai-assistant-preview"
 import { Button } from "@/components/ui/button"
@@ -35,7 +36,7 @@ import {
 import Link from "next/link"
 
 export default function HomePage() {
-  // Very short loading for smooth content appearance
+  const { user } = useAuth()
   const [loading, setLoading] = useState(false)
   const [showWelcome, setShowWelcome] = useState(false)
 
@@ -96,6 +97,21 @@ export default function HomePage() {
       <ParticlesBackground />
       <AuthNavbar />
 
+      {/* Logged-in: quick link to Dashboard */}
+      {user && (
+        <div className="sticky top-16 z-30 border-b border-primary/20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+          <div className="container flex h-12 items-center justify-center gap-4 py-2">
+            <span className="text-sm text-muted-foreground">Welcome back — open your strategic dashboard.</span>
+            <Link href="/dashboard">
+              <Button size="sm" className="bg-gradient-to-r from-primary to-secondary hover:opacity-90 gap-2">
+                Go to Dashboard
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      )}
+
       {/* Welcome Voice Pop-up */}
       <Dialog open={showWelcome} onOpenChange={setShowWelcome}>
         <DialogContent className="sm:max-w-[500px] bg-gradient-to-br from-background via-primary/5 to-secondary/5">
@@ -122,9 +138,9 @@ export default function HomePage() {
               Welcome to Aura!
             </DialogTitle>
             <DialogDescription className="text-base text-foreground mt-4 leading-relaxed">
-              I'm your <span className="font-semibold text-primary">AI-powered virtual CFO</span>, here to help you manage your startup's finances with confidence.
+              I'm your <span className="font-semibold text-primary">Strategic Financial Growth Manager</span> — internal finance plus market intelligence so you can scale with confidence.
               <br /><br />
-              Let's transform your financial chaos into <span className="font-semibold text-accent">strategic clarity</span> together.
+              Revenue growth, smarter capital allocation, and <span className="font-semibold text-accent">fewer financial blind spots</span>.
             </DialogDescription>
           </DialogHeader>
 
@@ -187,16 +203,16 @@ export default function HomePage() {
           <div className="flex flex-col items-center text-center gap-8 max-w-4xl mx-auto">
             <Badge variant="secondary" className="gap-2 px-4 py-2 animate-slide-up hover-glow">
               <Sparkles className="h-4 w-4 animate-pulse" />
-              AI-Powered Financial Intelligence for SMEs
+              Finance × Growth × Market Intelligence × Voice
             </Badge>
 
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-balance animate-slide-up [animation-delay:0.1s]">
-              Your AI-Powered <span className="animate-text-shimmer">Virtual CFO</span>
+              Your <span className="animate-text-shimmer">Strategic Financial Growth Manager</span>
             </h1>
 
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl text-balance animate-slide-up [animation-delay:0.2s]">
-              Aura is the strategic financial intelligence layer for early-stage startups and SMEs. Manage runway,
-              forecast cash flow, and make smarter decisions—without the six-figure CFO salary.
+              The real-time strategic financial brain for startups and SMEs. Internal accounting and financial health
+              plus external market intelligence — so you optimize capital, guide fundraising, and scale on data.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 animate-slide-up [animation-delay:0.3s]">
@@ -234,11 +250,11 @@ export default function HomePage() {
           <div className="text-center mb-12">
             <Badge className="mb-4 bg-primary/10 text-primary border-primary/50 gap-2">
               <Mic className="h-3 w-3" />
-              Try Aura Voice Assistant
+              Try Aura Voice
             </Badge>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Talk to Your AI CFO</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Your Voice-Enabled Strategic Co-Pilot</h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Experience the future of financial management with voice-powered AI
+              Join founder meetings by voice: ask about runway, growth scenarios, investor summaries, or market positioning — no typing required.
             </p>
           </div>
 
@@ -262,11 +278,11 @@ export default function HomePage() {
                   <div>
                     <h3 className="text-2xl font-bold mb-3 flex items-center gap-2">
                       <Volume2 className="h-6 w-6 text-primary" />
-                      Voice-Powered Financial Intelligence
+                      Voice in the Room
                     </h3>
                     <p className="text-muted-foreground">
-                      Simply ask Aura about your runway, burn rate, or get strategic advice. 
-                      No typing, no clicking—just talk naturally.
+                      Ask Aura about runway, growth scenarios, investor-ready summaries, or market benchmarks. 
+                      Real-time strategic intelligence by voice.
                     </p>
                   </div>
 
@@ -275,10 +291,10 @@ export default function HomePage() {
                     <p className="text-sm font-semibold text-primary">Try asking:</p>
                     <div className="grid gap-2">
                       {[
-                        '"What\'s my current runway?"',
-                        '"What are my top expenses?"',
-                        '"When should I start fundraising?"',
-                        '"How\'s my revenue growth?"'
+                        '"What\'s my runway and burn?"',
+                        '"Generate an investor summary"',
+                        '"How do we compare to benchmarks?"',
+                        '"Run a growth scenario"'
                       ].map((query, i) => (
                         <div 
                           key={i}
@@ -333,10 +349,10 @@ export default function HomePage() {
       <section className="py-20 gradient-bg-1 relative">
         <div className="container relative z-10">
           <div className="text-center mb-12">
-            <Badge className="mb-4 bg-primary/10 text-primary border-primary/50">Top Features</Badge>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Experience the Power of AI-Driven Finance</h2>
+            <Badge className="mb-4 bg-primary/10 text-primary border-primary/50">Core Capabilities</Badge>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">A Full Financial Operating Layer</h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              See how Aura transforms financial management with cutting-edge AI technology
+              Accounting, growth scenarios, market intelligence, and voice — one strategic brain for your startup
             </p>
           </div>
 
@@ -350,13 +366,39 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Value proposition: ¥1M → ¥2M */}
+      <section className="py-20 bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+        <div className="container">
+          <div className="text-center mb-12">
+            <Badge className="mb-4 bg-accent/10 text-accent border-accent/50">Realistic & Credible</Badge>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">From ¥1,000,000 to ¥2,000,000 — How Aura Helps</h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              If your startup makes ¥1M per month, Aura helps you grow toward ¥2M while controlling burn and minimizing risk.
+            </p>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
+            {[
+              { title: "ROI", desc: "Focus spend on channels and initiatives with measurable return" },
+              { title: "Margin optimization", desc: "Improve unit economics so growth is profitable" },
+              { title: "Cost efficiency", desc: "Reduce waste and reallocate to growth drivers" },
+              { title: "Capital efficiency", desc: "Smarter fund utilization and runway extension" },
+            ].map((item, i) => (
+              <Card key={i} className="p-6 border-2 border-primary/10 hover-lift">
+                <h3 className="font-bold text-primary mb-2">{item.title}</h3>
+                <p className="text-sm text-muted-foreground">{item.desc}</p>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Before/After Section */}
       <section className="py-20">
         <div className="container">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">From Financial Chaos to Strategic Clarity</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">From Blind Spots to Strategic Clarity</h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              See how Aura transforms your financial management
+              Aura is not just bookkeeping — it's your financial growth and market intelligence layer
             </p>
           </div>
 
@@ -366,15 +408,15 @@ export default function HomePage() {
                 <div className="h-12 w-12 rounded-full bg-destructive/10 flex items-center justify-center">
                   <span className="text-2xl">😰</span>
                 </div>
-                <h3 className="text-2xl font-bold text-destructive">Before Aura</h3>
+                <h3 className="text-2xl font-bold text-destructive">Without a growth lens</h3>
               </div>
               <ul className="space-y-4">
                 {[
-                  "Manually stitching data from 5+ tools",
-                  "Outdated spreadsheets and guesswork",
-                  "No idea when you'll run out of cash",
-                  "Can't afford a $200K+ CFO",
-                  "Missing critical financial insights",
+                  "Data scattered across tools, no single view",
+                  "Runway and burn unclear; reactive decisions",
+                  "Little visibility into competitors or benchmarks",
+                  "Fundraising and equity decisions by gut",
+                  "Revenue growth and capital allocation unoptimized",
                 ].map((item, i) => (
                   <li key={i} className="flex items-start gap-3">
                     <span className="text-destructive mt-1">✗</span>
@@ -393,11 +435,11 @@ export default function HomePage() {
               </div>
               <ul className="space-y-4">
                 {[
-                  "Unified view of all financial accounts",
-                  "Real-time, AI-powered forecasting",
-                  "Precise runway calculations updated daily",
-                  "CFO-level insights at startup pricing",
-                  "Proactive alerts and recommendations",
+                  "Unified finance + market intelligence in one place",
+                  "Real-time runway, scenarios, investor-ready summaries",
+                  "Competitive awareness and industry benchmarks",
+                  "Data-driven fundraising and equity guidance",
+                  "Revenue growth optimization and capital efficiency",
                 ].map((item, i) => (
                   <li key={i} className="flex items-start gap-3">
                     <CheckCircle2 className="h-5 w-5 text-accent mt-0.5 flex-shrink-0" />
@@ -415,10 +457,10 @@ export default function HomePage() {
         <div className="container">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Everything You Need to Manage Your Startup's Finances
+              Finance × Growth × Market Intelligence × Voice
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Aura unifies your financial data and provides strategic intelligence
+              One strategic financial operating layer — accounting, capital allocation, fundraising guidance, and market context
             </p>
           </div>
 
@@ -426,41 +468,41 @@ export default function HomePage() {
             {[
               {
                 icon: BarChart3,
-                title: "Unified Dashboard",
+                title: "Strategic Dashboard",
                 description:
-                  "See all your key financial metrics in one place. Real-time cash position, burn rate, and runway.",
+                  "Cash position, burn, runway, and key growth metrics in one place. Investor-ready views.",
                 href: "/dashboard",
               },
               {
                 icon: TrendingUp,
-                title: "Runway Forecasting",
-                description: "Know exactly when you'll run out of money with constantly updated, accurate forecasts.",
+                title: "Runway & Forecasting",
+                description: "Accurate runway and cash flow forecasts. Know when to raise and how much to extend.",
                 href: "/runway",
               },
               {
                 icon: Zap,
-                title: "Scenario Modeling",
-                description: "Model the impact of new hires, marketing spend, or revenue changes on your runway.",
-                href: "/scenarios",
+                title: "Growth Scenarios",
+                description: "Simulate hires, marketing spend, and revenue changes. Data-driven scaling decisions.",
+                href: "/dashboard/scenarios",
+              },
+              {
+                icon: Globe,
+                title: "Market Intelligence",
+                description: "Competitor signals, ad spend trends, SEO visibility, benchmarks, and market opportunities.",
+                href: "/dashboard/market-intelligence",
               },
               {
                 icon: Brain,
-                title: "AI Bookkeeping",
-                description: "Automatically categorize transactions with 85%+ accuracy. No manual data entry.",
-                href: "/bookkeeping",
+                title: "AI Assistant & Bookkeeping",
+                description: "Auto-categorization, strategic advice, investor summaries, and equity guidance.",
+                href: "/ai-assistant",
               },
               {
-                icon: Shield,
-                title: "Sales Analytics",
-                description: "Track sales performance, website metrics, and e-commerce data in real-time.",
-                href: "/sales",
-              },
-              {
-                icon: Database,
-                title: "Voice Data Entry",
+                icon: Mic,
+                title: "Voice Co-Pilot",
                 description:
-                  "Add financial data naturally with voice commands. AI handles categorization automatically.",
-                href: "/data-voice",
+                  "Join founder meetings by voice. Ask for reports, scenarios, or summaries — hands-free.",
+                href: "/voice-assistant",
               },
             ].map((feature, i) => (
               <Link key={i} href={feature.href}>
@@ -489,9 +531,9 @@ export default function HomePage() {
         <div className="container">
           <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
             {[
-              { value: "90%", label: "Time Saved on Financial Forecasting" },
-              { value: "38%", label: "Of Startups Fail Due to Cash Issues" },
-              { value: "$200K+", label: "Annual Cost of a Full-Time CFO" },
+              { value: "ROI", label: "Measurable improvement focus" },
+              { value: "Margin", label: "Optimization & cost efficiency" },
+              { value: "Capital", label: "Smarter fund utilization" },
             ].map((stat, i) => (
               <div key={i} className="text-center animate-scale-in" style={{ animationDelay: `${i * 0.1}s` }}>
                 <div className="text-4xl md:text-5xl font-bold animate-text-shimmer mb-2">{stat.value}</div>
@@ -689,7 +731,7 @@ export default function HomePage() {
           <Card className="p-12 bg-gradient-to-br from-primary via-secondary to-accent text-primary-foreground text-center hover-lift animate-gradient-shift">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Take Control of Your Finances?</h2>
             <p className="text-lg mb-8 opacity-90 max-w-2xl mx-auto">
-              Join hundreds of startups and SMEs using Aura to manage their runway and make smarter financial decisions.
+              Join startups and SMEs using Aura to grow revenue, optimize capital, and reduce financial blind spots.
             </p>
             <Link href="/onboarding">
               <Button size="lg" variant="secondary" className="text-lg px-8 hover-glow">
@@ -710,7 +752,7 @@ export default function HomePage() {
               <span className="font-semibold">Aura</span>
             </div>
             <p className="text-sm text-muted-foreground">
-              © 2025 Aura. Empowering startups and SMEs with AI-powered financial intelligence.
+              © 2025 Aura. Strategic Financial Growth Manager — revenue growth, capital efficiency, and market intelligence for startups and SMEs.
             </p>
           </div>
         </div>

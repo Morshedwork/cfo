@@ -1,13 +1,8 @@
-import { NextResponse } from "next/server"
-import type { NextRequest } from "next/server"
+import { type NextRequest } from "next/server"
+import { updateSession } from "@/lib/supabase/middleware"
 
-// Firebase uses client-side auth, so middleware is simpler
-// We just need to handle route protection on the server side
 export async function middleware(request: NextRequest) {
-  // Allow all requests to pass through
-  // Firebase handles authentication on the client side
-  // Protected routes will check auth state in the component
-  return NextResponse.next()
+  return await updateSession(request)
 }
 
 export const config = {

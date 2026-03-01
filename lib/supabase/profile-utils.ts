@@ -1,4 +1,5 @@
-import { createBrowserClient } from "@supabase/ssr"
+import { createClient } from "@/lib/supabase/client"
+import type { SupabaseClient } from "@supabase/supabase-js"
 
 export interface UserProfile {
   id: string
@@ -28,24 +29,22 @@ export interface UserCompany {
 
 /**
  * Ensures the current user has a profile and company
- * Creates them if they don't exist
+ * Creates them if they don't exist.
+ * Pass the same Supabase client used for sign-up so the new session is available.
  */
-export async function ensureUserProfile(): Promise<{
+export async function ensureUserProfile(supabaseClient?: SupabaseClient): Promise<{
   profile: UserProfile | null
   company: UserCompany | null
   error: string | null
 }> {
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
-  
+  const supabase = supabaseClient ?? createClient()
+
   try {
-    // Get current user
+    // Get current user (use provided client so sign-up session is available)
     const { data: { user }, error: userError } = await supabase.auth.getUser()
-    
+
     if (userError || !user) {
-      return { profile: null, company: null, error: 'Not authenticated' }
+      return { profile: null, company: null, error: "Not authenticated" }
     }
     
     // Check if profile exists
@@ -122,10 +121,7 @@ export async function ensureUserProfile(): Promise<{
  * Fast-fail with 2 second timeout to prevent blocking sign-in
  */
 export async function getCurrentUserProfile(): Promise<UserProfile | null> {
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+  const supabase = createClient()
   
   try {
     const { data: { user }, error: userError } = await supabase.auth.getUser()
@@ -186,10 +182,7 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
  * Gets the current user's company
  */
 export async function getCurrentUserCompany(): Promise<UserCompany | null> {
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+  const supabase = createClient()
   
   try {
     const { data: { user } } = await supabase.auth.getUser()
@@ -229,10 +222,7 @@ export async function updateUserProfile(updates: Partial<UserProfile>): Promise<
   profile: UserProfile | null
   error: string | null
 }> {
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+  const supabase = createClient()
   
   try {
     const { data: { user } } = await supabase.auth.getUser()
@@ -263,4 +253,66 @@ export async function updateUserProfile(updates: Partial<UserProfile>): Promise<
       error: error instanceof Error ? error.message : 'Unknown error'
     }
   }
+}
+
+/**
+ * Update the current user's company
+ */
+export async function updateCompany(updates: Partial<Record<keyof UserCompany, unknown>>): Promise<{
+  company: UserCompany | null
+  error: string | null
+}> {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { company: null, error: 'Not authenticated' }
+  const { data: company } = await supabase.from('companies').select('*').eq('user_id', user.id).limit(1).maybeSingle()
+  if (!company) return { company: null, error: 'No company found' }
+  const row: Record<string, unknown> = {}
+  if (updates.name != null) row.name = updates.name
+  if (updates.industry != null) row.industry = updates.industry
+  if (updates.founded_date != null) row.founded_date = updates.founded_date
+  if (updates.team_size != null) row.team_size = updates.team_size
+  if (updates.funding_stage != null) row.funding_stage = updates.funding_stage
+  if (updates.monthly_burn != null) row.monthly_burn = updates.monthly_burn
+  if (updates.current_cash != null) row.current_cash = updates.current_cash
+  row.updated_at = new Date().toISOString()
+  const { data: updated, error } = await supabase.from('companies').update(row).eq('id', company.id).select().single()
+  if (error) return { company: null, error: error.message }
+  return { company: updated, error: null }
+}
+
+/**
+ * Create an AI insight for the current user's company
+ */
+export async function createAIInsight(params: {
+  companyId?: string
+  type: string
+  title: string
+  description: string
+  severity?: 'info' | 'warning' | 'critical'
+  data?: Record<string, unknown>
+  isRead?: boolean
+}): Promise<{ id: string | null; error: string | null }> {
+  const supabase = createClient()
+  let companyId = params.companyId
+  if (!companyId) {
+    const company = await getCurrentUserCompany()
+    if (!company) return { id: null, error: 'No company found' }
+    companyId = company.id
+  }
+  const { data, error } = await supabase
+    .from('ai_insights')
+    .insert({
+      company_id: companyId,
+      type: params.type,
+      title: params.title,
+      description: params.description,
+      severity: params.severity ?? 'info',
+      data: params.data ?? null,
+      is_read: params.isRead ?? false,
+    })
+    .select('id')
+    .single()
+  if (error) return { id: null, error: error.message }
+  return { id: data?.id ?? null, error: null }
 }

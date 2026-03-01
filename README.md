@@ -35,8 +35,10 @@ Create `.env.local` file:
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 
-# Gemini AI (Optional - has intelligent fallbacks)
-GEMINI_API_KEY=your_gemini_api_key
+# AI (Optional - one of these for live AI; has intelligent fallbacks if none set)
+OPENAI_API_KEY=your_openai_api_key
+# GEMINI_API_KEY=your_gemini_api_key
+# OPENROUTER_API_KEY=your_openrouter_api_key
 
 # Financial Modeling Prep (Optional - for real company data)
 FMP_API_KEY=your_fmp_api_key
@@ -95,7 +97,7 @@ Features automatically showcase themselves:
 
 ### Intelligent AI Fallbacks
 
-Works without GEMINI_API_KEY:
+Works without OPENAI_API_KEY (or Gemini/OpenRouter):
 - Smart transaction categorization
 - Natural language processing
 - Financial insights generation
@@ -109,7 +111,7 @@ Works without GEMINI_API_KEY:
 - **UI Components:** Radix UI
 - **Authentication:** Supabase Auth
 - **Database:** Supabase (PostgreSQL)
-- **AI:** Google Gemini (with fallbacks)
+- **AI:** OpenAI (primary), or Gemini / OpenRouter (with fallbacks)
 - **Charts:** Recharts
 - **Deployment:** Vercel
 
@@ -150,11 +152,11 @@ See **[SUPABASE_SETUP.md](./SUPABASE_SETUP.md)** for complete guide.
 
 The app works in two modes:
 
-1. **Production Mode** (with GEMINI_API_KEY)
+1. **Production Mode** (with OPENAI_API_KEY or GEMINI_API_KEY)
    - Full AI capabilities
    - Real-time responses
 
-2. **Demo Mode** (without GEMINI_API_KEY)
+2. **Demo Mode** (without any AI API key)
    - Intelligent fallback responses
    - Keyword-based categorization
    - Pre-built financial insights
@@ -248,7 +250,7 @@ The app is centered using:
 ### API Errors
 
 The app has intelligent fallbacks:
-- Works without GEMINI_API_KEY
+- Works without OPENAI_API_KEY (or other AI keys)
 - Graceful error handling
 - User-friendly messages
 
@@ -283,7 +285,7 @@ Or connect your GitHub repo to Vercel dashboard.
 Add in Vercel dashboard:
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `GEMINI_API_KEY` (optional)
+- `OPENAI_API_KEY` (optional; or `GEMINI_API_KEY` / `OPENROUTER_API_KEY`)
 
 ## 📄 License
 

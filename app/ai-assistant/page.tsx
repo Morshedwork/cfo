@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react"
 import { LoadingScreen } from "@/components/loading-screen"
-import { AuthNavbar } from "@/components/auth-navbar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -197,7 +196,7 @@ export default function AIAssistantPage() {
       id: "welcome",
       role: "assistant",
       content:
-        "👋 Hello! I'm **Aura**, your AI Chief Financial Officer.\n\nI'm here to help you with:\n• Cash flow & runway analysis\n• Expense optimization strategies\n• Revenue growth planning\n• Fundraising recommendations\n• Strategic financial decisions\n\n**Ask me anything** about your finances!",
+        "👋 Hello! I'm **Aura**, your Strategic Financial Growth Manager.\n\nI combine internal finance with market intelligence. I can help with:\n• Cash flow, runway & burn efficiency\n• Revenue growth & capital allocation\n• Fundraising & investor-ready summaries\n• Growth scenarios & market benchmarks\n• Competitive awareness & strategic decisions\n\n**Ask me anything** about your finances or market position!",
       timestamp: new Date(),
       type: "text",
     }])
@@ -374,9 +373,7 @@ export default function AIAssistantPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background w-full page-transition">
-      <AuthNavbar />
-
+    <div className="min-h-full bg-background w-full page-transition">
       <div className="container max-w-[1920px] py-4 w-full px-8">
         {/* Header */}
         <div className="mb-4">
@@ -394,7 +391,7 @@ export default function AIAssistantPage() {
               />
               <div>
                 <h1 className="text-2xl font-bold gradient-text">AI Chief Financial Officer</h1>
-                <p className="text-sm text-muted-foreground">Your expert financial advisor powered by Gemini AI</p>
+                <p className="text-sm text-muted-foreground">Your expert financial advisor powered by OpenAI</p>
               </div>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
@@ -638,7 +635,7 @@ export default function AIAssistantPage() {
                       {message.type === "recommendation" && (
                         <div className="flex items-center gap-2 mb-2">
                           <Lightbulb className="h-4 w-4 text-green-600" />
-                          <span className="font-bold text-green-600 text-sm">CFO Recommendation</span>
+                          <span className="font-bold text-green-600 text-sm">Growth Manager Recommendation</span>
                         </div>
                       )}
                       <p className="text-sm leading-relaxed whitespace-pre-line">{message.content}</p>
@@ -962,7 +959,7 @@ export default function AIAssistantPage() {
                   <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                     <Bot className="h-3 w-3 text-primary" />
                   </div>
-                  <p className="text-muted-foreground">CFO-level financial analysis</p>
+                  <p className="text-muted-foreground">Strategic financial & growth analysis</p>
                 </div>
                 <div className="flex items-start gap-2">
                   <div className="h-5 w-5 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">

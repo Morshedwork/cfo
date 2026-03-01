@@ -47,7 +47,7 @@ export default function AIChat() {
           id: "welcome",
           role: "assistant",
           content:
-            "Hello! I'm your AI financial advisor powered by Gemini. I can help you understand your finances, forecast scenarios, and make strategic decisions. What would you like to know?",
+            "Hello! I'm your AI financial advisor powered by OpenAI. I can help you understand your finances, forecast scenarios, and make strategic decisions. What would you like to know?",
           timestamp: new Date(),
           type: "text",
         },
@@ -180,7 +180,7 @@ export default function AIChat() {
       <div className="container py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2 animate-text-shimmer">AI Financial Advisor</h1>
-          <p className="text-muted-foreground">Get intelligent insights powered by Gemini AI</p>
+          <p className="text-muted-foreground">Get intelligent insights powered by OpenAI</p>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
@@ -195,7 +195,7 @@ export default function AIChat() {
                     </div>
                     <div>
                       <CardTitle>Aura AI Advisor</CardTitle>
-                      <CardDescription>Powered by Gemini AI</CardDescription>
+                      <CardDescription>Powered by OpenAI</CardDescription>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -378,7 +378,7 @@ export default function AIChat() {
                 </div>
                 <div className="flex items-start gap-2">
                   <Sparkles className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />
-                  <p className="text-muted-foreground">Real-time financial data analysis with Gemini</p>
+                  <p className="text-muted-foreground">Real-time financial data analysis with OpenAI</p>
                 </div>
                 <div className="flex items-start gap-2">
                   <TrendingUp className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />

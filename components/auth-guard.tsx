@@ -3,7 +3,7 @@
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
-import { LoadingScreen } from "@/components/loading-screen"
+import { Loader2 } from "lucide-react"
 
 interface AuthGuardProps {
   children: React.ReactNode
@@ -11,10 +11,21 @@ interface AuthGuardProps {
   redirectTo?: string
 }
 
-export function AuthGuard({ 
-  children, 
+function QuickAuthSpinner() {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background">
+      <div className="flex flex-col items-center gap-3">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-sm text-muted-foreground">Signing you in...</p>
+      </div>
+    </div>
+  )
+}
+
+export function AuthGuard({
+  children,
   requireAuth = true,
-  redirectTo = "/auth/login"
+  redirectTo = "/auth/login",
 }: AuthGuardProps) {
   const { user, loading } = useAuth()
   const router = useRouter()
@@ -30,15 +41,15 @@ export function AuthGuard({
   }, [user, loading, requireAuth, redirectTo, router])
 
   if (loading) {
-    return <LoadingScreen />
+    return <QuickAuthSpinner />
   }
 
   if (requireAuth && !user) {
-    return <LoadingScreen />
+    return <QuickAuthSpinner />
   }
 
   if (!requireAuth && user) {
-    return <LoadingScreen />
+    return <QuickAuthSpinner />
   }
 
   return <>{children}</>

@@ -3,16 +3,49 @@
  * Tries ElevenLabs first, falls back to browser TTS
  */
 
+/** Minimal silent WAV to unlock audio on user gesture (browsers block play() until then) */
+const SILENT_WAV_BASE64 =
+  "UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA="
+
 export class SimpleVoiceService {
   private currentUtterance: SpeechSynthesisUtterance | null = null
   private currentAudio: HTMLAudioElement | null = null
+  private audioContext: AudioContext | null = null
+  private currentSource: AudioBufferSourceNode | null = null
   private isPlayingAudio = false
+  private audioUnlocked = false
 
   /**
    * Check if browser speech synthesis is supported
    */
   isSupported(): boolean {
     return typeof window !== "undefined" && "speechSynthesis" in window
+  }
+
+  /**
+   * Unlock audio playback. Must be called from a user gesture (e.g. click on mic).
+   * Call this when the user first interacts so later TTS is allowed by the browser.
+   */
+  async unlockAudio(): Promise<void> {
+    if (typeof window === "undefined" || this.audioUnlocked) return
+    try {
+      // 1) Play silent sound so HTMLAudioElement policy is satisfied
+      const silent = new Audio("data:audio/wav;base64," + SILENT_WAV_BASE64)
+      await silent.play()
+      silent.pause()
+      silent.src = ""
+      // 2) Create and resume AudioContext so Web Audio API is allowed when we speak later
+      const Ctx = window.AudioContext || (window as any).webkitAudioContext
+      if (Ctx) {
+        const ctx = new Ctx()
+        if (ctx.state === "suspended") await ctx.resume()
+        this.audioContext = ctx
+      }
+      this.audioUnlocked = true
+      console.log("[Voice] Audio unlocked (user gesture)")
+    } catch {
+      // Ignore; unlock is best-effort. Next speak() may still prompt user.
+    }
   }
 
   /**
@@ -55,16 +88,31 @@ export class SimpleVoiceService {
     }
 
     if (elevenLabsKey) {
+      const preferOgg = typeof navigator !== "undefined" && this.shouldPreferOgg()
       try {
-        await this.speakWithElevenLabs(text, elevenLabsKey, onEnd, onError)
+        await this.speakWithElevenLabs(text, elevenLabsKey, onEnd, onError, preferOgg ? "ogg" : "mp3")
         return // Success!
-      } catch (error) {
+      } catch (error: any) {
+        // If format/codec not supported (e.g. Safari + MP3), retry with Ogg/Opus
+        const msg = error?.message ?? ""
+        if (
+          msg.includes("not supported") ||
+          msg.includes("Decode error") ||
+          msg.includes("format") ||
+          msg.includes("decode")
+        ) {
+          try {
+            console.log("[Voice] Retrying with Ogg/Opus for better browser compatibility...")
+            await this.speakWithElevenLabs(text, elevenLabsKey, onEnd, onError, "ogg")
+            return
+          } catch (retryErr) {
+            if (onError) onError(retryErr as Error)
+            throw retryErr
+          }
+        }
         console.error("[Voice] ❌ ElevenLabs failed:", error)
         this.isPlayingAudio = false // Clear flag on error
-        // Don't fallback - user wants ElevenLabs only
-        if (onError) {
-          onError(error as Error)
-        }
+        if (onError) onError(error as Error)
         throw error
       }
     } else {
@@ -79,35 +127,52 @@ export class SimpleVoiceService {
     }
   }
 
+  /** Safari and some WebViews often fail to decode MP3 in Web Audio API; prefer Ogg/Opus. */
+  private shouldPreferOgg(): boolean {
+    const ua = navigator.userAgent
+    return (
+      (/Safari\//i.test(ua) && !/Chrome/i.test(ua)) ||
+      /iPhone|iPad|iPod/i.test(ua) ||
+      (/AppleWebKit/i.test(ua) && !/Chrome/i.test(ua))
+    )
+  }
+
   /**
-   * Speak using ElevenLabs API
+   * Speak using ElevenLabs API.
+   * format: "mp3" (default) or "ogg" — use "ogg" for Safari/browsers that don't decode MP3 in Web Audio.
    */
   private async speakWithElevenLabs(
     text: string,
     apiKey: string,
     onEnd?: () => void,
     onError?: (error: Error) => void,
+    format: "mp3" | "ogg" = "mp3",
   ): Promise<void> {
     console.log("[Voice] 🎙️ Using ElevenLabs Rachel voice (natural, consistent, professional)")
 
-    // Use Rachel voice - most natural, professional, consistent female voice
     const voiceId = "21m00Tcm4TlvDq8ikWAM" // Rachel - natural, warm, professional
 
-    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+    const accept = format === "ogg" ? "audio/ogg" : "audio/mpeg"
+    const url =
+      format === "ogg"
+        ? `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=ogg_48000_64`
+        : `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`
+
+    const response = await fetch(url, {
       method: "POST",
       headers: {
-        Accept: "audio/mpeg",
+        Accept: accept,
         "Content-Type": "application/json",
         "xi-api-key": apiKey,
       },
       body: JSON.stringify({
         text,
-        model_id: "eleven_turbo_v2_5", // Latest model - most natural and consistent
+        model_id: "eleven_turbo_v2_5",
         voice_settings: {
-          stability: 0.65, // Higher stability = more consistent
-          similarity_boost: 0.85, // Very high = authentic voice
-          style: 0.0, // No extra style = pure, natural voice
-          use_speaker_boost: true, // Enhanced clarity
+          stability: 0.65,
+          similarity_boost: 0.85,
+          style: 0.0,
+          use_speaker_boost: true,
         },
       }),
     })
@@ -118,96 +183,58 @@ export class SimpleVoiceService {
       throw new Error(`ElevenLabs API error: ${response.status} - ${errorText}`)
     }
 
-    // Get audio blob
-    const audioBlob = await response.blob()
-    console.log("[ElevenLabs] Audio blob received:", audioBlob.size, "bytes, type:", audioBlob.type)
-
-    // Validate audio blob
-    if (audioBlob.size === 0) {
+    const arrayBuffer = await response.arrayBuffer()
+    if (arrayBuffer.byteLength === 0) {
       throw new Error("ElevenLabs returned empty audio")
     }
+    console.log("[ElevenLabs] Audio received:", arrayBuffer.byteLength, "bytes")
 
-    // Create object URL
-    const audioUrl = URL.createObjectURL(audioBlob)
-    console.log("[ElevenLabs] Audio URL created:", audioUrl.substring(0, 50) + "...")
+    // Use Web Audio API for reliable playback (decodes MP3 then plays; works where <audio> + blob fails)
+    const ctx = this.audioContext ?? new (window.AudioContext || (window as any).webkitAudioContext)()
+    if (!this.audioContext) {
+      this.audioContext = ctx
+    }
 
-    // Create audio element with proper error handling
-    const audio = new Audio()
-    audio.preload = "auto"
-
-    // Set up event handlers BEFORE setting src
     let hasEnded = false
     let hasErrored = false
 
-    audio.onloadeddata = () => {
-      console.log("[ElevenLabs] Audio loaded, duration:", audio.duration, "seconds")
+    const cleanup = () => {
+      if (this.currentSource === source) {
+        this.currentSource = null
+      }
+      this.isPlayingAudio = false
     }
 
-    audio.onended = () => {
+    const source = ctx.createBufferSource()
+    this.currentSource = source
+    source.onended = () => {
       if (hasEnded || hasErrored) return
       hasEnded = true
-      URL.revokeObjectURL(audioUrl)
-      if (this.currentAudio === audio) {
-        this.currentAudio = null
-      }
-      this.isPlayingAudio = false // Clear flag
+      cleanup()
       console.log("[ElevenLabs] ✅ Audio finished playing")
       if (onEnd) onEnd()
     }
 
-    audio.onerror = (event: any) => {
-      if (hasErrored) return
-      hasErrored = true
-
-      const error = event?.target?.error
-      const errorDetails = {
-        code: error?.code,
-        message: error?.message,
-        type: event?.type,
-        audioSrc: audio.src.substring(0, 50),
-      }
-
-      console.error("[ElevenLabs] ❌ Audio playback error:", errorDetails)
-
-      URL.revokeObjectURL(audioUrl)
-      if (this.currentAudio === audio) {
-        this.currentAudio = null
-      }
-      this.isPlayingAudio = false // Clear flag
-
-      // Call onError but don't fallback - user wants ElevenLabs only
-      if (onError) {
-        onError(new Error(`Audio playback failed: ${error?.message || "Unknown error"}`))
-      } else if (onEnd) {
-        // If no error handler, at least call onEnd to continue conversation
-        onEnd()
-      }
-    }
-
-    // Store reference
-    this.currentAudio = audio
-
-    // Set source and play
-    audio.src = audioUrl
-
     try {
-      // Try to play
-      await audio.play()
-      console.log("[ElevenLabs] ✅ Audio playing successfully")
-    } catch (playError: any) {
-      console.error("[ElevenLabs] ❌ Play failed:", playError.message || playError)
-      URL.revokeObjectURL(audioUrl)
-      this.currentAudio = null
-      this.isPlayingAudio = false // Clear flag
-
-      // Provide helpful error message
-      if (playError.name === "NotAllowedError") {
-        throw new Error("Browser blocked audio playback. Please interact with the page first.")
-      } else if (playError.name === "NotSupportedError") {
-        throw new Error("Audio format not supported by browser")
-      } else {
-        throw new Error(`Failed to play audio: ${playError.message}`)
+      const audioBuffer = await ctx.decodeAudioData(arrayBuffer.slice(0))
+      source.buffer = audioBuffer
+      source.connect(ctx.destination)
+      if (ctx.state === "suspended") {
+        await ctx.resume()
       }
+      source.start(0)
+      console.log("[ElevenLabs] ✅ Audio playing successfully")
+    } catch (decodeError: any) {
+      hasErrored = true
+      cleanup()
+      console.error("[ElevenLabs] ❌ Decode/play failed:", decodeError?.message ?? decodeError)
+      if (decodeError?.name === "NotAllowedError") {
+        throw new Error("Browser blocked audio playback. Please interact with the page first (e.g. click the mic).")
+      }
+      if (onError) {
+        onError(new Error(`Audio playback failed: ${decodeError?.message ?? "Decode error"}`))
+      }
+      throw new Error(`Audio playback failed: ${decodeError?.message ?? "Decode error"}`)
     }
   }
 
@@ -280,17 +307,28 @@ export class SimpleVoiceService {
     // Clear the playing flag
     this.isPlayingAudio = false
 
-    // Stop audio playback (ElevenLabs)
+    // Stop Web Audio API playback (ElevenLabs)
+    if (this.currentSource) {
+      try {
+        this.currentSource.stop()
+        this.currentSource.disconnect()
+        this.currentSource = null
+        console.log("[Voice] ✅ Web Audio stopped")
+      } catch (error) {
+        // stop() throws if already stopped
+        this.currentSource = null
+      }
+    }
+
+    // Legacy: stop HTML audio if ever used
     if (this.currentAudio) {
       try {
         this.currentAudio.pause()
         this.currentAudio.currentTime = 0
-        this.currentAudio.src = "" // Clear source to stop download
-        this.currentAudio.load() // Force reset
+        this.currentAudio.src = ""
+        this.currentAudio.load()
         this.currentAudio = null
-        console.log("[Voice] ✅ Audio stopped")
       } catch (error) {
-        console.warn("[Voice] Error stopping audio:", error)
         this.currentAudio = null
       }
     }
@@ -311,7 +349,12 @@ export class SimpleVoiceService {
    * Check if currently speaking
    */
   isSpeaking(): boolean {
-    return (this.currentAudio && !this.currentAudio.paused) || (this.isSupported() && window.speechSynthesis.speaking)
+    return (
+      this.isPlayingAudio ||
+      this.currentSource != null ||
+      (this.currentAudio != null && !this.currentAudio.paused) ||
+      (this.isSupported() && window.speechSynthesis.speaking)
+    )
   }
 }
 

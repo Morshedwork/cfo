@@ -19,7 +19,7 @@ import {
   MessageSquare
 } from "lucide-react"
 import { getVoiceService } from "@/lib/voice-assistant-service"
-import { getVoiceService as getSimpleVoice } from "@/lib/simple-voice-service"
+import { getVoiceService as getSimpleVoice, getTTSProvider } from "@/lib/simple-voice-service"
 import { useAuth } from "@/lib/auth-context"
 import { CFOMascot, MascotState } from "@/components/cfo-mascot"
 
@@ -420,6 +420,9 @@ export default function VoiceAssistantPage() {
               </h1>
               <p className="text-muted-foreground mt-2">
                 Talk to Aura, your intelligent AI CFO
+                {getTTSProvider() === "minimax" && (
+                  <span className="ml-2 text-primary font-medium">· Voice: MiniMax</span>
+                )}
               </p>
             </div>
             
@@ -765,6 +768,12 @@ export default function VoiceAssistantPage() {
                     </Badge>
                   </div>
                   <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Voice Agent (TTS)</span>
+                    <Badge variant={getTTSProvider() === "minimax" ? "default" : "secondary"} className="capitalize">
+                      {getTTSProvider() === "minimax" ? "MiniMax" : getTTSProvider() === "elevenlabs" ? "ElevenLabs" : "Not configured"}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">AI Status</span>
                     <Badge variant="default">Online</Badge>
                   </div>
@@ -833,6 +842,9 @@ export default function VoiceAssistantPage() {
                   <CardTitle className="text-lg">Tips</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2 text-sm text-muted-foreground">
+                  {getTTSProvider() === "minimax" && (
+                    <p>• <strong>Voice agent:</strong> Aura speaks with MiniMax (set in .env.local)</p>
+                  )}
                   <p>• <strong>Auto Mode:</strong> Automatically keeps conversation going</p>
                   <p>• Speak naturally - Aura adapts to you</p>
                   <p>• After 2 questions, continuous mode auto-activates</p>

@@ -1,8 +1,40 @@
 /**
- * Voice Service with ElevenLabs Support
- * Tries ElevenLabs first, falls back to browser TTS
+ * MiniMax TTS configuration (from env or defaults).
+ * Set NEXT_PUBLIC_MINIMAX_API_KEY to use MiniMax as the voice agent.
  */
+export type MiniMaxConfig = {
+  apiKey: string
+  model: string
+  voiceId: string
+}
 
+const DEFAULT_MINIMAX_MODEL = "speech-2.6-turbo"
+const DEFAULT_MINIMAX_VOICE_ID = "English_Graceful_Lady"
+
+function getMiniMaxConfig(): MiniMaxConfig | null {
+  if (typeof window === "undefined") return null
+  const apiKey = process.env.NEXT_PUBLIC_MINIMAX_API_KEY?.trim()
+  if (!apiKey || apiKey.startsWith("your_")) return null
+  return {
+    apiKey,
+    model: process.env.NEXT_PUBLIC_MINIMAX_MODEL?.trim() || DEFAULT_MINIMAX_MODEL,
+    voiceId: process.env.NEXT_PUBLIC_MINIMAX_VOICE_ID?.trim() || DEFAULT_MINIMAX_VOICE_ID,
+  }
+}
+
+/** Which TTS provider is active: MiniMax (voice agent), ElevenLabs, or none. */
+export function getTTSProvider(): "minimax" | "elevenlabs" | null {
+  if (typeof window === "undefined") return null
+  if (getMiniMaxConfig()) return "minimax"
+  const key = process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY?.trim()
+  if (key && !key.startsWith("your_")) return "elevenlabs"
+  return null
+}
+
+/**
+ * Voice Service with MiniMax and ElevenLabs Support.
+ * Voice agent uses MiniMax when NEXT_PUBLIC_MINIMAX_API_KEY is set.
+ */
 export class SimpleVoiceService {
   private currentUtterance: SpeechSynthesisUtterance | null = null
   private currentAudio: HTMLAudioElement | null = null
@@ -16,67 +48,157 @@ export class SimpleVoiceService {
   }
 
   /**
-   * Speak text - ONLY ElevenLabs (no fallback)
+   * Speak text - MiniMax (if key set) or ElevenLabs (no browser fallback)
    */
   async speak(text: string, onEnd?: () => void, onError?: (error: Error) => void): Promise<void> {
     console.log("[Voice] 🎤 New speak request")
 
-    // Check if we need to stop existing audio (need longer delay)
     const wasPlaying = this.isPlayingAudio
-
     if (wasPlaying) {
       console.log("[Voice] ⚠️ Already playing audio - stopping previous")
     }
 
-    // CRITICAL: Stop ALL audio IMMEDIATELY
     this.stopSpeaking()
-
-    // Mark as playing to prevent race conditions
     this.isPlayingAudio = true
 
-    // Smart delay: longer if we had to stop something, shorter if starting fresh
     if (wasPlaying) {
-      await new Promise((resolve) => setTimeout(resolve, 150)) // Need time to stop
+      await new Promise((resolve) => setTimeout(resolve, 150))
     } else {
-      await new Promise((resolve) => setTimeout(resolve, 50)) // Quick start
+      await new Promise((resolve) => setTimeout(resolve, 50))
     }
 
-    // Try ElevenLabs first
-    const elevenLabsKey = process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY
+    const minimaxConfig = getMiniMaxConfig()
+    const elevenLabsKey = process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY?.trim()
+    const hasElevenLabs = elevenLabsKey && !elevenLabsKey.startsWith("your_")
 
-    // Debug logging
-    console.log("[Voice] Checking for ElevenLabs API key...")
-    console.log("[Voice] Key found:", !!elevenLabsKey)
-    if (elevenLabsKey) {
-      console.log("[Voice] Key prefix:", elevenLabsKey.substring(0, 8) + "...")
-    } else {
-      console.log("[Voice] ❌ No NEXT_PUBLIC_ELEVENLABS_API_KEY found in environment")
-      console.log("[Voice] Add it to .env.local and restart server + hard refresh browser")
-    }
-
-    if (elevenLabsKey) {
+    if (minimaxConfig) {
       try {
-        await this.speakWithElevenLabs(text, elevenLabsKey, onEnd, onError)
-        return // Success!
+        await this.speakWithMiniMax(text, minimaxConfig, onEnd, onError)
+        return
       } catch (error) {
-        console.error("[Voice] ❌ ElevenLabs failed:", error)
-        this.isPlayingAudio = false // Clear flag on error
-        // Don't fallback - user wants ElevenLabs only
-        if (onError) {
-          onError(error as Error)
-        }
+        console.error("[Voice] ❌ MiniMax failed:", error)
+        this.isPlayingAudio = false
+        if (onError) onError(error as Error)
         throw error
       }
-    } else {
-      // No API key - inform user
-      this.isPlayingAudio = false // Clear flag
-      const errorMsg = "ElevenLabs API key not configured. Add NEXT_PUBLIC_ELEVENLABS_API_KEY to .env.local"
-      console.error("[Voice]", errorMsg)
-      if (onError) {
-        onError(new Error(errorMsg))
-      }
-      throw new Error(errorMsg)
     }
+
+    if (hasElevenLabs && elevenLabsKey) {
+      try {
+        await this.speakWithElevenLabs(text, elevenLabsKey, onEnd, onError)
+        return
+      } catch (error) {
+        console.error("[Voice] ❌ ElevenLabs failed:", error)
+        this.isPlayingAudio = false
+        if (onError) onError(error as Error)
+        throw error
+      }
+    }
+
+    this.isPlayingAudio = false
+    const errorMsg =
+      "No TTS API key configured. Add NEXT_PUBLIC_MINIMAX_API_KEY or NEXT_PUBLIC_ELEVENLABS_API_KEY to .env.local"
+    console.error("[Voice]", errorMsg)
+    if (onError) onError(new Error(errorMsg))
+    throw new Error(errorMsg)
+  }
+
+  /**
+   * Speak using MiniMax T2A API (voice agent – natural TTS, 300+ voices, 40+ languages)
+   * Docs: https://platform.minimax.io/docs/api-reference/speech-t2a-intro
+   */
+  private async speakWithMiniMax(
+    text: string,
+    config: MiniMaxConfig,
+    onEnd?: () => void,
+    onError?: (error: Error) => void,
+  ): Promise<void> {
+    console.log("[Voice] 🎙️ Using MiniMax voice agent:", config.model, config.voiceId)
+
+    const url = "https://api.minimax.io/v1/t2a_v2"
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${config.apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: config.model,
+        text,
+        stream: false,
+        output_format: "hex",
+        voice_setting: {
+          voice_id: config.voiceId,
+          speed: 1,
+          vol: 1,
+          pitch: 0,
+        },
+        audio_setting: {
+          sample_rate: 32000,
+          bitrate: 128000,
+          format: "mp3",
+          channel: 1,
+        },
+      }),
+    })
+
+    const json = await response.json().catch(() => ({}))
+    const statusCode = json?.base_resp?.status_code
+
+    if (!response.ok || statusCode !== 0) {
+      const msg = json?.base_resp?.status_msg || response.statusText || "Unknown error"
+      console.error("[MiniMax] API Error:", response.status, msg)
+      throw new Error(`MiniMax API error: ${response.status} - ${msg}`)
+    }
+
+    const hexAudio = json?.data?.audio
+    if (!hexAudio || typeof hexAudio !== "string") {
+      throw new Error("MiniMax returned no audio data")
+    }
+
+    const bytes = this.hexToBytes(hexAudio)
+    const blob = new Blob([new Uint8Array(bytes)], { type: "audio/mpeg" })
+    if (blob.size === 0) throw new Error("MiniMax returned empty audio")
+
+    const audioUrl = URL.createObjectURL(blob)
+    const audio = new Audio()
+    audio.preload = "auto"
+
+    let hasEnded = false
+    let hasErrored = false
+
+    audio.onended = () => {
+      if (hasEnded || hasErrored) return
+      hasEnded = true
+      URL.revokeObjectURL(audioUrl)
+      if (this.currentAudio === audio) this.currentAudio = null
+      this.isPlayingAudio = false
+      if (onEnd) onEnd()
+    }
+
+    audio.onerror = () => {
+      if (hasErrored) return
+      hasErrored = true
+      URL.revokeObjectURL(audioUrl)
+      if (this.currentAudio === audio) this.currentAudio = null
+      this.isPlayingAudio = false
+      const msg = (audio.error?.message) || "Playback failed"
+      if (onError) onError(new Error(msg))
+      else if (onEnd) onEnd()
+    }
+
+    this.currentAudio = audio
+    audio.src = audioUrl
+    await audio.play()
+  }
+
+  private hexToBytes(hex: string): Uint8Array {
+    const len = hex.length
+    const out = new Uint8Array(len >> 1)
+    for (let i = 0; i < len; i += 2) {
+      out[i >> 1] = parseInt(hex.slice(i, i + 2), 16)
+    }
+    return out
   }
 
   /**

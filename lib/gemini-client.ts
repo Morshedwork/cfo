@@ -415,29 +415,33 @@ Give specific numbers. Be direct and actionable.`
 // Singleton instance
 let geminiClient: GeminiClient | null = null
 
+function isRealApiKey(key: string | undefined): boolean {
+  if (!key || typeof key !== "string") return false
+  const trimmed = key.trim()
+  return trimmed.length > 20 && !trimmed.startsWith("your_")
+}
+
 export function getGeminiClient(): GeminiClient {
   if (!geminiClient) {
     // Server-side only - never exposed to client
-    // Check for OpenRouter API key first (preferred)
     const openRouterKey = process.env.OPENROUTER_API_KEY
     const geminiKey = process.env.GEMINI_API_KEY
-    
-    if (openRouterKey) {
-      console.log("[AI] OpenRouter API key found, using OpenRouter with key:", openRouterKey.substring(0, 10) + "***")
-      geminiClient = new GeminiClient(openRouterKey, true) // true = use OpenRouter
-    } else if (geminiKey) {
-      console.log("[AI] Gemini API key found, using Gemini with key:", geminiKey.substring(0, 10) + "***")
-      geminiClient = new GeminiClient(geminiKey, false) // false = use Gemini
+
+    if (isRealApiKey(openRouterKey)) {
+      console.log("[AI] OpenRouter API key found, using OpenRouter with key:", openRouterKey!.substring(0, 10) + "***")
+      geminiClient = new GeminiClient(openRouterKey!, true)
+    } else if (isRealApiKey(geminiKey)) {
+      console.log("[AI] Gemini API key found, using Gemini with key:", geminiKey!.substring(0, 10) + "***")
+      geminiClient = new GeminiClient(geminiKey!, false)
     } else {
-      console.warn("[AI] No API key found (OPENROUTER_API_KEY or GEMINI_API_KEY), using fallback responses")
-      // Create a client with a dummy key - will use fallback responses
+      console.warn("[AI] No valid API key (OPENROUTER_API_KEY or GEMINI_API_KEY). Set a real key in .env.local or using fallback.")
       geminiClient = new GeminiClient("fallback-mode", false)
     }
   }
   return geminiClient
 }
 
-// Check if we're in fallback mode
+// Check if we're in fallback mode (no valid API key)
 export function isFallbackMode(): boolean {
-  return !process.env.OPENROUTER_API_KEY && !process.env.GEMINI_API_KEY
+  return !isRealApiKey(process.env.OPENROUTER_API_KEY) && !isRealApiKey(process.env.GEMINI_API_KEY)
 }

@@ -65,7 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
           })
           .catch(profileError => {
-            console.log('[Firebase Auth] Profile load skipped:', profileError)
+            console.warn('[Firebase Auth] Profile load failed (permissions?):', profileError.message || profileError)
             // Don't show error - it's okay to not have a database profile
             // Use Firebase auth data as fallback
             const basicProfile: UserProfile = {
@@ -77,6 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               updatedAt: new Date(),
             }
             setProfile(basicProfile)
+            console.log('[Firebase Auth] Using fallback profile from auth data')
           })
       } else {
         // Clear profile when user logs out

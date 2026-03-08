@@ -3,7 +3,6 @@
 import type React from "react"
 
 import { signInWithGoogle, signInWithEmail } from "@/lib/supabase/auth-client"
-import { ensureUserProfile } from "@/lib/supabase/profile-utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -40,7 +39,7 @@ export default function LoginPage() {
     setError(null)
     try {
       await signInWithEmail(email, password)
-      await ensureUserProfile()
+      // Redirect immediately; auth context will load/ensure profile in background on dashboard
       router.push("/dashboard")
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred")

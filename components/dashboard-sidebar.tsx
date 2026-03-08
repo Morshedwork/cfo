@@ -16,6 +16,7 @@ import {
   Sparkles,
   Globe,
   LineChart,
+  DollarSign,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -29,6 +30,7 @@ const navItems = [
   { href: "/sales", label: "Sales", icon: ShoppingCart },
   { href: "/dashboard/scenarios", label: "Growth Scenarios", icon: LineChart },
   { href: "/dashboard/market-intelligence", label: "Market Intelligence", icon: Globe },
+  { href: "/dashboard/fundraising", label: "Fundraising", icon: DollarSign },
   { href: "/data-management", label: "Data", icon: Database },
   { href: "/ai-assistant", label: "AI Assistant", icon: Brain },
   { href: "/voice-assistant", label: "Voice AI", icon: Mic },

@@ -5,9 +5,10 @@
 
 import { GeminiClient, getGeminiClient } from './gemini-client'
 import { FinancialEngine, type FinancialMetrics, type ScenarioChange } from './financial-engine'
+import { findInvestorsFromCrust } from './crust-data'
 
 export interface EnhancedMessage {
-  type: 'text' | 'scenario_analysis' | 'kpi_dashboard' | 'alert' | 'cap_table' | 'strategic_insight' | 'forecast'
+  type: 'text' | 'scenario_analysis' | 'kpi_dashboard' | 'alert' | 'cap_table' | 'strategic_insight' | 'forecast' | 'find_investors'
   message: string
   data?: any
   chart?: {
@@ -55,6 +56,10 @@ export class AICFOClient {
       return this.handleCapTable(message, context)
     }
     
+    if (this.isFindInvestorsRequest(messageLower)) {
+      return this.handleFindInvestors(message, context)
+    }
+    
     // Default: general financial analysis
     return this.handleGeneralQuery(message, context)
   }
@@ -79,6 +84,16 @@ export class AICFOClient {
 
   private isCapTableRequest(message: string): boolean {
     const keywords = ['cap table', 'equity', 'dilution', 'series', 'funding round', 'ownership']
+    return keywords.some(keyword => message.includes(keyword))
+  }
+
+  private isFindInvestorsRequest(message: string): boolean {
+    const keywords = [
+      'find investors', 'discover investors', 'investor matching', 'who should i pitch',
+      'fundraising list', 'investor list', 'potential investors', 'investor discovery',
+      'crust data', 'find investor', 'look for investors', 'investors for fundraising',
+      'match investors', 'investor leads'
+    ]
     return keywords.some(keyword => message.includes(keyword))
   }
 
@@ -394,6 +409,48 @@ export class AICFOClient {
         { label: 'Export to Carta', action: 'export_carta', variant: 'default' },
         { label: 'Model Different Terms', action: 'model_different', variant: 'outline' }
       ]
+    }
+  }
+
+  /**
+   * Fundraising agent: find investors using Crust Data
+   */
+  private async handleFindInvestors(
+    message: string,
+    context: FinancialMetrics
+  ): Promise<EnhancedMessage> {
+    const result = await findInvestorsFromCrust({
+      minFundingUsd: 500_000,
+      minHeadcount: 5,
+      limit: 25,
+    })
+
+    const hasInvestors = result.investors.length > 0
+    let summary = `🔍 **Investor discovery (Crust Data)**\n\n`
+    if (result.message) {
+      summary += `${result.message}\n\n`
+    }
+    if (hasInvestors) {
+      summary += `I found **${result.investors.length}** investors from companies with similar funding profiles. `
+      summary += `These investors have backed companies that have raised $1M+ and have 5+ employees. `
+      summary += `Use the list below to research and prioritize your outreach.\n\n`
+    } else {
+      summary += `No investor matches returned. Try again or adjust criteria (e.g. lower funding threshold).\n\n`
+    }
+
+    return {
+      type: 'find_investors',
+      message: summary,
+      data: {
+        investors: result.investors,
+        companies: result.companies.slice(0, 10),
+        source: result.source,
+        totalCompanies: result.companies.length,
+      },
+      actions: [
+        { label: 'Refresh list', action: 'find_investors', variant: 'outline' },
+        { label: 'Investor KPIs', action: 'open_investor_kpis', variant: 'secondary' },
+      ],
     }
   }
 

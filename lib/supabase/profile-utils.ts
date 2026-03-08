@@ -27,10 +27,13 @@ export interface UserCompany {
   updated_at: string
 }
 
+const ENSURE_PROFILE_TIMEOUT_MS = 5000
+
 /**
  * Ensures the current user has a profile and company
  * Creates them if they don't exist.
  * Pass the same Supabase client used for sign-up so the new session is available.
+ * Fast-fails after 5s to avoid blocking UI if DB is slow or tables are missing.
  */
 export async function ensureUserProfile(supabaseClient?: SupabaseClient): Promise<{
   profile: UserProfile | null
@@ -39,6 +42,7 @@ export async function ensureUserProfile(supabaseClient?: SupabaseClient): Promis
 }> {
   const supabase = supabaseClient ?? createClient()
 
+  const run = async (): Promise<{ profile: UserProfile | null; company: UserCompany | null; error: string | null }> => {
   try {
     // Get current user (use provided client so sign-up session is available)
     const { data: { user }, error: userError } = await supabase.auth.getUser()
@@ -114,6 +118,15 @@ export async function ensureUserProfile(supabaseClient?: SupabaseClient): Promis
       error: error instanceof Error ? error.message : 'Unknown error'
     }
   }
+  }
+
+  const timeoutPromise = new Promise<{ profile: UserProfile | null; company: UserCompany | null; error: string | null }>((resolve) =>
+    setTimeout(() => {
+      console.warn('[Profile] ensureUserProfile timeout - DB may be slow or tables missing')
+      resolve({ profile: null, company: null, error: 'timeout' })
+    }, ENSURE_PROFILE_TIMEOUT_MS)
+  )
+  return Promise.race([run(), timeoutPromise])
 }
 
 /**

@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import Link from "next/link"
 import {
   TrendingUp,
   TrendingDown,
@@ -20,6 +21,7 @@ import {
   Download,
   Filter,
   RefreshCw,
+  Search,
 } from "lucide-react"
 import {
   Line,
@@ -170,7 +172,7 @@ export default function DashboardPage() {
 
           <TabsContent value="overview" className="space-y-6">
             {/* Key Metrics */}
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
               <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent hover-lift">
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">Cash Balance</CardTitle>
@@ -224,6 +226,22 @@ export default function DashboardPage() {
                     <ArrowUpRight className="h-4 w-4" />
                     <span>+25% from last month</span>
                   </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-2 border-amber-500/20 bg-gradient-to-br from-amber-500/5 to-transparent hover-lift">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Fundraising</CardTitle>
+                  <Search className="h-4 w-4 text-amber-600" />
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm font-medium text-foreground mb-2">Find investors (Crust Data)</p>
+                  <Button variant="outline" size="sm" className="w-full gap-2" asChild>
+                    <Link href="/dashboard/fundraising">
+                      <Search className="h-3 w-3" />
+                      Open Fundraising
+                    </Link>
+                  </Button>
                 </CardContent>
               </Card>
             </div>

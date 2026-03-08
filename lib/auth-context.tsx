@@ -56,11 +56,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    let mounted = true
     const supabase = createClient()
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return
       const u = session?.user ?? null
       setUser(u)
 
@@ -68,15 +70,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setProfile(null)
         getCurrentUserProfile()
           .then((p) => {
+            if (!mounted) return
             if (p) {
               setProfile(mapSupabaseProfileToAuth(p))
             } else {
               ensureUserProfile().then(({ profile: ensured }) => {
-                setProfile(mapSupabaseProfileToAuth(ensured))
+                if (mounted) setProfile(mapSupabaseProfileToAuth(ensured))
               })
             }
           })
           .catch(() => {
+            if (!mounted) return
             setProfile(
               mapSupabaseProfileToAuth({
                 id: u.id,
@@ -101,29 +105,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     supabase.auth
       .getSession()
       .then(({ data: { session } }) => {
+        if (!mounted) return
         const u = session?.user ?? null
         setUser(u)
         if (u) {
           getCurrentUserProfile().then((p) => {
+            if (!mounted) return
             if (p) setProfile(mapSupabaseProfileToAuth(p))
-            else ensureUserProfile().then(({ profile: ensured }) => setProfile(mapSupabaseProfileToAuth(ensured)))
+            else ensureUserProfile().then(({ profile: ensured }) => {
+              if (mounted) setProfile(mapSupabaseProfileToAuth(ensured))
+            })
           }).catch(() => {
-            ensureUserProfile().then(({ profile: ensured }) => setProfile(mapSupabaseProfileToAuth(ensured)))
+            if (!mounted) return
+            ensureUserProfile().then(({ profile: ensured }) => {
+              if (mounted) setProfile(mapSupabaseProfileToAuth(ensured))
+            })
           })
         } else {
           setProfile(null)
         }
       })
       .catch((err) => {
-        console.error("[Auth] getSession failed:", err)
-        setUser(null)
-        setProfile(null)
+        // Ignore AbortError from Supabase auth-js locks (e.g. Strict Mode double-mount or nav away)
+        if (err?.name === "AbortError" || (err instanceof DOMException && err.name === "AbortError")) {
+          return
+        }
+        if (mounted) {
+          const isNetworkError =
+            err?.message === "Failed to fetch" ||
+            err?.name === "AuthRetryableFetchError" ||
+            (typeof err?.message === "string" && err.message.toLowerCase().includes("failed to fetch"))
+          if (isNetworkError) {
+            console.warn(
+              "[Auth] Cannot reach Supabase. Check: 1) Supabase project not paused (dashboard), 2) Correct NEXT_PUBLIC_SUPABASE_URL in .env.local, 3) Network / CORS / ad blocker."
+            )
+          } else {
+            console.error("[Auth] getSession failed:", err)
+          }
+          setUser(null)
+          setProfile(null)
+        }
       })
       .finally(() => {
-        setLoading(false)
+        if (mounted) setLoading(false)
       })
 
     return () => {
+      mounted = false
       subscription.unsubscribe()
     }
   }, [])

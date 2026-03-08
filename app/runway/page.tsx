@@ -32,6 +32,13 @@ export default function RunwayPage() {
   const netBurn = monthlyBurn - monthlyRevenue
   const runwayMonths = netBurn > 0 ? cashBalance / netBurn : 999
 
+  // Runway status for UI (critical < 1 mo, warning < 3 mo, ok >= 3 mo)
+  const runwayStatus =
+    runwayMonths < 1 ? "critical" : runwayMonths < 3 ? "warning" : "ok"
+  const runwayCut25 = netBurn > 0 ? cashBalance / (netBurn * 0.75) : 999
+  const growthPct = revenueGrowth[0]
+  const runwayDisplay = runwayMonths >= 999 ? "24+" : runwayMonths > 24 ? "24+" : runwayMonths.toFixed(1)
+
   // Generate forecast data
   const generateForecast = () => {
     const months = []
@@ -78,16 +85,46 @@ export default function RunwayPage() {
 
         {/* Key Runway Metrics */}
         <div className="grid gap-6 md:grid-cols-3 mb-8">
-          <Card className="border-2 border-destructive/50 bg-gradient-to-br from-destructive/10 to-transparent">
+          <Card
+            className={
+              runwayStatus === "critical"
+                ? "border-2 border-destructive/50 bg-gradient-to-br from-destructive/10 to-transparent"
+                : runwayStatus === "warning"
+                  ? "border-2 border-warning/50 bg-gradient-to-br from-warning/10 to-transparent"
+                  : "border-2 border-primary/20 bg-gradient-to-br from-primary/10 to-transparent"
+            }
+          >
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Current Runway</CardTitle>
-              <Calendar className="h-4 w-4 text-destructive" />
+              <Calendar
+                className={
+                  runwayStatus === "critical"
+                    ? "h-4 w-4 text-destructive"
+                    : runwayStatus === "warning"
+                      ? "h-4 w-4 text-warning"
+                      : "h-4 w-4 text-primary"
+                }
+              />
             </CardHeader>
             <CardContent>
-              <div className="text-4xl font-bold text-foreground">{runwayMonths.toFixed(1)} months</div>
-              <div className="flex items-center gap-1 text-sm text-destructive mt-2">
-                <AlertTriangle className="h-4 w-4" />
-                <span>Critical - Immediate action required</span>
+              <div className="text-4xl font-bold text-foreground">{runwayDisplay} months</div>
+              <div
+                className={`flex items-center gap-1 text-sm mt-2 ${
+                  runwayStatus === "critical"
+                    ? "text-destructive"
+                    : runwayStatus === "warning"
+                      ? "text-warning"
+                      : "text-primary"
+                }`}
+              >
+                {runwayStatus === "critical" && <AlertTriangle className="h-4 w-4" />}
+                <span>
+                  {runwayStatus === "critical"
+                    ? "Critical — immediate action required"
+                    : runwayStatus === "warning"
+                      ? "Low runway — consider reducing burn or fundraising"
+                      : "Healthy runway"}
+                </span>
               </div>
             </CardContent>
           </Card>
@@ -99,12 +136,16 @@ export default function RunwayPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-foreground">
-                {new Date(Date.now() + runwayMonths * 30 * 24 * 60 * 60 * 1000).toLocaleDateString("en-US", {
-                  month: "long",
-                  year: "numeric",
-                })}
+                {runwayMonths >= 24
+                  ? "—"
+                  : new Date(Date.now() + runwayMonths * 30 * 24 * 60 * 60 * 1000).toLocaleDateString("en-US", {
+                      month: "long",
+                      year: "numeric",
+                    })}
               </div>
-              <p className="text-sm text-muted-foreground mt-2">Based on current burn rate</p>
+              <p className="text-sm text-muted-foreground mt-2">
+                {runwayMonths >= 24 ? "Runway beyond 2 years" : "Based on current burn rate"}
+              </p>
             </CardContent>
           </Card>
 
@@ -130,29 +171,39 @@ export default function RunwayPage() {
               <div className="flex-1">
                 <CardTitle className="text-lg mb-2">AI Runway Recommendations</CardTitle>
                 <div className="space-y-3 text-sm">
-                  <div className="flex items-start gap-2">
-                    <Badge variant="destructive" className="mt-0.5">
-                      Critical
-                    </Badge>
-                    <p className="text-foreground">
-                      <strong>Start fundraising immediately.</strong> With less than 1 month of runway, you're in the
-                      danger zone. Most fundraising rounds take 3-6 months to close.
-                    </p>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <Badge variant="secondary" className="mt-0.5">
-                      Action
-                    </Badge>
-                    <p className="text-foreground">
-                      <strong>Reduce burn by 25%.</strong> Cutting $20K/month in expenses would extend your runway to
-                      1.4 months, giving you more time to fundraise.
-                    </p>
-                  </div>
+                  {runwayMonths < 3 && (
+                    <div className="flex items-start gap-2">
+                      <Badge variant="destructive" className="mt-0.5">
+                        Critical
+                      </Badge>
+                      <p className="text-foreground">
+                        <strong>Start fundraising soon.</strong>{" "}
+                        {runwayMonths < 1
+                          ? "With less than 1 month of runway, you're in the danger zone."
+                          : "With under 3 months of runway, you have limited time."}{" "}
+                        Most rounds take 3–6 months to close.
+                      </p>
+                    </div>
+                  )}
+                  {netBurn > 0 && (
+                    <div className="flex items-start gap-2">
+                      <Badge variant="secondary" className="mt-0.5">
+                        Action
+                      </Badge>
+                      <p className="text-foreground">
+                        <strong>Reduce burn by 25%.</strong> Cutting ${Math.round(netBurn * 0.25).toLocaleString()}/mo
+                        would extend runway to {runwayCut25 < 999 ? runwayCut25.toFixed(1) : "∞"} months, giving you
+                        more time to fundraise.
+                      </p>
+                    </div>
+                  )}
                   <div className="flex items-start gap-2">
                     <Badge className="mt-0.5 bg-accent text-accent-foreground">Opportunity</Badge>
                     <p className="text-foreground">
-                      <strong>Your revenue is growing at 25% MoM.</strong> If you can maintain this growth and reduce
-                      burn slightly, you could reach profitability in 8-10 months.
+                      <strong>Revenue growth is {growthPct}% MoM.</strong>{" "}
+                      {growthPct >= 10
+                        ? "If you maintain this and reduce burn slightly, you can extend runway and move toward profitability."
+                        : "Accelerating revenue growth while controlling burn will improve your runway and investor story."}
                     </p>
                   </div>
                 </div>
@@ -168,76 +219,82 @@ export default function RunwayPage() {
             <CardDescription>Projected cash balance based on current burn rate and revenue growth</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={400}>
-              <AreaChart data={forecastData}>
-                <defs>
-                  <linearGradient id="colorCashForecast" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
-                    <stop offset="50%" stopColor="#06b6d4" stopOpacity={0.5} />
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
-                <XAxis
-                  dataKey="month"
-                  stroke="#f9fafb"
-                  label={{ 
-                    value: "Months from now", 
-                    position: "insideBottom", 
-                    offset: -5,
-                    style: { fill: '#f9fafb', fontWeight: 600 }
-                  }}
-                  style={{ fontSize: '12px', fontWeight: 500, fill: '#f9fafb' }}
-                />
-                <YAxis 
-                  stroke="#f9fafb"
-                  style={{ fontSize: '12px', fontWeight: 500, fill: '#f9fafb' }}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#1f2937",
-                    border: "2px solid #10b981",
-                    borderRadius: "12px",
-                    color: "#f9fafb",
-                    fontWeight: 600,
-                  }}
-                  formatter={(value: number) => `$${value.toLocaleString()}`}
-                  cursor={{stroke: '#10b981', strokeWidth: 2}}
-                />
-                <ReferenceLine 
-                  y={0} 
-                  stroke="#f97316" 
-                  strokeDasharray="5 5" 
-                  strokeWidth={2}
-                  label={{ 
-                    value: "Break Even", 
-                    position: "right",
-                    style: { fill: '#f97316', fontWeight: 600 }
-                  }}
-                />
-                <ReferenceLine
-                  x={runoutMonth}
-                  stroke="#f97316"
-                  strokeDasharray="5 5"
-                  strokeWidth={2}
-                  label={{ 
-                    value: "Runout Point", 
-                    position: "top",
-                    style: { fill: '#f97316', fontWeight: 700, fontSize: 13 }
-                  }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="cash"
-                  stroke="#10b981"
-                  strokeWidth={4}
-                  fill="url(#colorCashForecast)"
-                  animationDuration={1500}
-                  dot={{ fill: '#10b981', r: 4 }}
-                  activeDot={{ r: 7, fill: '#10b981' }}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            <div className="w-full min-h-[400px]">
+              <ResponsiveContainer width="100%" height={400}>
+                <AreaChart data={forecastData} margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
+                  <defs>
+                    <linearGradient id="colorCashForecast" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
+                      <stop offset="50%" stopColor="#06b6d4" stopOpacity={0.5} />
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.15} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted-foreground/30" />
+                  <XAxis
+                    dataKey="month"
+                    className="text-muted-foreground"
+                    tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
+                    stroke="hsl(var(--muted-foreground))"
+                    label={{
+                      value: "Months from now",
+                      position: "insideBottom",
+                      offset: -5,
+                      style: { fill: "hsl(var(--muted-foreground))", fontWeight: 600 },
+                    }}
+                  />
+                  <YAxis
+                    stroke="hsl(var(--muted-foreground))"
+                    tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
+                    tickFormatter={(v) => (v >= 1000 ? `$${v / 1000}k` : `$${v}`)}
+                    width={52}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#1f2937",
+                      border: "2px solid #10b981",
+                      borderRadius: "12px",
+                      color: "#f9fafb",
+                      fontWeight: 600,
+                    }}
+                    labelFormatter={(month) => `Month ${month}`}
+                    formatter={(value: number) => [`$${Number(value).toLocaleString()}`, "Cash"]}
+                    cursor={{ stroke: "#10b981", strokeWidth: 2 }}
+                  />
+                  <ReferenceLine
+                    y={0}
+                    stroke="#f97316"
+                    strokeDasharray="5 5"
+                    strokeWidth={2}
+                    label={{
+                      value: "Zero cash",
+                      position: "right",
+                      style: { fill: "#f97316", fontWeight: 600 },
+                    }}
+                  />
+                  <ReferenceLine
+                    x={runoutMonth}
+                    stroke="#f97316"
+                    strokeDasharray="5 5"
+                    strokeWidth={2}
+                    label={{
+                      value: "Runout",
+                      position: "top",
+                      style: { fill: "#f97316", fontWeight: 700, fontSize: 13 },
+                    }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="cash"
+                    stroke="#10b981"
+                    strokeWidth={4}
+                    fill="url(#colorCashForecast)"
+                    animationDuration={1500}
+                    dot={{ fill: "#10b981", r: 4 }}
+                    activeDot={{ r: 7, fill: "#10b981" }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
           </CardContent>
         </Card>
 
@@ -254,8 +311,10 @@ export default function RunwayPage() {
                 <Input
                   id="cash"
                   type="number"
+                  min={0}
+                  step={1000}
                   value={cashBalance}
-                  onChange={(e) => setCashBalance(Number(e.target.value))}
+                  onChange={(e) => setCashBalance(Number(e.target.value) || 0)}
                   className="text-lg"
                 />
               </div>
@@ -264,8 +323,10 @@ export default function RunwayPage() {
                 <Input
                   id="burn"
                   type="number"
+                  min={0}
+                  step={1000}
                   value={monthlyBurn}
-                  onChange={(e) => setMonthlyBurn(Number(e.target.value))}
+                  onChange={(e) => setMonthlyBurn(Number(e.target.value) || 0)}
                   className="text-lg"
                 />
               </div>
@@ -274,8 +335,10 @@ export default function RunwayPage() {
                 <Input
                   id="revenue"
                   type="number"
+                  min={0}
+                  step={1000}
                   value={monthlyRevenue}
-                  onChange={(e) => setMonthlyRevenue(Number(e.target.value))}
+                  onChange={(e) => setMonthlyRevenue(Number(e.target.value) || 0)}
                   className="text-lg"
                 />
               </div>
@@ -286,6 +349,7 @@ export default function RunwayPage() {
                   value={revenueGrowth}
                   onValueChange={setRevenueGrowth}
                   max={30}
+                  min={0}
                   step={1}
                   className="mt-2"
                 />
@@ -296,7 +360,7 @@ export default function RunwayPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Updated Runway Projection</p>
-                  <p className="text-3xl font-bold text-primary mt-1">{runwayMonths.toFixed(1)} months</p>
+                  <p className="text-3xl font-bold text-primary mt-1">{runwayDisplay} months</p>
                 </div>
                 <Button className="bg-gradient-to-r from-primary to-secondary">
                   <Sparkles className="mr-2 h-4 w-4" />

@@ -22,7 +22,9 @@ import {
   AlertCircle,
   Info,
   Zap,
-  XCircle
+  XCircle,
+  Search,
+  Building2,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -494,7 +496,129 @@ export function CapTableComparisonCard({
 }
 
 // ============================================
-// 5. Strategic Insight Component
+// 5. Investor Finder (Crust Data) Component
+// ============================================
+
+export interface InvestorFinderCardProps {
+  investors: Array<{
+    name: string
+    companies: string[]
+    lastFundingRound?: string
+    totalInvestmentUsd?: number
+  }>
+  companies?: Array<{
+    company_name?: string
+    company_website_domain?: string
+    last_funding_round_type?: string
+    total_investment_usd?: number
+  }>
+  source?: string
+  totalCompanies?: number
+  onRefresh?: () => void
+  onViewInvestorKPIs?: () => void
+}
+
+export function InvestorFinderCard({
+  investors,
+  companies = [],
+  source = "crustdata",
+  totalCompanies = 0,
+  onRefresh,
+  onViewInvestorKPIs,
+}: InvestorFinderCardProps) {
+  return (
+    <Card className="border-2 border-amber-500/20 mt-2 bg-amber-500/5">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Search className="h-4 w-4 text-amber-600" />
+            Find investors (Crust Data)
+          </CardTitle>
+          <Badge variant="secondary" className="text-xs">
+            {source}
+          </Badge>
+        </div>
+        {totalCompanies > 0 && (
+          <p className="text-xs text-muted-foreground mt-1">
+            From {totalCompanies} companies with similar funding profiles
+          </p>
+        )}
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {investors.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            No investors found. Try refreshing or broadening your criteria.
+          </p>
+        ) : (
+          <div className="space-y-2 max-h-[320px] overflow-y-auto">
+            {investors.slice(0, 20).map((inv, i) => (
+              <div
+                key={i}
+                className="flex items-start gap-2 p-2 rounded-lg border bg-background/80 hover:bg-muted/50 transition-colors"
+              >
+                <Users className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-sm">{inv.name}</p>
+                  {inv.companies.length > 0 && (
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Invested in: {inv.companies.slice(0, 3).join(", ")}
+                      {inv.companies.length > 3 ? ` +${inv.companies.length - 3} more` : ""}
+                    </p>
+                  )}
+                  {(inv.lastFundingRound || inv.totalInvestmentUsd) && (
+                    <div className="flex gap-2 mt-1 flex-wrap">
+                      {inv.lastFundingRound && (
+                        <Badge variant="outline" className="text-[10px]">
+                          {inv.lastFundingRound}
+                        </Badge>
+                      )}
+                      {inv.totalInvestmentUsd != null && (
+                        <span className="text-[10px] text-muted-foreground">
+                          Portfolio co. raised ${(inv.totalInvestmentUsd / 1e6).toFixed(1)}M+
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        {companies.length > 0 && (
+          <div className="pt-2 border-t">
+            <p className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1">
+              <Building2 className="h-3 w-3" />
+              Sample companies in dataset
+            </p>
+            <div className="flex flex-wrap gap-1">
+              {companies.slice(0, 6).map((c, i) => (
+                <Badge key={i} variant="secondary" className="text-[10px] font-normal">
+                  {c.company_name || c.company_website_domain || "—"}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+        <div className="flex flex-wrap gap-2 pt-2">
+          {onRefresh && (
+            <Button size="sm" variant="outline" onClick={onRefresh}>
+              <Search className="h-3 w-3 mr-1" />
+              Refresh list
+            </Button>
+          )}
+          {onViewInvestorKPIs && (
+            <Button size="sm" variant="secondary" onClick={onViewInvestorKPIs}>
+              Investor KPIs
+            </Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+// ============================================
+// 6. Strategic Insight Component
 // ============================================
 
 export interface StrategicInsightProps {

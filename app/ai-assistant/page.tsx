@@ -26,6 +26,7 @@ import {
   User,
   RefreshCw,
   Rocket,
+  Search,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { CFOMascot } from "@/components/cfo-mascot"
@@ -35,6 +36,7 @@ import {
   RiskAlertCard,
   CapTableComparisonCard,
   StrategicInsightCard,
+  InvestorFinderCard,
 } from "@/components/ai-message-types"
 import { EquityCalculatorView } from "@/components/equity-calculator-view"
 import { EquityCalculatorForm } from "@/components/equity-calculator-form"
@@ -49,7 +51,7 @@ interface Message {
   role: "user" | "assistant"
   content: string
   timestamp: Date
-  type?: "text" | "insight" | "warning" | "recommendation" | "scenario_analysis" | "kpi_dashboard" | "alert" | "cap_table" | "strategic_insight" | "forecast" | "equity_calculator" | "equity_calculator_form" | "equity_calculator_wizard" | "investment_wizard" | "investment_results"
+  type?: "text" | "insight" | "warning" | "recommendation" | "scenario_analysis" | "kpi_dashboard" | "alert" | "cap_table" | "strategic_insight" | "forecast" | "equity_calculator" | "equity_calculator_form" | "equity_calculator_wizard" | "investment_wizard" | "investment_results" | "find_investors"
   roundName?: string
   data?: any
   chart?: any
@@ -127,6 +129,7 @@ export default function AIAssistantPage() {
     { icon: Calendar, label: "Funding Round Impact", query: "Calculate equity distribution from Pre-Seed to Series B" },
     { icon: Lightbulb, label: "Cost Optimization", query: "What are my biggest expenses and where can I reduce costs?" },
     { icon: Zap, label: "Equity Calculator", query: "Calculate startup equity across Pre-Seed, Seed, Series A, and Series B rounds" },
+    { icon: Search, label: "Find investors (Crust Data)", query: "Find investors using Crust Data for fundraising" },
   ]
 
   const startVoiceInput = () => {
@@ -672,6 +675,17 @@ export default function AIAssistantPage() {
                           onViewFull={() => console.log("View full cap table")}
                           onExport={() => console.log("Export")}
                           onModelDifferent={() => setInputValue("Model different funding terms")}
+                        />
+                      )}
+                      
+                      {message.role === "assistant" && message.type === "find_investors" && message.data && (
+                        <InvestorFinderCard
+                          investors={message.data.investors ?? []}
+                          companies={message.data.companies}
+                          source={message.data.source}
+                          totalCompanies={message.data.totalCompanies}
+                          onRefresh={() => handleSendMessage("Find investors using Crust Data")}
+                          onViewInvestorKPIs={() => setInputValue("Show me investor KPIs and prepare a dashboard for due diligence")}
                         />
                       )}
                       
